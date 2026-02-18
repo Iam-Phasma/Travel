@@ -325,12 +325,11 @@ button:hover {
     color: var(--sea);
     font-weight: 700;
     text-decoration: none;
-    transition: transform 150ms ease, box-shadow 150ms ease;
+    transition: background 200ms ease;
 }
 
 .link-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(47, 111, 179, 0.25);
+    background: rgba(47, 111, 179, 0.25);
 }
 
 @media (max-width: 720px) {
