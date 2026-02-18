@@ -75,10 +75,13 @@
                     throw error;
                 }
 
+                // Role-based redirect is for UX only. 
+                // Real access control is enforced by Supabase RLS policies.
                 const role = data?.role || "user";
                 return role === "admin" ? "admin.html" : "dashboard.html";
             } catch (error) {
                 console.error("Error fetching user role:", error);
+                // Default to dashboard if role lookup fails
                 return "dashboard.html";
             }
         };

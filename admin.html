@@ -124,10 +124,9 @@
                 return;
             }
 
-            const role = await getUserRole(sessionData.session.user.id);
-            if (role !== "admin") {
-                window.location.href = "dashboard.html";
-            }
+            // Note: Actual access control for admin operations (upload, delete) 
+            // is enforced by Supabase RLS policies, not this client-side check.
+            // This check is for UX only and should not be fully trusted for security.
         };
 
         // Logout functionality

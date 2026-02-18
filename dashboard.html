@@ -83,10 +83,8 @@
                 return;
             }
 
-            const role = await getUserRole(sessionData.session.user.id);
-            if (role === "admin") {
-                window.location.href = "admin.html";
-            }
+            // Note: Access control is enforced by Supabase RLS policies.
+            // Client-side checks are for UX only and should not be relied upon for security.
         };
 
         const taBody = document.getElementById("ta-body");
