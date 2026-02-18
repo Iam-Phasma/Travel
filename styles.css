@@ -106,6 +106,10 @@ h1 {
     animation: fadeUp 500ms ease-out both;
 }
 
+.wide-panel {
+    width: min(1100px, 96vw);
+}
+
 #ta-panel {
     min-height: 500px;
     grid-template-rows: auto 1fr auto;
@@ -125,11 +129,22 @@ h1 {
     gap: 14px;
 }
 
+.field-row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 label {
     font-size: 0.9rem;
     font-weight: 600;
     display: block;
     margin-bottom: 8px;
+}
+
+.required {
+    color: #a1251b;
+    margin-left: 4px;
 }
 
 .input-wrap {

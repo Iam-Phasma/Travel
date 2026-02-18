@@ -20,7 +20,7 @@
         <h2>Travel Authority Upload</h2>
         <div class="fields">
             <div>
-                <label for="ta-number">TA Number</label>
+                <label for="ta-number">TA Number <span class="required">*</span></label>
                 <div class="input-wrap">
                     <span class="icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -31,18 +31,42 @@
                 </div>
             </div>
             <div>
-                <label for="travel-date">Travel Date</label>
+                <label for="purpose">Purpose <span class="required">*</span></label>
                 <div class="input-wrap">
                     <span class="icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
+                            <path d="M4 5h16a1 1 0 0 1 1 1v10a3 3 0 0 1-3 3H8a5 5 0 0 1-5-5V6a1 1 0 0 1 1-1Zm1 2v7a3 3 0 0 0 3 3h10a1 1 0 0 0 1-1V7H5Zm3 1h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
                         </svg>
                     </span>
-                    <input id="travel-date" type="text" placeholder="Select travel date" required>
+                    <input id="purpose" type="text" placeholder="Enter travel purpose" required>
+                </div>
+            </div>
+            <div class="field-row">
+                <div>
+                    <label for="travel-date">Travel Date <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
+                            </svg>
+                        </span>
+                        <input id="travel-date" type="text" placeholder="Select travel date" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="travel-until">Travel Until</label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
+                            </svg>
+                        </span>
+                        <input id="travel-until" type="text" placeholder="Select end date">
+                    </div>
                 </div>
             </div>
             <div>
-                <label for="scan-file">Upload Scanned</label>
+                <label for="scan-file">Upload Scanned <span class="required">*</span></label>
                 <input id="scan-file" type="file" required>
             </div>
         </div>
@@ -52,7 +76,7 @@
         </div>
     </section>
 
-    <section class="panel hidden" id="view-panel">
+    <section class="panel wide-panel hidden" id="view-panel">
         <div class="panel-head">
             <h2>Travel Authorities</h2>
             <span class="pill">Admin Access</span>
@@ -62,14 +86,16 @@
                 <thead>
                     <tr>
                         <th scope="col">TA Number</th>
+                        <th scope="col">Purpose</th>
                         <th scope="col">Travel Date</th>
+                        <th scope="col">Travel Until</th>
                         <th scope="col">File</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="view-body">
                     <tr>
-                        <td colspan="4">Loading records...</td>
+                        <td colspan="6">Loading records...</td>
                     </tr>
                 </tbody>
             </table>
@@ -142,10 +168,17 @@
 
         const uploadStatus = document.getElementById("upload-status");
         const taNumberInput = document.getElementById("ta-number");
+        const purposeInput = document.getElementById("purpose");
         const travelDateInput = document.getElementById("travel-date");
+        const travelUntilInput = document.getElementById("travel-until");
         const scanFileInput = document.getElementById("scan-file");
 
         window.flatpickr(travelDateInput, {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        window.flatpickr(travelUntilInput, {
             dateFormat: "Y-m-d",
             allowInput: true
         });
@@ -160,17 +193,41 @@
 
         document.getElementById("upload-btn").addEventListener("click", async () => {
             const taNumber = taNumberInput.value.trim();
+            const purpose = purposeInput.value.trim();
             const travelDate = travelDateInput.value;
+            const travelUntil = travelUntilInput.value;
 
             const file = scanFileInput.files[0];
 
-            if (!taNumber || !travelDate || !file) {
+            if (!taNumber || !purpose || !travelDate || !file) {
                 uploadStatus.textContent = "Please fill in all required fields.";
                 uploadStatus.classList.add("status--error");
                 uploadStatus.classList.remove("status--shake");
                 void uploadStatus.offsetWidth;
                 uploadStatus.classList.add("status--shake");
                 return;
+            }
+
+            if (travelUntil) {
+                const start = new Date(`${travelDate}T00:00:00`);
+                const end = new Date(`${travelUntil}T00:00:00`);
+                if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+                    uploadStatus.textContent = "Please enter valid dates.";
+                    uploadStatus.classList.add("status--error");
+                    uploadStatus.classList.remove("status--shake");
+                    void uploadStatus.offsetWidth;
+                    uploadStatus.classList.add("status--shake");
+                    return;
+                }
+
+                if (start > end) {
+                    uploadStatus.textContent = "Travel date cannot be after travel until.";
+                    uploadStatus.classList.add("status--error");
+                    uploadStatus.classList.remove("status--shake");
+                    void uploadStatus.offsetWidth;
+                    uploadStatus.classList.add("status--shake");
+                    return;
+                }
             }
 
             try {
@@ -224,7 +281,9 @@
                     .insert([
                         {
                             ta_number: taNumber,
+                            purpose: purpose,
                             travel_date: travelDate,
+                            travel_until: travelUntil,
                             file_name: file.name,
                             file_url: fileUrl
                         }
@@ -282,19 +341,22 @@
 
         const renderViewRows = (rows) => {
             if (!rows.length) {
-                viewBody.innerHTML = "<tr><td colspan=\"4\">No records yet.</td></tr>";
+                viewBody.innerHTML = "<tr><td colspan=\"6\">No records yet.</td></tr>";
                 return;
             }
 
             viewBody.innerHTML = rows.map((row) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
+                const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
 
                 return `
                     <tr data-id="${row.id}" data-file-url="${fileUrl}">
                         <td>${row.ta_number || "-"}</td>
+                        <td>${row.purpose || "-"}</td>
                         <td>${dateText}</td>
+                        <td>${untilText}</td>
                         <td>
                             <a class="link-btn" href="${fileUrl}" target="_blank" rel="noopener">${safeName}</a>
                         </td>
@@ -325,7 +387,7 @@
             try {
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("id, ta_number, travel_date, file_name, file_url, created_at")
+                    .select("id, ta_number, purpose, travel_date, travel_until, file_name, file_url, created_at")
                     .order("created_at", { ascending: false });
 
                 if (error) {
@@ -336,7 +398,7 @@
                 viewStatus.textContent = `Loaded ${data.length} record${data.length === 1 ? "" : "s"}.`;
             } catch (error) {
                 console.error("View load error:", error);
-                viewBody.innerHTML = "<tr><td colspan=\"4\">Unable to load records.</td></tr>";
+                viewBody.innerHTML = "<tr><td colspan=\"6\">Unable to load records.</td></tr>";
                 viewStatus.textContent = "Failed to load travel authorities.";
             }
         };

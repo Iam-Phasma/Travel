@@ -13,7 +13,7 @@
         <button id="logout-btn" type="button" class="logout-btn">Log Out</button>
     </header>
     <main class="shell">
-        <section class="panel" id="ta-panel">
+        <section class="panel wide-panel" id="ta-panel">
             <div class="panel-head">
                 <h2>Travel Authorities</h2>
                 <span class="pill">Read only</span>
@@ -23,13 +23,15 @@
                     <thead>
                         <tr>
                             <th scope="col">TA Number</th>
+                            <th scope="col">Purpose</th>
                             <th scope="col">Travel Date</th>
+                            <th scope="col">Travel Until</th>
                             <th scope="col">File</th>
                         </tr>
                     </thead>
                     <tbody id="ta-body">
                         <tr>
-                            <td colspan="3">Loading records...</td>
+                            <td colspan="5">Loading records...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -92,19 +94,22 @@
 
         const renderRows = (rows) => {
             if (!rows.length) {
-                taBody.innerHTML = "<tr><td colspan=\"3\">No records yet.</td></tr>";
+                taBody.innerHTML = "<tr><td colspan=\"5\">No records yet.</td></tr>";
                 return;
             }
 
             taBody.innerHTML = rows.map((row) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
+                const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
 
                 return `
                     <tr>
                         <td>${row.ta_number || "-"}</td>
+                        <td>${row.purpose || "-"}</td>
                         <td>${dateText}</td>
+                        <td>${untilText}</td>
                         <td>
                             <a class="link-btn" href="${fileUrl}" target="_blank" rel="noopener">${safeName}</a>
                         </td>
@@ -118,7 +123,7 @@
             try {
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("ta_number, travel_date, file_name, file_url, created_at")
+                    .select("ta_number, purpose, travel_date, travel_until, file_name, file_url, created_at")
                     .order("created_at", { ascending: false });
 
                 if (error) {
@@ -129,7 +134,7 @@
                 taStatus.textContent = `Loaded ${data.length} record${data.length === 1 ? "" : "s"}.`;
             } catch (error) {
                 console.error("Dashboard load error:", error);
-                taBody.innerHTML = "<tr><td colspan=\"3\">Unable to load records.</td></tr>";
+                taBody.innerHTML = "<tr><td colspan=\"5\">Unable to load records.</td></tr>";
                 taStatus.textContent = "Failed to load travel authorities.";
             }
         };
