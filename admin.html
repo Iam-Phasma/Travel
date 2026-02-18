@@ -200,12 +200,13 @@
 
                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
-                const filePath = `travel-authorities/${safeTa}/${safeDate}/${file.name}`;
+                const uniqueName = `${Date.now()}_${file.name}`;
+                const filePath = `travel-authorities/${safeTa}/${safeDate}/${uniqueName}`;
 
                 const { error: uploadError } = await supabase
                     .storage
                     .from("ta-files")
-                    .upload(filePath, file, { upsert: true });
+                    .upload(filePath, file, { upsert: false });
 
                 if (uploadError) {
                     throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
