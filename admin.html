@@ -255,39 +255,65 @@
 
         // Single-session enforcement for admin users
         const checkAdminSession = async () => {
-            const { data: sessionData } = await supabase.auth.getSession();
-            const user = sessionData?.session?.user;
-            if (!user) return;
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const user = sessionData?.session?.user;
+                if (!user) {
+                    console.log("No user session found");
+                    return;
+                }
 
-            const localToken = localStorage.getItem('admin_session_token');
-            if (!localToken) return;
+                const localToken = localStorage.getItem('admin_session_token');
+                if (!localToken) {
+                    console.log("No local session token found");
+                    return;
+                }
 
-            const { data, error } = await supabase
-                .from("profiles")
-                .select("session_token")
-                .eq("id", user.id)
-                .maybeSingle();
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("session_token")
+                    .eq("id", user.id)
+                    .maybeSingle();
 
-            if (!error && data) {
+                if (error) {
+                    console.error("Error fetching session token:", error);
+                    return;
+                }
+
+                if (!data) {
+                    console.log("No profile data found");
+                    return;
+                }
+
+                console.log("Session check - DB token exists:", !!data.session_token, "Matches local:", data.session_token === localToken);
+
                 // Only logout if database token exists AND doesn't match
                 // If database token is null, update it (in case initial update failed)
                 if (data.session_token === null) {
-                    await supabase
+                    console.log("Database token is null, updating with local token");
+                    const { error: updateError } = await supabase
                         .from("profiles")
                         .update({ session_token: localToken })
                         .eq("id", user.id);
+                    
+                    if (updateError) {
+                        console.error("Failed to update session token:", updateError);
+                    }
                 } else if (data.session_token !== localToken) {
                     // Session token mismatch - another device logged in
+                    console.log("Session token mismatch - logging out");
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
                     window.location.href = 'index.html';
                 }
+            } catch (err) {
+                console.error("Error in checkAdminSession:", err);
             }
         };
 
         // Check session every 5 seconds, start after initial delay
         setInterval(checkAdminSession, 5000);
-        setTimeout(checkAdminSession, 2000); // First check after 2 seconds
+        setTimeout(checkAdminSession, 3000); // First check after 3 seconds
 
         const getUserRole = async (userId) => {
             try {

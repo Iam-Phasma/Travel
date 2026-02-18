@@ -120,11 +120,17 @@
 
                 const { role, page } = await getRedirectPage(user.id);
                 
+                loginStatus.textContent = "Signed in. Redirecting...";
+                loginStatus.classList.remove("hidden");
+                loginStatus.classList.add("status--success");
+
                 // For admin users, generate and store a session token to enforce single-session
                 if (role === "admin") {
                     const sessionToken = crypto.randomUUID();
+                    console.log("Generated session token for admin:", sessionToken);
                     localStorage.setItem('admin_session_token', sessionToken);
                     
+                    // Wait for database update to complete before redirecting
                     const { error: updateError } = await supabase
                         .from("profiles")
                         .update({ session_token: sessionToken })
@@ -132,16 +138,18 @@
                     
                     if (updateError) {
                         console.error("Failed to update session token:", updateError);
+                        loginStatus.textContent = "Warning: Session token update failed. " + updateError.message;
+                    } else {
+                        console.log("Session token successfully updated in database");
                     }
+                    
+                    // Add extra delay to ensure database propagation
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
-
-                loginStatus.textContent = "Signed in. Redirecting...";
-                loginStatus.classList.remove("hidden");
-                loginStatus.classList.add("status--success");
 
                 setTimeout(() => {
                     window.location.href = page;
-                }, 1000);
+                }, 500);
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
 
