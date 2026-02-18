@@ -195,7 +195,7 @@
             const taNumber = taNumberInput.value.trim();
             const purpose = purposeInput.value.trim();
             const travelDate = travelDateInput.value;
-            const travelUntil = travelUntilInput.value;
+            let travelUntil = travelUntilInput.value;
 
             const file = scanFileInput.files[0];
 
@@ -206,6 +206,11 @@
                 void uploadStatus.offsetWidth;
                 uploadStatus.classList.add("status--shake");
                 return;
+            }
+
+            if (!travelUntil) {
+                travelUntil = travelDate;
+                travelUntilInput.value = travelDate;
             }
 
             if (travelUntil) {
