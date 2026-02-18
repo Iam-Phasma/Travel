@@ -45,7 +45,7 @@
             </div>
             <div class="login-actions">
                 <button id="login-btn" type="button">Sign in</button>
-                <span class="status status--neutral" id="login-status">Enter your credentials.</span>
+                <span class="status status--neutral hidden" id="login-status">Enter your credentials.</span>
             </div>
         </section>
 
@@ -92,14 +92,16 @@
 
             if (!email || !password) {
                 loginStatus.textContent = "Please enter email and password.";
-                loginStatus.classList.remove("status--success");
+                loginStatus.classList.remove("status--success", "hidden");
                 loginStatus.classList.add("status--error");
+                loginStatus.classList.remove("status--shake");
+                void loginStatus.offsetWidth;
+                loginStatus.classList.add("status--shake");
                 return;
             }
 
             loginStatus.textContent = "Signing in...";
-            loginStatus.classList.remove("status--error");
-            loginStatus.classList.remove("status--success");
+            loginStatus.classList.remove("status--error", "status--success", "hidden");
 
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
@@ -117,6 +119,7 @@
                 }
 
                 loginStatus.textContent = "Signed in. Redirecting...";
+                loginStatus.classList.remove("hidden");
                 loginStatus.classList.add("status--success");
 
                 const redirectPage = await getRedirectPage(user.id);
@@ -127,7 +130,7 @@
                 const errorMessage = error?.message || "Invalid email or password";
 
                 loginStatus.textContent = errorMessage;
-                loginStatus.classList.remove("status--success");
+                loginStatus.classList.remove("status--success", "hidden");
                 loginStatus.classList.add("status--error");
                 loginStatus.classList.remove("status--shake");
                 void loginStatus.offsetWidth;
