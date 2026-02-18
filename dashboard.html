@@ -37,7 +37,10 @@
                     </tbody>
                 </table>
             </div>
-            <span class="status" id="ta-status">Fetching travel authorities.</span>
+            <div class="table-footer">
+                <span class="status" id="ta-status">Fetching travel authorities.</span>
+                <button id="ta-more" class="pagination-btn" type="button">Load more</button>
+            </div>
         </section>
     </main>
 
@@ -123,6 +126,11 @@
 
         const taBody = document.getElementById("ta-body");
         const taStatus = document.getElementById("ta-status");
+        const taMoreBtn = document.getElementById("ta-more");
+        const pageSize = 30;
+        let taOffset = 0;
+        let taRows = [];
+        let taHasMore = true;
 
         const formatFileLabel = (value) => {
             const base = String(value || "Download");
@@ -146,7 +154,7 @@
                 return;
             }
 
-            taBody.innerHTML = rows.map((row) => {
+            taBody.innerHTML = rows.map((row, index) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
                 const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
@@ -201,26 +209,65 @@
             });
         };
 
-        const loadTravelAuthorities = async () => {
+        const updateTaFooter = () => {
+            if (!taRows.length) {
+                taStatus.textContent = "No records yet.";
+            } else if (!taHasMore) {
+                taStatus.textContent = "End of records.";
+            } else {
+                taStatus.textContent = `Loaded ${taRows.length} record${taRows.length === 1 ? "" : "s"}.`;
+            }
+
+            if (taMoreBtn) {
+                taMoreBtn.hidden = !taHasMore;
+            }
+        };
+
+        const loadTravelAuthorities = async (reset = false) => {
+            if (reset) {
+                taOffset = 0;
+                taRows = [];
+                taHasMore = true;
+                taBody.innerHTML = "<tr><td colspan=\"6\">Loading records...</td></tr>";
+            }
+
+            if (!taHasMore) {
+                updateTaFooter();
+                return;
+            }
+
             taStatus.textContent = "Fetching travel authorities.";
             try {
+                const from = taOffset;
+                const to = taOffset + pageSize - 1;
                 const { data, error } = await supabase
                     .from("travel_authorities")
                     .select("ta_number, purpose, travel_date, travel_until, file_name, file_url, created_at")
-                    .order("created_at", { ascending: false });
+                    .order("created_at", { ascending: false })
+                    .range(from, to);
 
                 if (error) {
                     throw error;
                 }
 
-                renderRows(data || []);
-                taStatus.textContent = `Loaded ${data.length} record${data.length === 1 ? "" : "s"}.`;
+                const nextRows = data || [];
+                taRows = taRows.concat(nextRows);
+                taOffset += nextRows.length;
+                taHasMore = nextRows.length === pageSize;
+
+                renderRows(taRows);
+                updateTaFooter();
             } catch (error) {
                 console.error("Dashboard load error:", error);
                 taBody.innerHTML = "<tr><td colspan=\"6\">Unable to load records.</td></tr>";
                 taStatus.textContent = "Failed to load travel authorities.";
             }
         };
+        if (taMoreBtn) {
+            taMoreBtn.addEventListener("click", () => {
+                loadTravelAuthorities(false);
+            });
+        }
 
         closeViewBtn.addEventListener("click", () => {
             viewModal.classList.remove("show");
@@ -234,7 +281,7 @@
 
         const init = async () => {
             await requireUser();
-            await loadTravelAuthorities();
+            await loadTravelAuthorities(true);
         };
 
         init();

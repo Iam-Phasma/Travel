@@ -34,11 +34,14 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .header h1 {
     margin: 0;
     font-size: 2rem;
+    white-space: nowrap;
 }
 
 .logout-btn {
@@ -57,6 +60,8 @@ body {
     display: grid;
     gap: 28px;
     justify-items: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 header {
@@ -85,6 +90,7 @@ h1 {
     font-size: 2.6rem;
     letter-spacing: -0.03em;
     font-weight: 1000;
+    white-space: nowrap;
 }
 
 .tagline {
@@ -316,6 +322,30 @@ button:hover {
     max-height: 580px;
 }
 
+.table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    background: var(--sea);
+    color: var(--mist);
+    font-weight: 700;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -327,6 +357,7 @@ button:hover {
     padding: 14px 16px;
     text-align: left;
     border-bottom: 1px solid rgba(15, 26, 31, 0.1);
+    white-space: nowrap;
 }
 
 .data-table th {

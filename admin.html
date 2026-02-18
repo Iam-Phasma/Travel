@@ -101,7 +101,10 @@
                 </tbody>
             </table>
         </div>
-        <span class="status" id="view-status">Fetching travel authorities.</span>
+        <div class="table-footer">
+            <span class="status" id="view-status">Fetching travel authorities.</span>
+            <button id="view-more" class="pagination-btn" type="button">Load more</button>
+        </div>
     </section>
 
     <div id="delete-modal" class="modal">
@@ -465,7 +468,7 @@
                 } else {
                     uploadPanel.classList.add("hidden");
                     viewPanel.classList.remove("hidden");
-                    loadTravelAuthorities();
+                    loadTravelAuthorities(true);
                 }
             });
         });
@@ -473,11 +476,12 @@
         // Table view functionality
         const viewBody = document.getElementById("view-body");
         const viewStatus = document.getElementById("view-status");
+          const viewMoreBtn = document.getElementById("view-more");
         const deleteModal = document.getElementById("delete-modal");
         const viewModal = document.getElementById("view-modal");
         const updateModal = document.getElementById("update-modal");
         const cancelDeleteBtn = document.getElementById("cancel-delete");
-        const closeViewBtn = document.getElementById("close-view");
+          const closeViewBtn = document.getElementById("close-view");
         const confirmDeleteBtn = document.getElementById("confirm-delete");
         const cancelUpdateBtn = document.getElementById("cancel-update");
         const confirmUpdateBtn = document.getElementById("confirm-update");
@@ -496,6 +500,10 @@
         bindTaFormatter(taNumberInput);
         bindTaFormatter(updateTaInput);
         const recordCache = new Map();
+        const pageSize = 30;
+        let viewOffset = 0;
+        let viewRows = [];
+        let viewHasMore = true;
         let deleteRecordData = null;
         let updateRecordData = null;
         let toastTimer = null;
@@ -671,6 +679,12 @@
             updateRecordData = null;
         });
 
+        if (viewMoreBtn) {
+            viewMoreBtn.addEventListener("click", () => {
+                loadTravelAuthorities(false);
+            });
+        }
+
         closeViewBtn.addEventListener("click", () => {
             viewModal.classList.remove("show");
         });
@@ -718,7 +732,7 @@
                 deleteRecordData = null;
                 
                 // Reload the table
-                await loadTravelAuthorities();
+                await loadTravelAuthorities(true);
             } catch (error) {
                 console.error("Delete error:", error);
                 viewStatus.textContent = `Delete failed: ${error.message || "Unknown error"}`;
@@ -851,7 +865,7 @@
                 updateRecordData = null;
                 viewStatus.textContent = "Record updated successfully.";
                 showToast("Update saved.");
-                await loadTravelAuthorities();
+                await loadTravelAuthorities(true);
             } catch (error) {
                 console.error("Update error:", error);
                 const message = error && error.message ? error.message : "Please try again.";
