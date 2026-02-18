@@ -52,27 +52,11 @@
     </main>
 
     <script type="module">
-        // Import Firebase Auth and Firestore functions
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8NjORbh1QxLOYgpup4MD0IVSyA8bTDq8",
-            authDomain: "travel-6a21c.firebaseapp.com",
-            projectId: "travel-6a21c",
-            databaseURL: "https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app",
-            storageBucket: "travel-6a21c.firebasestorage.app",
-            messagingSenderId: "898455368190",
-            appId: "1:898455368190:web:b4bcba337c028fe4d590af",
-            measurementId: "G-3P3FFYD1PW"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        const supabaseUrl = "https://gptfbpktebajhvwvlfkd.supabase.co";
+        const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
+        const supabase = createClient(supabaseUrl, supabaseKey);
 
         const loginStatus = document.getElementById("login-status");
         const emailInput = document.getElementById("email");
@@ -81,13 +65,18 @@
 
         const getRedirectPage = async (userId) => {
             try {
-                const userDoc = await getDoc(doc(db, "users", userId));
-                if (userDoc.exists()) {
-                    const role = userDoc.data().role;
-                    return role === "admin" ? "admin.html" : "dashboard.html";
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", userId)
+                    .maybeSingle();
+
+                if (error) {
+                    throw error;
                 }
-                // Default to dashboard if user role doesn't exist
-                return "dashboard.html";
+
+                const role = data?.role || "user";
+                return role === "admin" ? "admin.html" : "dashboard.html";
             } catch (error) {
                 console.error("Error fetching user role:", error);
                 return "dashboard.html";
@@ -110,26 +99,30 @@
             loginStatus.classList.remove("status--success");
 
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                const user = data?.user;
+                if (!user) {
+                    throw new Error("Unable to load user session.");
+                }
+
                 loginStatus.textContent = "Signed in. Redirecting...";
                 loginStatus.classList.add("status--success");
-                
-                const redirectPage = await getRedirectPage(user.uid);
+
+                const redirectPage = await getRedirectPage(user.id);
                 setTimeout(() => {
                     window.location.href = redirectPage;
                 }, 1000);
             } catch (error) {
-                let errorMessage = "Invalid email or password";
-                if (error.code === "auth/user-not-found") {
-                    errorMessage = "User not found. Please register first.";
-                } else if (error.code === "auth/wrong-password") {
-                    errorMessage = "Incorrect password.";
-                } else if (error.code === "auth/invalid-email") {
-                    errorMessage = "Invalid email format.";
-                }
-                
+                const errorMessage = error?.message || "Invalid email or password";
+
                 loginStatus.textContent = errorMessage;
                 loginStatus.classList.remove("status--success");
                 loginStatus.classList.add("status--error");
@@ -137,6 +130,15 @@
                 void loginStatus.offsetWidth;
                 loginStatus.classList.add("status--shake");
             }
+        };
+
+        const redirectIfLoggedIn = async () => {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const user = sessionData?.session?.user;
+            if (!user) return;
+
+            const redirectPage = await getRedirectPage(user.id);
+            window.location.href = redirectPage;
         };
 
         loginBtn.addEventListener("click", handleLogin);
@@ -153,6 +155,8 @@
                 handleLogin();
             }
         });
+
+        redirectIfLoggedIn();
     </script>
 
 </body>

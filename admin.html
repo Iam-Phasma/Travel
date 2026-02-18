@@ -90,63 +90,50 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script type="module">
-        // Import Firebase Auth and Supabase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        // Import Supabase
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyB8NjORbh1QxLOYgpup4MD0IVSyA8bTDq8",
-            authDomain: "travel-6a21c.firebaseapp.com",
-            projectId: "travel-6a21c",
-            databaseURL: "https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app",
-            //storageBucket: "travel-6a21c.firebasestorage.app",
-            storageBucket: "travel-6a21c.appspot.com",
-            //https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app/
-            messagingSenderId: "898455368190",
-            appId: "1:898455368190:web:b4bcba337c028fe4d590af",
-            measurementId: "G-3P3FFYD1PW"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
 
         // Initialize Supabase
         const supabaseUrl = "https://gptfbpktebajhvwvlfkd.supabase.co";
         const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Authenticate Supabase with Firebase token
-        const authenticateSupabase = async (user) => {
+        const getUserRole = async (userId) => {
             try {
-                if (user) {
-                    const idToken = await user.getIdToken();
-                    const { data, error } = await supabase.auth.signInWithIdToken({
-                        provider: 'firebase',
-                        token: idToken,
-                    });
-                    if (error) {
-                        console.warn("Supabase auth warning:", error);
-                    } else {
-                        console.log("Supabase authenticated successfully");
-                    }
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", userId)
+                    .maybeSingle();
+
+                if (error) {
+                    throw error;
                 }
+
+                return data?.role || "user";
             } catch (error) {
-                console.warn("Supabase authentication error:", error);
+                console.error("Role lookup error:", error);
+                return "user";
             }
         };
 
-        // Check if user is already logged in and authenticate with Supabase
-        onAuthStateChanged(auth, (user) => {
-            authenticateSupabase(user);
-        });
+        const requireAdmin = async () => {
+            const { data: sessionData, error } = await supabase.auth.getSession();
+            if (error || !sessionData?.session) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            const role = await getUserRole(sessionData.session.user.id);
+            if (role !== "admin") {
+                window.location.href = "dashboard.html";
+            }
+        };
 
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {
-                await signOut(auth);
+                await supabase.auth.signOut();
                 window.location.href = "index.html";
             } catch (error) {
                 console.error("Logout error:", error);
@@ -398,6 +385,8 @@
                 deleteRecordData = null;
             }
         });
+
+        requireAdmin();
     </script>
 </body>
 </html>
