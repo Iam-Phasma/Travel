@@ -344,6 +344,20 @@ button:hover {
     background: rgba(207, 228, 255, 0.35);
 }
 
+.data-table th:last-child,
+.data-table td:last-child {
+    white-space: nowrap;
+    width: 1%;
+}
+
+.truncate {
+    display: block;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .flatpickr-calendar {
     font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
     border: 1px solid rgba(15, 26, 31, 0.12);
@@ -382,6 +396,7 @@ button:hover {
     font-weight: 700;
     text-decoration: none;
     transition: background 200ms ease;
+    white-space: nowrap;
 }
 
 .link-btn:hover {
@@ -446,11 +461,27 @@ button:hover {
     fill: currentColor;
 }
 
-.update-btn {
-    padding: 6px 12px;
+.view-btn {
+    padding: 6px 10px;
     border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: var(--sea);
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+}
+
+.view-btn:hover {
+    background: rgba(47, 111, 179, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
+.update-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(216, 180, 0, 0.25);
+    color: #ba8926;
     font-weight: 700;
     font-size: 0.85rem;
     border: none;
@@ -460,7 +491,7 @@ button:hover {
 }
 
 .update-btn:hover {
-    background: rgba(47, 111, 179, 0.25);
+    background: rgba(255, 213, 0, 0.583);
     transform: none;
     box-shadow: none;
 }
@@ -513,6 +544,29 @@ button:hover {
     width: 90%;
     box-shadow: 0 20px 60px rgba(12, 21, 24, 0.3);
     animation: fadeUp 300ms ease-out both;
+}
+
+.detail-list {
+    display: grid;
+    gap: 12px;
+    margin: 18px 0 24px;
+}
+
+.detail-row {
+    display: grid;
+    gap: 6px;
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    color: rgba(15, 26, 31, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: var(--ink);
 }
 
 .modal-content.modal-form {
