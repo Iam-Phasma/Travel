@@ -16,7 +16,7 @@
         <h2>Travel Authority Upload</h2>
         <div class="fields">
             <div>
-                <label for="ta-number">Req. TA Number</label>
+                <label for="ta-number">TA Number</label>
                 <div class="input-wrap">
                     <span class="icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -27,7 +27,7 @@
                 </div>
             </div>
             <div>
-                <label for="travel-date">Req. Travel Date</label>
+                <label for="travel-date">Travel Date</label>
                 <div class="input-wrap">
                     <span class="icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -38,7 +38,7 @@
                 </div>
             </div>
             <div>
-                <label for="scan-file">Req. Scanned</label>
+                <label for="scan-file">Upload Scanned</label>
                 <input id="scan-file" type="file" required>
             </div>
         </div>
@@ -48,12 +48,12 @@
         </div>
     </section>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script type="module">
         // Import Firebase Auth and Supabase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/esm/index.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -94,7 +94,7 @@
         const travelDateInput = document.getElementById("travel-date");
         const scanFileInput = document.getElementById("scan-file");
 
-        flatpickr(travelDateInput, {
+        window.flatpickr(travelDateInput, {
             dateFormat: "Y-m-d",
             allowInput: true
         });
