@@ -88,13 +88,6 @@
         const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Monitor auth state changes - auto-logout when session is invalidated
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT' && !session) {
-                window.location.href = 'index.html';
-            }
-        });
-
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {

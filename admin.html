@@ -253,12 +253,32 @@
         const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Monitor auth state changes - auto-logout when session is invalidated
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT' && !session) {
+        // Single-session enforcement for admin users
+        const checkAdminSession = async () => {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const user = sessionData?.session?.user;
+            if (!user) return;
+
+            const localToken = localStorage.getItem('admin_session_token');
+            if (!localToken) return;
+
+            const { data, error } = await supabase
+                .from("profiles")
+                .select("session_token")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (!error && data && data.session_token !== localToken) {
+                // Session token mismatch - another device logged in
+                await supabase.auth.signOut();
+                localStorage.removeItem('admin_session_token');
                 window.location.href = 'index.html';
             }
-        });
+        };
+
+        // Check session every 5 seconds
+        setInterval(checkAdminSession, 5000);
+        checkAdminSession();
 
         const getUserRole = async (userId) => {
             try {
@@ -294,10 +314,13 @@
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {
+                // Clear admin session token
+                localStorage.removeItem('admin_session_token');
                 await supabase.auth.signOut();
                 window.location.href = "index.html";
             } catch (error) {
                 console.error("Logout error:", error);
+                localStorage.removeItem('admin_session_token');
                 window.location.href = "index.html";
             }
         });

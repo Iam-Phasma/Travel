@@ -78,11 +78,11 @@
                 // Role-based redirect is for UX only. 
                 // Real access control is enforced by Supabase RLS policies.
                 const role = data?.role || "user";
-                return role === "admin" ? "admin.html" : "dashboard.html";
+                return { role, page: role === "admin" ? "admin.html" : "dashboard.html" };
             } catch (error) {
                 console.error("Error fetching user role:", error);
                 // Default to dashboard if role lookup fails
-                return "dashboard.html";
+                return { role: "user", page: "dashboard.html" };
             }
         };
 
@@ -113,21 +113,30 @@
                     throw error;
                 }
 
-                // Invalidate all other sessions for this account
-                await supabase.auth.signOut({ scope: 'others' });
-
                 const user = data?.user;
                 if (!user) {
                     throw new Error("Unable to load user session.");
+                }
+
+                const { role, page } = await getRedirectPage(user.id);
+                
+                // For admin users, generate and store a session token to enforce single-session
+                if (role === "admin") {
+                    const sessionToken = crypto.randomUUID();
+                    localStorage.setItem('admin_session_token', sessionToken);
+                    
+                    await supabase
+                        .from("profiles")
+                        .update({ session_token: sessionToken })
+                        .eq("id", user.id);
                 }
 
                 loginStatus.textContent = "Signed in. Redirecting...";
                 loginStatus.classList.remove("hidden");
                 loginStatus.classList.add("status--success");
 
-                const redirectPage = await getRedirectPage(user.id);
                 setTimeout(() => {
-                    window.location.href = redirectPage;
+                    window.location.href = page;
                 }, 1000);
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
@@ -146,8 +155,8 @@
             const user = sessionData?.session?.user;
             if (!user) return;
 
-            const redirectPage = await getRedirectPage(user.id);
-            window.location.href = redirectPage;
+            const { page } = await getRedirectPage(user.id);
+            window.location.href = page;
         };
 
         loginBtn.addEventListener("click", handleLogin);
