@@ -85,6 +85,12 @@
             <button id="upload-btn" type="button">Upload</button>
             <span class="status" id="upload-status">Complete the required fields.</span>
         </div>
+        <div class="auto-clear-container">
+            <label class="checkbox-label">
+                <input type="checkbox" id="auto-clear-checkbox">
+                <span>Auto clear fields</span>
+            </label>
+        </div>
     </section>
 
     <section class="panel wide-panel hidden" id="view-panel">
@@ -550,6 +556,18 @@
 
                 uploadStatus.textContent = "Upload complete.";
                 console.log("File URL:", fileUrl);
+                
+                // Clear fields if auto-clear is enabled
+                const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
+                if (autoClearCheckbox && autoClearCheckbox.checked) {
+                    taNumberInput.value = "";
+                    purposeInput.value = "";
+                    destinationInput.value = "";
+                    travelDateInput.value = "";
+                    travelUntilInput.value = "";
+                    scanFileInput.value = "";
+                    uploadStatus.textContent = "Upload complete. Fields cleared.";
+                }
             } catch (error) {
                 console.error("Upload error:", error);
                 const message = error && error.message ? error.message : "Please try again.";
@@ -1058,6 +1076,20 @@
             if (e.target === viewModal) {
                 viewModal.classList.remove("show");
             }
+        });
+
+        // Auto-clear checkbox state management
+        const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
+        
+        // Load saved state from localStorage
+        const savedAutoClearState = localStorage.getItem("autoClearFields");
+        if (savedAutoClearState === "true") {
+            autoClearCheckbox.checked = true;
+        }
+        
+        // Save state when checkbox changes
+        autoClearCheckbox.addEventListener("change", () => {
+            localStorage.setItem("autoClearFields", autoClearCheckbox.checked.toString());
         });
 
         requireAdmin();
