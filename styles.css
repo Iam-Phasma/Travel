@@ -126,6 +126,7 @@ h1 {
 
 .panel h2 {
     font-size: 1.2rem;
+    margin-bottom: 20px;
 }
 
 .fields {
@@ -385,6 +386,17 @@ button:hover {
     color: rgba(15, 26, 31, 0.7);
 }
 
+.data-table th:nth-child(4),
+.data-table th:nth-child(5),
+.data-table th:nth-child(7) {
+    text-align: center;
+}
+
+.data-table td:nth-child(4),
+.data-table td:nth-child(5) {
+    text-align: center;
+}
+
 .data-table tbody tr:last-child td {
     border-bottom: none;
 }
@@ -439,7 +451,7 @@ button:hover {
     align-items: center;
     justify-content: center;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: var(--sea);
     font-weight: 700;
@@ -527,7 +539,7 @@ button:hover {
 }
 
 .update-btn {
-    padding: 6px 12px;
+    padding: 6px 10px;
     border-radius: 8px;
     background: rgba(216, 180, 0, 0.25);
     color: #c88e19;
@@ -667,7 +679,57 @@ button:hover {
 }
 
 @media (max-width: 720px) {
+    h1 {
+        font-size: 1.8rem;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .header h1 {
+        font-size: 1.5rem;
+        white-space: normal;
+    }
+
+    .tagline {
+        font-size: 1rem;
+    }
+
+    .logo-row img {
+        height: 55px;
+    }
+
     .panel {
         padding: 22px;
+    }
+
+    .field-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    .header h1 {
+        font-size: 1.2rem;
+    }
+
+    .tagline {
+        font-size: 0.95rem;
+    }
+
+    .logo-row img {
+        height: 45px;
+    }
+
+    .logo-row {
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .panel {
+        padding: 18px;
     }
 }
