@@ -174,12 +174,18 @@
             }
 
             try {
+                uploadStatus.textContent = "Uploading...";
+                uploadStatus.classList.remove("status--error");
+
+                // Verify user is authenticated
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError || !user) {
+                    throw new Error("Not authenticated");
+                }
+
                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                 const filePath = `travel-authorities/${safeTa}/${safeDate}/${file.name}`;
-
-                uploadStatus.textContent = "Uploading...";
-                uploadStatus.classList.remove("status--error");
 
                 const { error: uploadError } = await supabase
                     .storage
