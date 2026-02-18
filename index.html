@@ -113,6 +113,9 @@
                     throw error;
                 }
 
+                // Invalidate all other sessions for this account
+                await supabase.auth.signOut({ scope: 'others' });
+
                 const user = data?.user;
                 if (!user) {
                     throw new Error("Unable to load user session.");
