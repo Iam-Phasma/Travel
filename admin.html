@@ -27,7 +27,7 @@
                             <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
                         </svg>
                     </span>
-                    <input id="ta-number" type="text" placeholder="Enter TA Number" required>
+                    <input id="ta-number" type="text" placeholder="0000-00-0000" pattern="\d{4}-\d{2}-\d{4}" maxlength="12" inputmode="numeric" required>
                 </div>
             </div>
             <div>
@@ -129,7 +129,7 @@
                                 <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
                             </svg>
                         </span>
-                        <input id="update-ta-number" type="text" placeholder="Enter TA Number" required>
+                        <input id="update-ta-number" type="text" placeholder="0000-00-0000" pattern="\d{4}-\d{2}-\d{4}" maxlength="12" inputmode="numeric" required>
                     </div>
                 </div>
                 <div>
@@ -250,6 +250,26 @@
             allowInput: true
         });
 
+        const isValidTaNumber = (value) => /^\d{4}-\d{2}-\d{4}$/.test(value);
+        const formatTaNumber = (value) => {
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            const part1 = digits.slice(0, 4);
+            const part2 = digits.slice(4, 6);
+            const part3 = digits.slice(6, 10);
+            if (digits.length <= 4) return part1;
+            if (digits.length <= 6) return `${part1}-${part2}`;
+            return `${part1}-${part2}-${part3}`;
+        };
+
+        const bindTaFormatter = (input) => {
+            input.addEventListener("input", () => {
+                input.value = formatTaNumber(input.value);
+            });
+        };
+
+        bindTaFormatter(taNumberInput);
+        bindTaFormatter(updateTaInput);
+
         scanFileInput.addEventListener("change", () => {
             if (scanFileInput.files.length > 0) {
                 uploadStatus.textContent = `Selected: ${scanFileInput.files[0].name}`;
@@ -268,6 +288,15 @@
 
             if (!taNumber || !purpose || !travelDate || !file) {
                 uploadStatus.textContent = "Please fill in all required fields.";
+                uploadStatus.classList.add("status--error");
+                uploadStatus.classList.remove("status--shake");
+                void uploadStatus.offsetWidth;
+                uploadStatus.classList.add("status--shake");
+                return;
+            }
+
+            if (!isValidTaNumber(taNumber)) {
+                uploadStatus.textContent = "TA Number must be in the format 0000-00-0000.";
                 uploadStatus.classList.add("status--error");
                 uploadStatus.classList.remove("status--shake");
                 void uploadStatus.offsetWidth;
@@ -621,6 +650,15 @@
 
             if (!taNumber || !purpose || !travelDate) {
                 updateStatus.textContent = "Please fill in all required fields.";
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
+            if (!isValidTaNumber(taNumber)) {
+                updateStatus.textContent = "TA Number must be in the format 0000-00-0000.";
                 updateStatus.classList.add("status--error");
                 updateStatus.classList.remove("status--shake");
                 void updateStatus.offsetWidth;
