@@ -118,6 +118,31 @@
         const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // Authenticate Supabase with Firebase token
+        const authenticateSupabase = async () => {
+            try {
+                if (auth.currentUser) {
+                    const idToken = await auth.currentUser.getIdToken();
+                    const { data, error } = await supabase.auth.signInWithIdToken({
+                        provider: 'google',
+                        token: idToken,
+                    });
+                    if (error) {
+                        console.warn("Supabase auth warning:", error);
+                    } else {
+                        console.log("Supabase authenticated successfully");
+                    }
+                }
+            } catch (error) {
+                console.warn("Supabase authentication error:", error);
+            }
+        };
+
+        // Check if user is already logged in and authenticate with Supabase
+        if (auth.currentUser) {
+            authenticateSupabase();
+        }
+
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {
