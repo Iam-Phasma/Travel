@@ -173,6 +173,10 @@ input[type="file"] {
     padding-left: 40px;
 }
 
+.input-wrap .flatpickr-input {
+    padding-left: 40px;
+}
+
 input:focus {
     border-color: rgba(95, 183, 177, 0.8);
     box-shadow: 0 0 0 3px rgba(95, 183, 177, 0.18);
@@ -313,6 +317,33 @@ button:hover {
 
 .data-table tbody tr:hover {
     background: rgba(207, 228, 255, 0.35);
+}
+
+.flatpickr-calendar {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-weekdays {
+    background: rgba(207, 228, 255, 0.35);
+}
+
+.flatpickr-day {
+    border-radius: 10px;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: var(--sea);
+    border-color: var(--sea);
+}
+
+.flatpickr-day.today {
+    border-color: var(--clay);
 }
 
 .link-btn {

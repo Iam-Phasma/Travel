@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,7 +29,12 @@
             <div>
                 <label for="travel-date">Req. Travel Date</label>
                 <div class="input-wrap">
-                    <input id="travel-date" type="date" required>
+                    <span class="icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm12 8H5v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8Zm-2-4H7v1a1 1 0 1 1-2 0V6H5a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1h-1v1a1 1 0 1 1-2 0V6Z" />
+                        </svg>
+                    </span>
+                    <input id="travel-date" type="text" placeholder="Select travel date" required>
                 </div>
             </div>
             <div>
@@ -47,6 +53,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+        import flatpickr from "https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/esm/index.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -86,6 +93,11 @@
         const taNumberInput = document.getElementById("ta-number");
         const travelDateInput = document.getElementById("travel-date");
         const scanFileInput = document.getElementById("scan-file");
+
+        flatpickr(travelDateInput, {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
 
         scanFileInput.addEventListener("change", () => {
             if (scanFileInput.files.length > 0) {
