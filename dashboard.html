@@ -68,10 +68,10 @@
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {
                 await signOut(auth);
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             } catch (error) {
                 console.error("Logout error:", error);
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             }
         });
 
