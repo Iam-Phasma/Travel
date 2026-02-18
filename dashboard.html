@@ -25,6 +25,7 @@
                             <th scope="col">View</th>
                             <th scope="col">TA Number</th>
                             <th scope="col">Purpose</th>
+                            <th scope="col">Destination</th>
                             <th scope="col">Travel Date</th>
                             <th scope="col">Travel Until</th>
                             <th scope="col">File</th>
@@ -32,7 +33,7 @@
                     </thead>
                     <tbody id="ta-body">
                         <tr>
-                            <td colspan="6">Loading records...</td>
+                            <td colspan="7">Loading records...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -55,6 +56,10 @@
                 <div class="detail-row">
                     <span class="detail-label">Purpose</span>
                     <span class="detail-value" id="view-purpose">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Destination</span>
+                    <span class="detail-value" id="view-destination">-</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Travel Date</span>
@@ -144,13 +149,14 @@
         const closeViewBtn = document.getElementById("close-view");
         const viewTaNumber = document.getElementById("view-ta-number");
         const viewPurpose = document.getElementById("view-purpose");
+        const viewDestination = document.getElementById("view-destination");
         const viewTravelDate = document.getElementById("view-travel-date");
         const viewTravelUntil = document.getElementById("view-travel-until");
         const viewFileLink = document.getElementById("view-file-link");
 
         const renderRows = (rows) => {
             if (!rows.length) {
-                taBody.innerHTML = "<tr><td colspan=\"6\">No records yet.</td></tr>";
+                taBody.innerHTML = "<tr><td colspan=\"7\">No records yet.</td></tr>";
                 return;
             }
 
@@ -172,6 +178,7 @@
                         </td>
                         <td>${row.ta_number || "-"}</td>
                         <td><span class="truncate">${row.purpose || "-"}</span></td>
+                        <td><span class="truncate">${row.destination || "-"}</span></td>
                         <td>${dateText}</td>
                         <td>${untilText}</td>
                         <td>
@@ -189,6 +196,7 @@
 
                     viewTaNumber.textContent = record.ta_number || "-";
                     viewPurpose.textContent = record.purpose || "-";
+                    viewDestination.textContent = record.destination || "-";
                     viewTravelDate.textContent = record.travel_date
                         ? new Date(record.travel_date).toLocaleDateString()
                         : "-";
@@ -228,7 +236,7 @@
                 taOffset = 0;
                 taRows = [];
                 taHasMore = true;
-                taBody.innerHTML = "<tr><td colspan=\"6\">Loading records...</td></tr>";
+                taBody.innerHTML = "<tr><td colspan=\"7\">Loading records...</td></tr>";
             }
 
             if (!taHasMore) {
@@ -242,7 +250,7 @@
                 const to = taOffset + pageSize - 1;
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("ta_number, purpose, travel_date, travel_until, file_name, file_url, created_at")
+                    .select("ta_number, purpose, destination, travel_date, travel_until, file_name, file_url, created_at")
                     .order("created_at", { ascending: false })
                     .range(from, to);
 
@@ -259,7 +267,7 @@
                 updateTaFooter();
             } catch (error) {
                 console.error("Dashboard load error:", error);
-                taBody.innerHTML = "<tr><td colspan=\"6\">Unable to load records.</td></tr>";
+                taBody.innerHTML = "<tr><td colspan=\"7\">Unable to load records.</td></tr>";
                 taStatus.textContent = "Failed to load travel authorities.";
             }
         };

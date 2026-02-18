@@ -248,6 +248,11 @@ button:hover {
     color: rgba(15, 26, 31, 0.75);
 }
 
+#update-status {
+    display: block;
+    margin-bottom: 15px;
+}
+
 .status--neutral {
     color: rgba(15, 26, 31, 0.75);
 }
@@ -354,15 +359,15 @@ button:hover {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
 .data-table th,
 .data-table td {
-    padding: 14px 16px;
+    padding: 12px 10px;
     text-align: left;
     border-bottom: 1px solid rgba(15, 26, 31, 0.1);
-    white-space: nowrap;
+    vertical-align: middle;
 }
 
 .data-table thead th {
@@ -385,20 +390,74 @@ button:hover {
 }
 
 .data-table th {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: rgba(15, 26, 31, 0.7);
+    white-space: nowrap;
 }
 
-.data-table th:nth-child(4),
-.data-table th:nth-child(5),
-.data-table th:nth-child(7) {
+/* View column - narrow */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+    width: 60px;
     text-align: center;
 }
 
-.data-table td:nth-child(4),
+/* TA Number - fixed width */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+    width: 130px;
+    white-space: nowrap;
+}
+
+/* Purpose - allow wrapping */
+.data-table td:nth-child(3) {
+    max-width: 200px;
+}
+
+/* Destination - allow wrapping */
+.data-table td:nth-child(4) {
+    max-width: 150px;
+}
+
+/* Travel Date - fixed width */
+.data-table th:nth-child(5),
 .data-table td:nth-child(5) {
+    width: 110px;
+    white-space: nowrap;
+}
+
+/* Travel Until - fixed width */
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+    width: 110px;
+    white-space: nowrap;
+}
+
+/* File - fixed width */
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+    width: 120px;
+    white-space: nowrap;
+}
+
+/* Actions - narrow */
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
+    width: 140px;
+    white-space: nowrap;
+}
+
+/* Center alignment */
+.data-table th:nth-child(2),
+.data-table th:nth-child(7),
+.data-table th:nth-child(8) {
+    text-align: center;
+}
+
+.data-table td:nth-child(5),
+.data-table td:nth-child(6) {
     text-align: center;
 }
 
@@ -410,18 +469,18 @@ button:hover {
     background: rgba(207, 228, 255, 0.35);
 }
 
-.data-table th:last-child,
-.data-table td:last-child {
-    white-space: nowrap;
-    width: 1%;
-}
-
 .truncate {
     display: block;
-    max-width: 260px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Dashboard table adjustments (7 columns, no Actions) */
+#ta-panel .data-table th:nth-child(7),
+#ta-panel .data-table td:nth-child(7) {
+    text-align: center;
 }
 
 .flatpickr-calendar {
