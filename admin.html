@@ -475,13 +475,13 @@
 
         // Table view functionality
         const viewBody = document.getElementById("view-body");
-        const viewStatus = document.getElementById("view-status");
-          const viewMoreBtn = document.getElementById("view-more");
+                const viewStatus = document.getElementById("view-status");
+                const viewMoreBtn = document.getElementById("view-more");
         const deleteModal = document.getElementById("delete-modal");
         const viewModal = document.getElementById("view-modal");
         const updateModal = document.getElementById("update-modal");
-        const cancelDeleteBtn = document.getElementById("cancel-delete");
-          const closeViewBtn = document.getElementById("close-view");
+                const cancelDeleteBtn = document.getElementById("cancel-delete");
+                const closeViewBtn = document.getElementById("close-view");
         const confirmDeleteBtn = document.getElementById("confirm-delete");
         const cancelUpdateBtn = document.getElementById("cancel-update");
         const confirmUpdateBtn = document.getElementById("confirm-update");
@@ -500,7 +500,7 @@
         bindTaFormatter(taNumberInput);
         bindTaFormatter(updateTaInput);
         const recordCache = new Map();
-        const pageSize = 30;
+        const pageSize = 20;
         let viewOffset = 0;
         let viewRows = [];
         let viewHasMore = true;
@@ -647,20 +647,54 @@
             });
         };
 
-        const loadTravelAuthorities = async () => {
+        const updateViewFooter = () => {
+            if (!viewRows.length) {
+                viewStatus.textContent = "No records yet.";
+            } else if (!viewHasMore) {
+                viewStatus.textContent = "End of records.";
+            } else {
+                viewStatus.textContent = `Loaded ${viewRows.length} record${viewRows.length === 1 ? "" : "s"}.`;
+            }
+
+            if (viewMoreBtn) {
+                viewMoreBtn.hidden = !viewHasMore;
+            }
+        };
+
+        const loadTravelAuthorities = async (reset = false) => {
+            if (reset) {
+                viewOffset = 0;
+                viewRows = [];
+                viewHasMore = true;
+                viewBody.innerHTML = "<tr><td colspan=\"7\">Loading records...</td></tr>";
+            }
+
+            if (!viewHasMore) {
+                updateViewFooter();
+                return;
+            }
+
             viewStatus.textContent = "Fetching travel authorities.";
             try {
+                const from = viewOffset;
+                const to = viewOffset + pageSize - 1;
                 const { data, error } = await supabase
                     .from("travel_authorities")
                     .select("id, ta_number, purpose, travel_date, travel_until, file_name, file_url, created_at")
-                    .order("created_at", { ascending: false });
+                    .order("created_at", { ascending: false })
+                    .range(from, to);
 
                 if (error) {
                     throw error;
                 }
 
-                renderViewRows(data || []);
-                viewStatus.textContent = `Loaded ${data.length} record${data.length === 1 ? "" : "s"}.`;
+                const nextRows = data || [];
+                viewRows = viewRows.concat(nextRows);
+                viewOffset += nextRows.length;
+                viewHasMore = nextRows.length === pageSize;
+
+                renderViewRows(viewRows);
+                updateViewFooter();
             } catch (error) {
                 console.error("View load error:", error);
                 viewBody.innerHTML = "<tr><td colspan=\"7\">Unable to load records.</td></tr>";
