@@ -125,10 +125,14 @@
                     const sessionToken = crypto.randomUUID();
                     localStorage.setItem('admin_session_token', sessionToken);
                     
-                    await supabase
+                    const { error: updateError } = await supabase
                         .from("profiles")
                         .update({ session_token: sessionToken })
                         .eq("id", user.id);
+                    
+                    if (updateError) {
+                        console.error("Failed to update session token:", updateError);
+                    }
                 }
 
                 loginStatus.textContent = "Signed in. Redirecting...";

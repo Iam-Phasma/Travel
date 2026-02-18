@@ -268,17 +268,26 @@
                 .eq("id", user.id)
                 .maybeSingle();
 
-            if (!error && data && data.session_token !== localToken) {
-                // Session token mismatch - another device logged in
-                await supabase.auth.signOut();
-                localStorage.removeItem('admin_session_token');
-                window.location.href = 'index.html';
+            if (!error && data) {
+                // Only logout if database token exists AND doesn't match
+                // If database token is null, update it (in case initial update failed)
+                if (data.session_token === null) {
+                    await supabase
+                        .from("profiles")
+                        .update({ session_token: localToken })
+                        .eq("id", user.id);
+                } else if (data.session_token !== localToken) {
+                    // Session token mismatch - another device logged in
+                    await supabase.auth.signOut();
+                    localStorage.removeItem('admin_session_token');
+                    window.location.href = 'index.html';
+                }
             }
         };
 
-        // Check session every 5 seconds
+        // Check session every 5 seconds, start after initial delay
         setInterval(checkAdminSession, 5000);
-        checkAdminSession();
+        setTimeout(checkAdminSession, 2000); // First check after 2 seconds
 
         const getUserRole = async (userId) => {
             try {
