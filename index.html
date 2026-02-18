@@ -63,6 +63,115 @@
         const passwordInput = document.getElementById("password");
         const loginBtn = document.getElementById("login-btn");
 
+        // Anti-spam login configuration
+        const MAX_FAILED_ATTEMPTS = 10;
+        const LOCKOUT_DURATION = 60000; // 1 minute in milliseconds
+        let countdownInterval = null;
+
+        const stopCountdown = () => {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+        };
+
+        const startCountdown = (email) => {
+            stopCountdown(); // Clear any existing countdown
+
+            const updateCountdown = () => {
+                const lockoutStatus = isLockedOut(email);
+                if (!lockoutStatus.locked) {
+                    stopCountdown();
+                    localStorage.removeItem('last_locked_email');
+                    loginStatus.textContent = "You can now try logging in again.";
+                    loginStatus.classList.remove("status--error", "hidden");
+                    loginStatus.classList.add("status--success");
+                    setTimeout(() => {
+                        loginStatus.classList.add("hidden");
+                    }, 3000);
+                    return;
+                }
+
+                loginStatus.textContent = `Too many failed attempts. Please try again in ${lockoutStatus.remainingSeconds} second${lockoutStatus.remainingSeconds !== 1 ? 's' : ''}.`;
+                loginStatus.classList.remove("status--success", "hidden");
+                loginStatus.classList.add("status--error");
+            };
+
+            updateCountdown(); // Initial update
+            countdownInterval = setInterval(updateCountdown, 1000); // Update every second
+        };
+
+        const checkLockoutOnLoad = () => {
+            const email = emailInput.value.trim();
+            if (!email) {
+                // Check if there's a last locked email in localStorage
+                const lastEmail = localStorage.getItem('last_locked_email');
+                if (lastEmail) {
+                    const lockoutStatus = isLockedOut(lastEmail);
+                    if (lockoutStatus.locked) {
+                        emailInput.value = lastEmail;
+                        startCountdown(lastEmail);
+                    } else {
+                        localStorage.removeItem('last_locked_email');
+                    }
+                }
+                return;
+            }
+
+            const lockoutStatus = isLockedOut(email);
+            if (lockoutStatus.locked) {
+                startCountdown(email);
+            }
+        };
+
+        const getFailedAttempts = (email) => {
+            const key = `login_attempts_${email}`;
+            const data = localStorage.getItem(key);
+            if (!data) return { count: 0, lockoutUntil: null };
+            return JSON.parse(data);
+        };
+
+        const setFailedAttempts = (email, count, lockoutUntil = null) => {
+            const key = `login_attempts_${email}`;
+            localStorage.setItem(key, JSON.stringify({ count, lockoutUntil }));
+        };
+
+        const clearFailedAttempts = (email) => {
+            const key = `login_attempts_${email}`;
+            localStorage.removeItem(key);
+            localStorage.removeItem('last_locked_email');
+        };
+
+        const isLockedOut = (email) => {
+            const { count, lockoutUntil } = getFailedAttempts(email);
+            if (!lockoutUntil) return { locked: false };
+
+            const now = Date.now();
+            if (now < lockoutUntil) {
+                const remainingSeconds = Math.ceil((lockoutUntil - now) / 1000);
+                return { locked: true, remainingSeconds };
+            }
+
+            // Lockout expired, clear attempts
+            clearFailedAttempts(email);
+            return { locked: false };
+        };
+
+        const incrementFailedAttempts = (email) => {
+            const { count } = getFailedAttempts(email);
+            const newCount = count + 1;
+
+            if (newCount >= MAX_FAILED_ATTEMPTS) {
+                const lockoutUntil = Date.now() + LOCKOUT_DURATION;
+                setFailedAttempts(email, newCount, lockoutUntil);
+                localStorage.setItem('last_locked_email', email);
+                return { locked: true, remainingSeconds: LOCKOUT_DURATION / 1000 };
+            } else {
+                setFailedAttempts(email, newCount);
+                return { locked: false, attemptsRemaining: MAX_FAILED_ATTEMPTS - newCount };
+            }
+        };
+
         const getRedirectPage = async (userId) => {
             try {
                 const { data, error } = await supabase
@@ -100,6 +209,13 @@
                 return;
             }
 
+            // Check if account is locked out
+            const lockoutStatus = isLockedOut(email);
+            if (lockoutStatus.locked) {
+                startCountdown(email);
+                return;
+            }
+
             loginStatus.textContent = "Signing in...";
             loginStatus.classList.remove("status--error", "status--success", "hidden");
 
@@ -117,6 +233,10 @@
                 if (!user) {
                     throw new Error("Unable to load user session.");
                 }
+
+                // Clear failed attempts on successful login
+                stopCountdown();
+                clearFailedAttempts(email);
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -153,12 +273,25 @@
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
 
-                loginStatus.textContent = errorMessage;
-                loginStatus.classList.remove("status--success", "hidden");
-                loginStatus.classList.add("status--error");
-                loginStatus.classList.remove("status--shake");
-                void loginStatus.offsetWidth;
-                loginStatus.classList.add("status--shake");
+                // Increment failed attempts
+                const attemptResult = incrementFailedAttempts(email);
+
+                if (attemptResult.locked) {
+                    startCountdown(email);
+                } else {
+                    const attemptsRemaining = attemptResult.attemptsRemaining;
+                    // Only show attempts remaining when 5 or fewer attempts left
+                    if (attemptsRemaining <= 5) {
+                        loginStatus.textContent = `${errorMessage}. ${attemptsRemaining} attempt${attemptsRemaining !== 1 ? 's' : ''} remaining.`;
+                    } else {
+                        loginStatus.textContent = errorMessage;
+                    }
+                    loginStatus.classList.remove("status--success", "hidden");
+                    loginStatus.classList.add("status--error");
+                    loginStatus.classList.remove("status--shake");
+                    void loginStatus.offsetWidth;
+                    loginStatus.classList.add("status--shake");
+                }
             }
         };
 
@@ -185,6 +318,21 @@
                 handleLogin();
             }
         });
+
+        // Check lockout status when email changes
+        emailInput.addEventListener("input", () => {
+            stopCountdown();
+            checkLockoutOnLoad();
+        });
+
+        // Check lockout status on page load
+        emailInput.addEventListener("blur", checkLockoutOnLoad);
+
+        // Clean up countdown on page unload
+        window.addEventListener("beforeunload", stopCountdown);
+
+        // Check for existing lockout on page load
+        checkLockoutOnLoad();
 
         redirectIfLoggedIn();
     </script>
