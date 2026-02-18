@@ -363,6 +363,123 @@ button:hover {
     background: rgba(47, 111, 179, 0.25);
 }
 
+.panel-switcher {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.switch-btn {
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 2px solid var(--sea);
+    background: transparent;
+    color: var(--sea);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+
+.switch-btn:hover {
+    background: rgba(47, 111, 179, 0.1);
+}
+
+.switch-btn.active {
+    background: var(--sea);
+    color: white;
+}
+
+.delete-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(161, 37, 27, 0.15);
+    color: #a1251b;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+}
+
+.delete-btn:hover {
+    background: rgba(161, 37, 27, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 28, 59, 0.6);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(12, 21, 24, 0.3);
+    animation: fadeUp 300ms ease-out both;
+}
+
+.modal-content h3 {
+    margin-bottom: 12px;
+    font-size: 1.4rem;
+}
+
+.modal-content p {
+    margin-bottom: 24px;
+    color: rgba(15, 26, 31, 0.75);
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 150ms ease;
+}
+
+.modal-btn.cancel {
+    background: rgba(15, 26, 31, 0.1);
+    color: var(--ink);
+}
+
+.modal-btn.cancel:hover {
+    background: rgba(15, 26, 31, 0.2);
+}
+
+.modal-btn.confirm {
+    background: #a1251b;
+    color: white;
+}
+
+.modal-btn.confirm:hover {
+    background: #8a1f17;
+}
+
 @media (max-width: 720px) {
     .panel {
         padding: 22px;
