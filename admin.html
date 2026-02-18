@@ -92,7 +92,7 @@
     <script type="module">
         // Import Firebase Auth and Supabase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
         // Firebase configuration
@@ -119,12 +119,12 @@
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Authenticate Supabase with Firebase token
-        const authenticateSupabase = async () => {
+        const authenticateSupabase = async (user) => {
             try {
-                if (auth.currentUser) {
-                    const idToken = await auth.currentUser.getIdToken();
+                if (user) {
+                    const idToken = await user.getIdToken();
                     const { data, error } = await supabase.auth.signInWithIdToken({
-                        provider: 'google',
+                        provider: 'firebase',
                         token: idToken,
                     });
                     if (error) {
@@ -139,9 +139,9 @@
         };
 
         // Check if user is already logged in and authenticate with Supabase
-        if (auth.currentUser) {
-            authenticateSupabase();
-        }
+        onAuthStateChanged(auth, (user) => {
+            authenticateSupabase(user);
+        });
 
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -284,7 +284,7 @@
                 const safeName = row.file_name || "Download";
 
                 return `
-                    <tr data-id="${row.id}" data-record='${JSON.stringify(row).replace(/'/g, "&apos;")}'>
+                    <tr data-id="${row.id}" data-file-url="${fileUrl}">
                         <td>${row.ta_number || "-"}</td>
                         <td>${dateText}</td>
                         <td>
@@ -301,7 +301,12 @@
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     const row = e.target.closest("tr");
-                    deleteRecordData = JSON.parse(row.getAttribute("data-record").replace(/&apos;/g, "'"));
+                    const recordId = row?.getAttribute("data-id");
+                    const recordFileUrl = row?.getAttribute("data-file-url") || "";
+                    deleteRecordData = {
+                        id: recordId ? Number(recordId) : null,
+                        file_url: recordFileUrl
+                    };
                     deleteModal.classList.add("show");
                 });
             });
@@ -344,7 +349,7 @@
                 const { error: deleteError } = await supabase
                     .from("travel_authorities")
                     .delete()
-                    .match({ id: deleteRecordData.id });
+                    .eq("id", deleteRecordData.id);
 
                 if (deleteError) {
                     throw deleteError;
@@ -356,7 +361,7 @@
                         const url = new URL(deleteRecordData.file_url);
                         const pathParts = url.pathname.split('/ta-files/');
                         if (pathParts.length > 1) {
-                            const filePath = pathParts[1];
+                            const filePath = decodeURIComponent(pathParts[1]);
                             
                             const { error: storageError } = await supabase
                                 .storage
