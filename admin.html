@@ -310,11 +310,21 @@
         });
 
         confirmDeleteBtn.addEventListener("click", async () => {
-            if (!deleteRecordData) return;
+            if (!deleteRecordData || !deleteRecordData.id) return;
 
             try {
                 viewStatus.textContent = "Deleting record...";
                 
+                // Delete database record first
+                const { error: deleteError } = await supabase
+                    .from("travel_authorities")
+                    .delete()
+                    .match({ id: deleteRecordData.id });
+
+                if (deleteError) {
+                    throw deleteError;
+                }
+
                 // Extract file path from URL and delete from storage
                 if (deleteRecordData.file_url) {
                     try {
@@ -337,16 +347,6 @@
                     }
                 }
 
-                // Delete database record
-                const { error } = await supabase
-                    .from("travel_authorities")
-                    .delete()
-                    .eq("id", deleteRecordData.id);
-
-                if (error) {
-                    throw error;
-                }
-
                 deleteModal.classList.remove("show");
                 viewStatus.textContent = "Record deleted successfully.";
                 deleteRecordData = null;
@@ -355,7 +355,7 @@
                 await loadTravelAuthorities();
             } catch (error) {
                 console.error("Delete error:", error);
-                viewStatus.textContent = `Delete failed: ${error.message}`;
+                viewStatus.textContent = `Delete failed: ${error.message || "Unknown error"}`;
                 deleteModal.classList.remove("show");
                 deleteRecordData = null;
             }
