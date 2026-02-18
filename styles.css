@@ -306,6 +306,10 @@ button:hover {
     background: rgba(255, 255, 255, 0.75);
 }
 
+.table-wrap.max-rows-10 {
+    max-height: 860px;
+}
+
 .data-table {
     width: 100%;
     border-collapse: collapse;
