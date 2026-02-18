@@ -114,6 +114,8 @@
         </div>
     </div>
 
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
     <div id="update-modal" class="modal">
         <div class="modal-content modal-form">
             <h3>Update Travel Authority</h3>
@@ -416,8 +418,23 @@
         const updateTravelUntilInput = document.getElementById("update-travel-until");
         const updateScanFileInput = document.getElementById("update-scan-file");
         const updateStatus = document.getElementById("update-status");
+        const toast = document.getElementById("toast");
+        const recordCache = new Map();
         let deleteRecordData = null;
         let updateRecordData = null;
+        let toastTimer = null;
+
+        const showToast = (message) => {
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add("show");
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+            }
+            toastTimer = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2600);
+        };
 
         window.flatpickr(updateTravelDateInput, {
             dateFormat: "Y-m-d",
@@ -431,9 +448,15 @@
 
         const renderViewRows = (rows) => {
             if (!rows.length) {
+                recordCache.clear();
                 viewBody.innerHTML = "<tr><td colspan=\"6\">No records yet.</td></tr>";
                 return;
             }
+
+            recordCache.clear();
+            rows.forEach((row) => {
+                recordCache.set(String(row.id), row);
+            });
 
             viewBody.innerHTML = rows.map((row) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
@@ -442,7 +465,7 @@
                 const safeName = row.file_name || "Download";
 
                 return `
-                    <tr data-id="${row.id}" data-file-url="${fileUrl}" data-file-name="${row.file_name || ""}" data-ta-number="${row.ta_number || ""}" data-purpose="${row.purpose || ""}" data-travel-date="${row.travel_date || ""}" data-travel-until="${row.travel_until || ""}">
+                    <tr data-id="${row.id}">
                         <td>${row.ta_number || "-"}</td>
                         <td>${row.purpose || "-"}</td>
                         <td>${dateText}</td>
@@ -452,7 +475,11 @@
                         </td>
                         <td>
                             <button class="update-btn" data-id="${row.id}">Update</button>
-                            <button class="delete-btn" data-id="${row.id}">Delete</button>
+                            <button class="delete-btn icon-btn" data-id="${row.id}" aria-label="Delete">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M9 3h6l1 2h4a1 1 0 1 1 0 2h-1l-1.1 12.1a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9L5 7H4a1 1 0 0 1 0-2h4l1-2Zm1.1 7a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Zm5.9 0a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Z" />
+                                </svg>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -462,11 +489,11 @@
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     const row = e.target.closest("tr");
-                    const recordId = row?.getAttribute("data-id") || "";
-                    const recordFileUrl = row?.getAttribute("data-file-url") || "";
+                    const recordId = (row?.getAttribute("data-id") || "").trim();
+                    const record = recordCache.get(recordId);
                     deleteRecordData = {
-                        id: recordId.trim(),
-                        file_url: recordFileUrl
+                        id: recordId,
+                        file_url: record?.file_url || ""
                     };
                     deleteModal.classList.add("show");
                 });
@@ -476,17 +503,20 @@
                 btn.addEventListener("click", (e) => {
                     const row = e.target.closest("tr");
                     if (!row) return;
+                    const recordId = (row.getAttribute("data-id") || "").trim();
+                    const record = recordCache.get(recordId);
+                    if (!recordId || !record) return;
 
                     updateRecordData = {
-                        id: row.getAttribute("data-id") || "",
-                        file_url: row.getAttribute("data-file-url") || "",
-                        file_name: row.getAttribute("data-file-name") || ""
+                        id: recordId,
+                        file_url: record.file_url || "",
+                        file_name: record.file_name || ""
                     };
 
-                    updateTaInput.value = row.getAttribute("data-ta-number") || "";
-                    updatePurposeInput.value = row.getAttribute("data-purpose") || "";
-                    updateTravelDateInput.value = row.getAttribute("data-travel-date") || "";
-                    updateTravelUntilInput.value = row.getAttribute("data-travel-until") || "";
+                    updateTaInput.value = record.ta_number || "";
+                    updatePurposeInput.value = record.purpose || "";
+                    updateTravelDateInput.value = record.travel_date || "";
+                    updateTravelUntilInput.value = record.travel_until || "";
                     updateScanFileInput.value = "";
                     updateStatus.textContent = "Update the fields and choose a new file if needed.";
                     updateStatus.classList.remove("status--error");
@@ -694,6 +724,7 @@
                 updateModal.classList.remove("show");
                 updateRecordData = null;
                 viewStatus.textContent = "Record updated successfully.";
+                showToast("Update saved.");
                 await loadTravelAuthorities();
             } catch (error) {
                 console.error("Update error:", error);
