@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <h1>Main Page</h1>
+        <button id="logout-btn" type="button" class="logout-btn">Log Out</button>
+    </header>
+    <section class="panel" id="upload-panel">
+        <h2>Travel Authority Upload</h2>
+        <div class="fields">
+            <div>
+                <label for="ta-number">Req. TA Number</label>
+                <div class="input-wrap">
+                    <input id="ta-number" type="text" placeholder="Enter TA Number" required>
+                </div>
+            </div>
+            <div>
+                <label for="travel-date">Req. Travel Date</label>
+                <div class="input-wrap">
+                    <input id="travel-date" type="date" required>
+                </div>
+            </div>
+            <div>
+                <label for="scan-file">Req. Scanned</label>
+                <input id="scan-file" type="file" required>
+            </div>
+        </div>
+        <div class="row">
+            <button id="upload-btn" type="button">Upload</button>
+            <span class="status" id="upload-status">Complete the required fields.</span>
+        </div>
+    </section>
+
+    <script type="module">
+        // Import Firebase Auth and Supabase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8NjORbh1QxLOYgpup4MD0IVSyA8bTDq8",
+            authDomain: "travel-6a21c.firebaseapp.com",
+            projectId: "travel-6a21c",
+            databaseURL: "https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app",
+            //storageBucket: "travel-6a21c.firebasestorage.app",
+            storageBucket: "travel-6a21c.appspot.com",
+            //https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app/
+            messagingSenderId: "898455368190",
+            appId: "1:898455368190:web:b4bcba337c028fe4d590af",
+            measurementId: "G-3P3FFYD1PW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Initialize Supabase
+        const supabaseUrl = "https://gptfbpktebajhvwvlfkd.supabase.co";
+        const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Logout functionality
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                window.location.href = "login.html";
+            } catch (error) {
+                console.error("Logout error:", error);
+                window.location.href = "login.html";
+            }
+        });
+
+        const uploadStatus = document.getElementById("upload-status");
+        const taNumberInput = document.getElementById("ta-number");
+        const travelDateInput = document.getElementById("travel-date");
+        const scanFileInput = document.getElementById("scan-file");
+
+        scanFileInput.addEventListener("change", () => {
+            if (scanFileInput.files.length > 0) {
+                uploadStatus.textContent = `Selected: ${scanFileInput.files[0].name}`;
+            } else {
+                uploadStatus.textContent = "Complete the required fields.";
+            }
+        });
+
+        document.getElementById("upload-btn").addEventListener("click", async () => {
+            const taNumber = taNumberInput.value.trim();
+            const travelDate = travelDateInput.value;
+
+            const file = scanFileInput.files[0];
+
+            if (!taNumber || !travelDate || !file) {
+                uploadStatus.textContent = "Please fill in all required fields.";
+                return;
+            }
+
+            try {
+                const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
+                const safeDate = travelDate.replace(/[^0-9-]/g, "-");
+                const filePath = `travel-authorities/${safeTa}/${safeDate}/${file.name}`;
+
+                uploadStatus.textContent = "Uploading...";
+
+                const { error: uploadError } = await supabase
+                    .storage
+                    .from("ta-files")
+                    .upload(filePath, file, { upsert: true });
+
+                if (uploadError) {
+                    throw uploadError;
+                }
+
+                const { data: publicUrlData } = supabase
+                    .storage
+                    .from("ta-files")
+                    .getPublicUrl(filePath);
+
+                const fileUrl = publicUrlData.publicUrl;
+
+                const { error: insertError } = await supabase
+                    .from("travel_authorities")
+                    .insert([
+                        {
+                            ta_number: taNumber,
+                            travel_date: travelDate,
+                            file_name: file.name,
+                            file_url: fileUrl
+                        }
+                    ]);
+
+                if (insertError) {
+                    throw insertError;
+                }
+
+                uploadStatus.textContent = "Upload complete.";
+                console.log("File URL:", fileUrl);
+            } catch (error) {
+                console.error("Upload error:", error);
+                const message = error && error.message ? error.message : "Please try again.";
+                uploadStatus.textContent = `Upload failed: ${message}`;
+            }
+        });
+    </script>
+</body>
+</html>

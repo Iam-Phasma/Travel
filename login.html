@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="shell">
+        <header>
+            <div class="logo-row" aria-label="Government logos">
+                <img src="CHED-Logo.png" alt="CHED logo">
+                <img src="Bagong_Pilipinas_logo.png" alt="Bagong Pilipinas logo">
+            </div>
+            <h1>CHEDRO IV TRAVEL AUTHORITY ARCHIVE</h1>
+            <p class="tagline">This portal stores scanned copies of travel authority documents filed by CHEDRO IV employees. Use a defined email and password to view the download files.</p>
+        </header>
+
+        <section class="panel" id="login-panel">
+            <h2>Login</h2>
+            <div class="fields">
+                <div>
+                    <label for="email">Email</label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                                <path d="M12 12.2c2.4 0 4.4-2 4.4-4.4S14.4 3.4 12 3.4 7.6 5.4 7.6 7.8s2 4.4 4.4 4.4Zm0 2.2c-3.4 0-8.2 1.7-8.2 5.1v1.1h16.4v-1.1c0-3.4-4.8-5.1-8.2-5.1Z" />
+                            </svg>
+                        </span>
+                        <input id="email" type="email" autocomplete="email" placeholder="email">
+                    </div>
+                </div>
+                <div>
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                                <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 0 1 4 0v2h-4V7Z" />
+                            </svg>
+                        </span>
+                        <input id="password" type="password" autocomplete="current-password" placeholder="password">
+                    </div>
+                </div>
+            </div>
+            <div class="login-actions">
+                <button id="login-btn" type="button">Sign in</button>
+                <span class="status status--neutral" id="login-status">Enter your credentials.</span>
+            </div>
+        </section>
+
+    </main>
+
+    <script type="module">
+        // Import Firebase Auth and Firestore functions
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8NjORbh1QxLOYgpup4MD0IVSyA8bTDq8",
+            authDomain: "travel-6a21c.firebaseapp.com",
+            projectId: "travel-6a21c",
+            databaseURL: "https://travel-6a21c-default-rtdb.asia-southeast1.firebasedatabase.app",
+            storageBucket: "travel-6a21c.firebasestorage.app",
+            messagingSenderId: "898455368190",
+            appId: "1:898455368190:web:b4bcba337c028fe4d590af",
+            measurementId: "G-3P3FFYD1PW"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const loginStatus = document.getElementById("login-status");
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        const loginBtn = document.getElementById("login-btn");
+
+        const getRedirectPage = async (userId) => {
+            try {
+                const userDoc = await getDoc(doc(db, "users", userId));
+                if (userDoc.exists()) {
+                    const role = userDoc.data().role;
+                    return role === "admin" ? "admin.html" : "dashboard.html";
+                }
+                // Default to dashboard if user role doesn't exist
+                return "dashboard.html";
+            } catch (error) {
+                console.error("Error fetching user role:", error);
+                return "dashboard.html";
+            }
+        };
+
+        const handleLogin = async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                loginStatus.textContent = "Please enter email and password.";
+                loginStatus.classList.remove("status--success");
+                loginStatus.classList.add("status--error");
+                return;
+            }
+
+            loginStatus.textContent = "Signing in...";
+            loginStatus.classList.remove("status--error");
+            loginStatus.classList.remove("status--success");
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                loginStatus.textContent = "Signed in. Redirecting...";
+                loginStatus.classList.add("status--success");
+                
+                const redirectPage = await getRedirectPage(user.uid);
+                setTimeout(() => {
+                    window.location.href = redirectPage;
+                }, 1000);
+            } catch (error) {
+                let errorMessage = "Invalid email or password";
+                if (error.code === "auth/user-not-found") {
+                    errorMessage = "User not found. Please register first.";
+                } else if (error.code === "auth/wrong-password") {
+                    errorMessage = "Incorrect password.";
+                } else if (error.code === "auth/invalid-email") {
+                    errorMessage = "Invalid email format.";
+                }
+                
+                loginStatus.textContent = errorMessage;
+                loginStatus.classList.remove("status--success");
+                loginStatus.classList.add("status--error");
+                loginStatus.classList.remove("status--shake");
+                void loginStatus.offsetWidth;
+                loginStatus.classList.add("status--shake");
+            }
+        };
+
+        loginBtn.addEventListener("click", handleLogin);
+
+        // Trigger login when Enter key is pressed
+        emailInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                handleLogin();
+            }
+        });
+
+        passwordInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                handleLogin();
+            }
+        });
+    </script>
+
+</body>
+</html>
+
