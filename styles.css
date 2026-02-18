@@ -667,6 +667,10 @@ button:hover {
     transform: translateY(0);
 }
 
+.toast.toast--warning {
+    background: rgba(255, 67, 67, 0.95);
+}
+
 .modal-content {
     background: white;
     border-radius: 20px;

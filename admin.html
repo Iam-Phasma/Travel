@@ -302,6 +302,17 @@
                 } else if (data.session_token !== localToken) {
                     // Session token mismatch - another device logged in
                     console.log("Session token mismatch - logging out");
+                    
+                    // Show toast notification
+                    const toastEl = document.getElementById("toast");
+                    if (toastEl) {
+                        toastEl.textContent = "Logged out: Another device logged into this account.";
+                        toastEl.classList.add("show", "toast--warning");
+                    }
+                    
+                    // Wait 2 seconds for user to see the toast
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
                     window.location.href = 'index.html';
