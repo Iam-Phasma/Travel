@@ -178,9 +178,24 @@
                 uploadStatus.classList.remove("status--error");
 
                 // Verify user is authenticated
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !sessionData?.session) {
+                    throw new Error("No active session. Please log in again.");
+                }
+
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
                 if (userError || !user) {
                     throw new Error("Not authenticated");
+                }
+
+                const { data: profile, error: profileError } = await supabase
+                    .from("profiles")
+                    .select("role")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (profileError || profile?.role !== "admin") {
+                    throw new Error("Not authorized to upload.");
                 }
 
                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
@@ -193,7 +208,7 @@
                     .upload(filePath, file, { upsert: true });
 
                 if (uploadError) {
-                    throw uploadError;
+                    throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
                 }
 
                 const { data: publicUrlData } = supabase
@@ -215,7 +230,7 @@
                     ]);
 
                 if (insertError) {
-                    throw insertError;
+                    throw new Error(`Database insert failed: ${insertError.message || "Unknown error"}`);
                 }
 
                 uploadStatus.textContent = "Upload complete.";
