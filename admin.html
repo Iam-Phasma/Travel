@@ -114,6 +114,71 @@
         </div>
     </div>
 
+    <div id="update-modal" class="modal">
+        <div class="modal-content modal-form">
+            <h3>Update Travel Authority</h3>
+            <p>Updating will overwrite the existing record.</p>
+            <div class="fields">
+                <div>
+                    <label for="update-ta-number">TA Number <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
+                            </svg>
+                        </span>
+                        <input id="update-ta-number" type="text" placeholder="Enter TA Number" required>
+                    </div>
+                </div>
+                <div>
+                    <label for="update-purpose">Purpose <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                <path d="M4 5h16a1 1 0 0 1 1 1v10a3 3 0 0 1-3 3H8a5 5 0 0 1-5-5V6a1 1 0 0 1 1-1Zm1 2v7a3 3 0 0 0 3 3h10a1 1 0 0 0 1-1V7H5Zm3 1h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
+                            </svg>
+                        </span>
+                        <input id="update-purpose" type="text" placeholder="Enter travel purpose" required>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div>
+                        <label for="update-travel-date">Travel Date <span class="required">*</span></label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
+                                </svg>
+                            </span>
+                            <input id="update-travel-date" type="text" placeholder="Select travel date" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="update-travel-until">Travel Until</label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
+                                </svg>
+                            </span>
+                            <input id="update-travel-until" type="text" placeholder="Select end date">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label for="update-scan-file">Upload Scanned</label>
+                    <input id="update-scan-file" type="file">
+                    <p class="disclaimer">Leave empty to keep the current file.</p>
+                </div>
+            </div>
+            <span class="status" id="update-status">Update the fields and choose a new file if needed.</span>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancel-update">Cancel</button>
+                <button class="modal-btn confirm" id="confirm-update">Update</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script type="module">
         // Import Supabase
@@ -340,9 +405,29 @@
         const viewBody = document.getElementById("view-body");
         const viewStatus = document.getElementById("view-status");
         const deleteModal = document.getElementById("delete-modal");
+        const updateModal = document.getElementById("update-modal");
         const cancelDeleteBtn = document.getElementById("cancel-delete");
         const confirmDeleteBtn = document.getElementById("confirm-delete");
+        const cancelUpdateBtn = document.getElementById("cancel-update");
+        const confirmUpdateBtn = document.getElementById("confirm-update");
+        const updateTaInput = document.getElementById("update-ta-number");
+        const updatePurposeInput = document.getElementById("update-purpose");
+        const updateTravelDateInput = document.getElementById("update-travel-date");
+        const updateTravelUntilInput = document.getElementById("update-travel-until");
+        const updateScanFileInput = document.getElementById("update-scan-file");
+        const updateStatus = document.getElementById("update-status");
         let deleteRecordData = null;
+        let updateRecordData = null;
+
+        window.flatpickr(updateTravelDateInput, {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        window.flatpickr(updateTravelUntilInput, {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
 
         const renderViewRows = (rows) => {
             if (!rows.length) {
@@ -357,7 +442,7 @@
                 const safeName = row.file_name || "Download";
 
                 return `
-                    <tr data-id="${row.id}" data-file-url="${fileUrl}">
+                    <tr data-id="${row.id}" data-file-url="${fileUrl}" data-file-name="${row.file_name || ""}" data-ta-number="${row.ta_number || ""}" data-purpose="${row.purpose || ""}" data-travel-date="${row.travel_date || ""}" data-travel-until="${row.travel_until || ""}">
                         <td>${row.ta_number || "-"}</td>
                         <td>${row.purpose || "-"}</td>
                         <td>${dateText}</td>
@@ -366,6 +451,7 @@
                             <a class="link-btn" href="${fileUrl}" target="_blank" rel="noopener">${safeName}</a>
                         </td>
                         <td>
+                            <button class="update-btn" data-id="${row.id}">Update</button>
                             <button class="delete-btn" data-id="${row.id}">Delete</button>
                         </td>
                     </tr>
@@ -383,6 +469,29 @@
                         file_url: recordFileUrl
                     };
                     deleteModal.classList.add("show");
+                });
+            });
+
+            document.querySelectorAll(".update-btn").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const row = e.target.closest("tr");
+                    if (!row) return;
+
+                    updateRecordData = {
+                        id: row.getAttribute("data-id") || "",
+                        file_url: row.getAttribute("data-file-url") || "",
+                        file_name: row.getAttribute("data-file-name") || ""
+                    };
+
+                    updateTaInput.value = row.getAttribute("data-ta-number") || "";
+                    updatePurposeInput.value = row.getAttribute("data-purpose") || "";
+                    updateTravelDateInput.value = row.getAttribute("data-travel-date") || "";
+                    updateTravelUntilInput.value = row.getAttribute("data-travel-until") || "";
+                    updateScanFileInput.value = "";
+                    updateStatus.textContent = "Update the fields and choose a new file if needed.";
+                    updateStatus.classList.remove("status--error");
+
+                    updateModal.classList.add("show");
                 });
             });
         };
@@ -412,6 +521,11 @@
         cancelDeleteBtn.addEventListener("click", () => {
             deleteModal.classList.remove("show");
             deleteRecordData = null;
+        });
+
+        cancelUpdateBtn.addEventListener("click", () => {
+            updateModal.classList.remove("show");
+            updateRecordData = null;
         });
 
         confirmDeleteBtn.addEventListener("click", async () => {
@@ -466,11 +580,144 @@
             }
         });
 
+        confirmUpdateBtn.addEventListener("click", async () => {
+            if (!updateRecordData || !updateRecordData.id) return;
+
+            const taNumber = updateTaInput.value.trim();
+            const purpose = updatePurposeInput.value.trim();
+            const travelDate = updateTravelDateInput.value;
+            let travelUntil = updateTravelUntilInput.value;
+            const file = updateScanFileInput.files[0];
+
+            if (!taNumber || !purpose || !travelDate) {
+                updateStatus.textContent = "Please fill in all required fields.";
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
+            if (!travelUntil) {
+                travelUntil = travelDate;
+                updateTravelUntilInput.value = travelDate;
+            }
+
+            const start = new Date(`${travelDate}T00:00:00`);
+            const end = new Date(`${travelUntil}T00:00:00`);
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+                updateStatus.textContent = "Please enter valid dates.";
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
+            if (start > end) {
+                updateStatus.textContent = "Travel date cannot be after travel until.";
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
+            try {
+                updateStatus.textContent = "Updating...";
+                updateStatus.classList.remove("status--error");
+
+                let fileUrl = updateRecordData.file_url || "";
+                let fileName = updateRecordData.file_name || "";
+
+                if (file) {
+                    const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
+                    const safeDate = travelDate.replace(/[^0-9-]/g, "-");
+                    const uniqueName = `${Date.now()}_${file.name}`;
+                    const filePath = `travel-authorities/${safeTa}/${safeDate}/${uniqueName}`;
+
+                    const { error: uploadError } = await supabase
+                        .storage
+                        .from("ta-files")
+                        .upload(filePath, file, { upsert: false });
+
+                    if (uploadError) {
+                        throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
+                    }
+
+                    const { data: publicUrlData } = supabase
+                        .storage
+                        .from("ta-files")
+                        .getPublicUrl(filePath);
+
+                    fileUrl = publicUrlData.publicUrl;
+                    fileName = file.name;
+                }
+
+                const { error: updateError } = await supabase
+                    .from("travel_authorities")
+                    .update({
+                        ta_number: taNumber,
+                        purpose: purpose,
+                        travel_date: travelDate,
+                        travel_until: travelUntil,
+                        file_name: fileName,
+                        file_url: fileUrl
+                    })
+                    .eq("id", updateRecordData.id);
+
+                if (updateError) {
+                    throw new Error(`Database update failed: ${updateError.message || "Unknown error"}`);
+                }
+
+                if (file && updateRecordData.file_url) {
+                    try {
+                        const url = new URL(updateRecordData.file_url);
+                        const pathParts = url.pathname.split('/ta-files/');
+                        if (pathParts.length > 1) {
+                            const oldFilePath = decodeURIComponent(pathParts[1]);
+
+                            const { error: storageError } = await supabase
+                                .storage
+                                .from("ta-files")
+                                .remove([oldFilePath]);
+
+                            if (storageError) {
+                                console.warn("Storage delete warning:", storageError);
+                            }
+                        }
+                    } catch (urlError) {
+                        console.warn("File path extraction error:", urlError);
+                    }
+                }
+
+                updateModal.classList.remove("show");
+                updateRecordData = null;
+                viewStatus.textContent = "Record updated successfully.";
+                await loadTravelAuthorities();
+            } catch (error) {
+                console.error("Update error:", error);
+                const message = error && error.message ? error.message : "Please try again.";
+                updateStatus.textContent = `Update failed: ${message}`;
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+            }
+        });
+
         // Close modal when clicking outside
         deleteModal.addEventListener("click", (e) => {
             if (e.target === deleteModal) {
                 deleteModal.classList.remove("show");
                 deleteRecordData = null;
+            }
+        });
+
+        updateModal.addEventListener("click", (e) => {
+            if (e.target === updateModal) {
+                updateModal.classList.remove("show");
+                updateRecordData = null;
             }
         });
 

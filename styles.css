@@ -147,6 +147,12 @@ label {
     margin-left: 4px;
 }
 
+.disclaimer {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: rgba(15, 26, 31, 0.6);
+}
+
 .input-wrap {
     position: relative;
     display: flex;
@@ -427,6 +433,25 @@ button:hover {
     box-shadow: none;
 }
 
+.update-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(47, 111, 179, 0.15);
+    color: var(--sea);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+    margin-right: 6px;
+}
+
+.update-btn:hover {
+    background: rgba(47, 111, 179, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
 .modal {
     display: none;
     position: fixed;
@@ -453,6 +478,10 @@ button:hover {
     width: 90%;
     box-shadow: 0 20px 60px rgba(12, 21, 24, 0.3);
     animation: fadeUp 300ms ease-out both;
+}
+
+.modal-content.modal-form {
+    max-width: 560px;
 }
 
 .modal-content h3 {
