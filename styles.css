@@ -102,8 +102,13 @@ h1 {
     backdrop-filter: blur(12px);
     display: grid;
     margin-top: 30px;
-    gap: 20px;
+    gap: 14px;
     animation: fadeUp 500ms ease-out both;
+}
+
+#ta-panel {
+    min-height: 500px;
+    grid-template-rows: auto 1fr auto;
 }
 
 #login-panel {
@@ -269,11 +274,14 @@ button:hover {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    max-height: 30px;
 }
 
 .table-wrap {
     width: 100%;
+    height: 100%;
     overflow-x: auto;
+    overflow-y: auto;
     border-radius: 16px;
     border: 1px solid rgba(15, 26, 31, 0.12);
     background: rgba(255, 255, 255, 0.75);
