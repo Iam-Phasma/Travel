@@ -504,8 +504,11 @@
 
                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
-                const uniqueName = `${Date.now()}_${file.name}`;
-                const filePath = `travel-authorities/${safeTa}/${safeDate}/${uniqueName}`;
+                
+                // Extract file extension and rename file to TA number
+                const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
+                const newFileName = `${taNumber}${fileExtension}`;
+                const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
 
                 const { error: uploadError } = await supabase
                     .storage
@@ -532,7 +535,7 @@
                             destination: destination,
                             travel_date: travelDate,
                             travel_until: travelUntil,
-                            file_name: file.name,
+                            file_name: newFileName,
                             file_url: fileUrl
                         }
                     ]);
@@ -954,8 +957,11 @@
                 if (file) {
                     const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                     const safeDate = travelDate.replace(/[^0-9-]/g, "-");
-                    const uniqueName = `${Date.now()}_${file.name}`;
-                    const filePath = `travel-authorities/${safeTa}/${safeDate}/${uniqueName}`;
+                    
+                    // Extract file extension and rename file to TA number
+                    const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
+                    const newFileName = `${taNumber}${fileExtension}`;
+                    const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
 
                     const { error: uploadError } = await supabase
                         .storage
@@ -972,7 +978,7 @@
                         .getPublicUrl(filePath);
 
                     fileUrl = publicUrlData.publicUrl;
-                    fileName = file.name;
+                    fileName = newFileName;
                 }
 
                 const { error: updateError } = await supabase

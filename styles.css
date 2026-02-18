@@ -409,6 +409,7 @@ button:hover {
 .data-table td:nth-child(2) {
     width: 130px;
     white-space: nowrap;
+    text-align: center;
 }
 
 /* Purpose - allow wrapping */
