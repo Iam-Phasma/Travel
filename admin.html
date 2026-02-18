@@ -301,10 +301,10 @@
             document.querySelectorAll(".delete-btn").forEach(btn => {
                 btn.addEventListener("click", (e) => {
                     const row = e.target.closest("tr");
-                    const recordId = row?.getAttribute("data-id");
+                    const recordId = row?.getAttribute("data-id") || "";
                     const recordFileUrl = row?.getAttribute("data-file-url") || "";
                     deleteRecordData = {
-                        id: recordId ? Number(recordId) : null,
+                        id: recordId.trim(),
                         file_url: recordFileUrl
                     };
                     deleteModal.classList.add("show");
