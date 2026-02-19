@@ -18,6 +18,7 @@
         <button class="switch-btn active" data-panel="upload-panel">Upload Files</button>
         <button class="switch-btn" data-panel="view-panel">View & Manage</button>
         <button class="switch-btn" data-panel="employees-panel">Employees</button>
+        <button class="switch-btn hidden" id="users-panel-btn" data-panel="users-panel">User Management</button>
     </div>
     <section class="panel" id="upload-panel">
         <h2>Travel Authority Upload</h2>
@@ -208,6 +209,44 @@
         </div>
     </section>
 
+    <section class="panel users-panel hidden" id="users-panel">
+        <h2>User Management</h2>
+        <p class="panel-description">Manage user accounts and roles. Only super users can modify user roles.</p>
+        
+        <div class="user-filter-bar">
+            <div class="filter-field">
+                <label for="users-role-filter">Filter by Role</label>
+                <select id="users-role-filter" class="filter-select">
+                    <option value="">All Roles</option>
+                    <option value="super">Super</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="table-wrap users-table-wrap">
+            <table class="data-table users-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="text-left">Email</th>
+                        <th scope="col">Current Role</th>
+                        <th scope="col">Access</th>
+                        <th scope="col">Change Role</th>
+                    </tr>
+                </thead>
+                <tbody id="users-body">
+                    <tr>
+                        <td colspan="4">Loading users...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <span class="status" id="users-status">Manage user roles and permissions.</span>
+        </div>
+    </section>
+
     <div id="delete-modal" class="modal">
         <div class="modal-content">
             <h3>Confirm Deletion</h3>
@@ -243,6 +282,17 @@
             <div class="modal-actions">
                 <button class="modal-btn cancel" id="cancel-edit-employee">Cancel</button>
                 <button class="modal-btn confirm" id="confirm-edit-employee">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirm-modal-title">Confirm Action</h3>
+            <p id="confirm-modal-message">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancel-confirm">Cancel</button>
+                <button class="modal-btn confirm" id="confirm-confirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -391,18 +441,19 @@
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Single-session enforcement for admin users
+        // ⚠️ WARNING: This uses localStorage which users can view/modify via DevTools
+        // However, we validate against the database token, so manipulation won't grant access
+        // The database session_token field is the source of truth
         const checkAdminSession = async () => {
             try {
                 const { data: sessionData } = await supabase.auth.getSession();
                 const user = sessionData?.session?.user;
                 if (!user) {
-                    console.log("No user session found");
                     return;
                 }
 
                 const localToken = localStorage.getItem('admin_session_token');
                 if (!localToken) {
-                    console.log("No local session token found");
                     return;
                 }
 
@@ -418,16 +469,12 @@
                 }
 
                 if (!data) {
-                    console.log("No profile data found");
                     return;
                 }
-
-                console.log("Session check - DB token exists:", !!data.session_token, "Matches local:", data.session_token === localToken);
 
                 // Only logout if database token exists AND doesn't match
                 // If database token is null, update it (in case initial update failed)
                 if (data.session_token === null) {
-                    console.log("Database token is null, updating with local token");
                     const { error: updateError } = await supabase
                         .from("profiles")
                         .update({ session_token: localToken })
@@ -438,7 +485,6 @@
                     }
                 } else if (data.session_token !== localToken) {
                     // Session token mismatch - another device logged in
-                    console.log("Session token mismatch - logging out");
                     
                     // Show toast notification
                     const toastEl = document.getElementById("toast");
@@ -485,14 +531,89 @@
         const requireAdmin = async () => {
             const { data: sessionData, error } = await supabase.auth.getSession();
             if (error || !sessionData?.session) {
+                // No valid session - redirect to login
+                console.warn("No valid session found. Redirecting to login.");
+                window.location.href = "../index.html";
+                return null;
+            }
+
+            const user = sessionData.session.user;
+            
+            // CRITICAL: Verify admin/super role from database (not localStorage which can be manipulated)
+            const role = await getUserRole(user.id);
+            
+            if (role !== "admin" && role !== "super") {
+                // User is not an admin or super - block access silently
+                console.warn("Access denied: User is not an admin or super. Redirecting to dashboard.");
+                window.location.href = "../dashboard/dashboard.html";
+                return null;
+            }
+            
+            return role; // Return the role for UI customization
+
+            // Additional check: Verify session token matches database
+            const localToken = localStorage.getItem('admin_session_token');
+            if (!localToken) {
+                console.warn("No session token found. Redirecting to login.");
                 window.location.href = "../index.html";
                 return;
             }
 
+            const { data: profileData, error: profileError } = await supabase
+                .from("profiles")
+                .select("session_token")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (profileError || !profileData) {
+                console.error("Failed to verify session token:", profileError);
+                window.location.href = "../index.html";
+                return;
+            }
+
+            // If DB token exists and doesn't match, another session is active
+            if (profileData.session_token && profileData.session_token !== localToken) {
+                console.warn("Session token mismatch. Another device logged in.");
+                await supabase.auth.signOut();
+                localStorage.removeItem('admin_session_token');
+                window.location.href = "../index.html";
+                return;
+            }
+
+            // Update token in DB if it's null (recovery from failed initial update)
+            if (!profileData.session_token) {
+                await supabase
+                    .from("profiles")
+                    .update({ session_token: localToken })
+                    .eq("id", user.id);
+            }
+
             // Note: Actual access control for admin operations (upload, delete) 
             // is enforced by Supabase RLS policies, not this client-side check.
-            // This check is for UX only and should not be fully trusted for security.
+            // This check is for UX and adds defense-in-depth, but RLS is the real security.
         };
+
+        // Periodic session validation to detect session termination
+        // WARNING: Users can disable this in DevTools, so server-side security (RLS) is critical
+        const validateAdminSession = async () => {
+            const { data: sessionData, error } = await supabase.auth.getSession();
+            if (error || !sessionData?.session) {
+                console.warn("Session expired or invalid. Redirecting to login.");
+                window.location.href = "../index.html";
+                return;
+            }
+
+            // Re-verify admin/super role
+            const role = await getUserRole(sessionData.session.user.id);
+            if (role !== "admin" && role !== "super") {
+                console.warn("User is no longer an admin or super. Redirecting.");
+                await supabase.auth.signOut();
+                window.location.href = "../index.html";
+            }
+        };
+
+        // Check session validity every 30 seconds
+        setInterval(validateAdminSession, 30000);
 
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
@@ -524,8 +645,6 @@
             }
 
             try {
-                console.log(`Original PDF size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-
                 const arrayBuffer = await file.arrayBuffer();
                 const { PDFDocument } = window.PDFLib;
                 const pdfDoc = await PDFDocument.load(arrayBuffer);
@@ -542,7 +661,6 @@
                     });
                 } catch (e) {
                     // Strategy 2: Fallback without object streams
-                    console.log('Trying fallback compression...');
                     compressedPdfBytes = await pdfDoc.save({
                         useObjectStreams: false,
                         addDefaultPage: false
@@ -550,8 +668,6 @@
                 }
 
                 const compressedSize = compressedPdfBytes.length;
-                const compressionRatio = ((1 - compressedSize / file.size) * 100).toFixed(1);
-                console.log(`Compressed PDF size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
 
                 // Create a new File object from the compressed bytes
                 const compressedFile = new File([compressedPdfBytes], file.name, {
@@ -934,6 +1050,7 @@
         const uploadPanel = document.getElementById("upload-panel");
         const viewPanel = document.getElementById("view-panel");
         const employeesPanel = document.getElementById("employees-panel");
+        const usersPanel = document.getElementById("users-panel");
 
         switchButtons.forEach(btn => {
             btn.addEventListener("click", () => {
@@ -947,6 +1064,7 @@
                 uploadPanel.classList.add("hidden");
                 viewPanel.classList.add("hidden");
                 employeesPanel.classList.add("hidden");
+                if (usersPanel) usersPanel.classList.add("hidden");
                 
                 if (targetPanel === "upload-panel") {
                     uploadPanel.classList.remove("hidden");
@@ -956,6 +1074,9 @@
                 } else if (targetPanel === "employees-panel") {
                     employeesPanel.classList.remove("hidden");
                     renderEmployeeList();
+                } else if (targetPanel === "users-panel" && usersPanel) {
+                    usersPanel.classList.remove("hidden");
+                    loadUsers();
                 }
             });
         });
@@ -967,6 +1088,11 @@
         const deleteModal = document.getElementById("delete-modal");
         const viewModal = document.getElementById("view-modal");
         const updateModal = document.getElementById("update-modal");
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmModalTitle = document.getElementById("confirm-modal-title");
+        const confirmModalMessage = document.getElementById("confirm-modal-message");
+        const cancelConfirmBtn = document.getElementById("cancel-confirm");
+        const confirmConfirmBtn = document.getElementById("confirm-confirm");
                 const cancelDeleteBtn = document.getElementById("cancel-delete");
                 const closeViewBtn = document.getElementById("close-view");
         const confirmDeleteBtn = document.getElementById("confirm-delete");
@@ -1054,6 +1180,45 @@
             toastTimer = setTimeout(() => {
                 toast.classList.remove("show");
             }, 2600);
+        };
+
+        // Show confirmation modal and return a Promise
+        const showConfirmation = (title, message) => {
+            return new Promise((resolve) => {
+                confirmModalTitle.textContent = title;
+                confirmModalMessage.textContent = message;
+                confirmModal.classList.add("show");
+
+                const handleConfirm = () => {
+                    confirmModal.classList.remove("show");
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    confirmModal.classList.remove("show");
+                    cleanup();
+                    resolve(false);
+                };
+
+                const handleClickOutside = (e) => {
+                    if (e.target === confirmModal) {
+                        confirmModal.classList.remove("show");
+                        cleanup();
+                        resolve(false);
+                    }
+                };
+
+                const cleanup = () => {
+                    confirmConfirmBtn.removeEventListener('click', handleConfirm);
+                    cancelConfirmBtn.removeEventListener('click', handleCancel);
+                    confirmModal.removeEventListener('click', handleClickOutside);
+                };
+
+                confirmConfirmBtn.addEventListener('click', handleConfirm);
+                cancelConfirmBtn.addEventListener('click', handleCancel);
+                confirmModal.addEventListener('click', handleClickOutside);
+            });
         };
 
         window.flatpickr(updateTravelDateInput, {
@@ -1846,7 +2011,6 @@
                             .limit(1);
                         
                         if (existingData && existingData.length > 0) {
-                            console.log("Existing employee in database:", existingData[0]);
                             throw new Error(`Employee "${existingData[0].name}" already exists (ID: ${existingData[0].id}).`);
                         } else {
                             throw new Error("This employee name already exists in the database.");
@@ -1977,9 +2141,311 @@
             }
         });
 
-        requireAdmin();
+        // ============================================
+        // USER MANAGEMENT (SUPER USER ONLY)
+        // ============================================
+        
+        const usersBody = document.getElementById('users-body');
+        const usersStatus = document.getElementById('users-status');
+        const usersRoleFilter = document.getElementById('users-role-filter');
+        
+        let allUsersData = []; // Store all users for filtering
+
+        const getRolePriority = (role) => {
+            const priorities = { 'super': 3, 'admin': 2, 'user': 1 };
+            return priorities[role] || 0;
+        };
+
+        const truncateEmail = (email, maxLocalLength = 10) => {
+            if (!email || !email.includes('@')) return email;
+            
+            const [localPart, domain] = email.split('@');
+            
+            if (localPart.length <= maxLocalLength) {
+                return email; // No truncation needed
+            }
+            
+            // Truncate local part but keep domain
+            const truncated = localPart.substring(0, maxLocalLength) + '...';
+            return `${truncated}@${domain}`;
+        };
+
+        const renderUsersTable = (users) => {
+            if (!users || users.length === 0) {
+                usersBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+                usersStatus.textContent = 'No users available.';
+                return;
+            }
+
+            // Render users table
+            usersBody.innerHTML = users.map(user => {
+                const accessEnabled = user.access_enabled !== false;
+                const displayEmail = truncateEmail(user.email || 'No email', 10);
+                const fullEmail = user.email || 'No email';
+                
+                return `
+                <tr class="${!accessEnabled ? 'user-disabled' : ''}">
+                    <td class="text-left" title="${fullEmail}">${displayEmail}</td>
+                    <td><span class="role-badge role-${user.role}">${user.role}</span></td>
+                    <td>
+                        <select class="access-select" data-user-id="${user.id}" data-current-access="${accessEnabled}">
+                            <option value="true" ${accessEnabled ? 'selected' : ''}>Enabled</option>
+                            <option value="false" ${!accessEnabled ? 'selected' : ''}>Disabled</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="role-select" data-user-id="${user.id}" data-current-role="${user.role}" ${!accessEnabled ? 'disabled' : ''}>
+                            <option value="">-- Select Role --</option>
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            <option value="super" ${user.role === 'super' ? 'selected' : ''}>Super</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+
+            // Add change event listeners to role selects
+            document.querySelectorAll('.role-select').forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    const userId = e.target.getAttribute('data-user-id');
+                    const currentRole = e.target.getAttribute('data-current-role');
+                    const newRole = e.target.value;
+
+                    if (!newRole || newRole === currentRole) {
+                        e.target.value = currentRole; // Reset if no selection or same role
+                        return;
+                    }
+
+                    // Confirm role change
+                    const confirmChange = await showConfirmation(
+                        'Confirm Role Change',
+                        `Change user role from "${currentRole}" to "${newRole}"?`
+                    );
+                    if (!confirmChange) {
+                        e.target.value = currentRole; // Reset to original
+                        return;
+                    }
+
+                    await changeUserRole(userId, newRole, e.target);
+                });
+            });
+
+            // Add change event listeners to access selects
+            document.querySelectorAll('.access-select').forEach(select => {
+                select.addEventListener('change', async (e) => {
+                    const userId = e.target.getAttribute('data-user-id');
+                    const currentAccess = e.target.getAttribute('data-current-access') === 'true';
+                    const newAccess = e.target.value === 'true';
+                    
+                    if (newAccess === currentAccess) {
+                        return; // No change
+                    }
+                    
+                    // Confirm access change
+                    const action = newAccess ? 'enable' : 'disable';
+                    const confirmChange = await showConfirmation(
+                        'Confirm Access Change',
+                        `Are you sure you want to ${action} access for this user?`
+                    );
+                    if (!confirmChange) {
+                        e.target.value = currentAccess.toString(); // Reset to original
+                        return;
+                    }
+
+                    await toggleUserAccess(userId, newAccess, e.target);
+                });
+            });
+
+            const filterValue = usersRoleFilter?.value || '';
+            const displayCount = filterValue ? users.length : allUsersData.length;
+            const filterText = filterValue ? ` (filtered by ${filterValue})` : '';
+            usersStatus.textContent = `Loaded ${displayCount} user(s)${filterText}.`;
+        };
+
+        const loadUsers = async () => {
+            try {
+                usersStatus.textContent = 'Loading users...';
+                usersStatus.classList.remove('status--error');
+                
+                // Use RPC function to get users with emails from auth.users
+                // This is secure because the RPC function validates super user permission
+                const { data, error } = await supabase.rpc('get_all_users_with_emails');
+                
+                if (error) {
+                    console.error('Error loading users:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint,
+                        code: error.code
+                    });
+                    
+                    // Provide helpful error messages
+                    if (error.message.includes('function') && error.message.includes('does not exist')) {
+                        throw new Error('Database function not found. Please run the SQL script: create_get_users_function.sql');
+                    } else if (error.message.includes('Permission denied')) {
+                        throw new Error('Permission denied. Only super users can view all users.');
+                    } else {
+                        throw error;
+                    }
+                }
+
+                if (!data || data.length === 0) {
+                    allUsersData = [];
+                    renderUsersTable([]);
+                    return;
+                }
+
+                // Sort by role priority: super > admin > user
+                allUsersData = data.sort((a, b) => {
+                    const priorityDiff = getRolePriority(b.role) - getRolePriority(a.role);
+                    if (priorityDiff !== 0) return priorityDiff;
+                    // If same role, sort by email
+                    return (a.email || '').localeCompare(b.email || '');
+                });
+
+                renderUsersTable(allUsersData);
+
+            } catch (error) {
+                console.error('Failed to load users:', error);
+                usersBody.innerHTML = '<tr><td colspan="4">Error loading users.</td></tr>';
+                usersStatus.textContent = 'Failed to load users.';
+            }
+        };
+
+        // Filter users by role
+        if (usersRoleFilter) {
+            usersRoleFilter.addEventListener('change', () => {
+                const filterValue = usersRoleFilter.value;
+                
+                if (!filterValue) {
+                    // Show all users
+                    renderUsersTable(allUsersData);
+                } else {
+                    // Filter by selected role
+                    const filteredUsers = allUsersData.filter(user => user.role === filterValue);
+                    renderUsersTable(filteredUsers);
+                }
+            });
+        }
+
+        const changeUserRole = async (userId, newRole, selectElement) => {
+            const originalRole = selectElement.getAttribute('data-current-role');
+            
+            try {
+                usersStatus.textContent = 'Changing user role...';
+                usersStatus.classList.remove('status--error');
+
+                // Call server-side RPC function that validates permissions
+                // CRITICAL: This RPC function MUST verify that the calling user is 'super'
+                const { data, error } = await supabase.rpc('change_user_role', {
+                    target_user_id: userId,
+                    new_role: newRole
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                // Update success
+                selectElement.setAttribute('data-current-role', newRole);
+                usersStatus.textContent = `User role changed to "${newRole}" successfully!`;
+                showToast(`User role changed to "${newRole}"`);
+                
+                // Reload users to refresh the display
+                await loadUsers();
+
+            } catch (error) {
+                console.error('Failed to change user role:', error);
+                
+                // Revert select to original role
+                selectElement.value = originalRole;
+                
+                // Show error message
+                const errorMessage = error.message || 'Failed to change user role. You may not have permission.';
+                usersStatus.textContent = errorMessage;
+                usersStatus.classList.add('status--error');
+                showToast(errorMessage);
+            }
+        };
+
+        const toggleUserAccess = async (userId, newAccessEnabled, selectElement) => {
+            const originalAccess = selectElement.getAttribute('data-current-access') === 'true';
+            
+            try {
+                usersStatus.textContent = `${newAccessEnabled ? 'Enabling' : 'Disabling'} user access...`;
+                usersStatus.classList.remove('status--error');
+
+                // Call server-side RPC function that validates permissions
+                // CRITICAL: This RPC function MUST verify that the calling user is 'super'
+                const { data, error } = await supabase.rpc('toggle_user_access', {
+                    target_user_id: userId,
+                    new_access_enabled: newAccessEnabled
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                // Update success
+                const action = newAccessEnabled ? 'enabled' : 'disabled';
+                usersStatus.textContent = `User access ${action} successfully!`;
+                showToast(`User access ${action}`);
+                
+                // Reload users to refresh the display
+                await loadUsers();
+
+            } catch (error) {
+                console.error('Failed to toggle user access:', error);
+                
+                // Revert select to original value
+                selectElement.value = originalAccess.toString();
+                
+                // Show error message
+                const errorMessage = error.message || 'Failed to toggle user access. You may not have permission.';
+                usersStatus.textContent = errorMessage;
+                usersStatus.classList.add('status--error');
+                showToast(errorMessage);
+            }
+        };
+
+        // ============================================
+        // END USER MANAGEMENT
+        // ============================================
+
+        // Initialize and check permissions
+        (async () => {
+            const userRole = await requireAdmin();
+            if (!userRole) return; // Redirected to login or dashboard
+            
+            // Show User Management panel only for super users
+            if (userRole === 'super') {
+                const usersPanelBtn = document.getElementById('users-panel-btn');
+                if (usersPanelBtn) {
+                    usersPanelBtn.classList.remove('hidden');
+                }
+                // Load users for the User Management panel
+                await loadUsers();
+            }
+        })();
+        
         loadEmployees();
         loadAdminEmployeesForFilter();
+
+        // Prevent browser back/forward navigation
+        // This prevents users from accidentally navigating back to login or other pages
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', () => {
+            history.pushState(null, null, location.href);
+        });
+
+        // Force page reload if loaded from cache (back/forward button)
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
     </script>
 
     <div id="footer-container"></div>

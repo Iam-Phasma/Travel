@@ -64,26 +64,74 @@
         const passwordInput = document.getElementById("password");
         const loginBtn = document.getElementById("login-btn");
 
-        // Anti-spam login configuration
-        const MAX_FAILED_ATTEMPTS = 10;
-        const LOCKOUT_DURATION = 60000; // 1 minute in milliseconds
-        let countdownInterval = null;
+        // Database function to check if user is locked out
+        const checkLockoutStatus = async (email) => {
+            try {
+                const { data, error } = await supabase.rpc('check_login_lockout', {
+                    user_email: email
+                });
 
-        const stopCountdown = () => {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
+                if (error) {
+                    console.error("Error checking lockout:", error);
+                    return { locked: false };
+                }
+
+                return data;
+            } catch (err) {
+                console.error("Lockout check failed:", err);
+                return { locked: false };
             }
         };
 
-        const startCountdown = (email) => {
-            stopCountdown(); // Clear any existing countdown
+        // Database function to record failed login attempt
+        const recordFailedAttempt = async (email) => {
+            try {
+                const { data, error } = await supabase.rpc('record_failed_login', {
+                    user_email: email
+                });
 
-            const updateCountdown = () => {
-                const lockoutStatus = isLockedOut(email);
+                if (error) {
+                    console.error("Error recording failed login:", error);
+                    return { locked: false };
+                }
+
+                return data;
+            } catch (err) {
+                console.error("Failed to record attempt:", err);
+                return { locked: false };
+            }
+        };
+
+        // Database function to clear login attempts on successful login
+        const clearLoginAttempts = async (email) => {
+            try {
+                await supabase.rpc('clear_failed_login', {
+                    user_email: email
+                });
+            } catch (err) {
+                console.error("Failed to clear attempts:", err);
+            }
+        };
+
+        // Dynamic countdown timer for lockout
+        let lockoutCountdownInterval = null;
+
+        const stopLockoutCountdown = () => {
+            if (lockoutCountdownInterval) {
+                clearInterval(lockoutCountdownInterval);
+                lockoutCountdownInterval = null;
+            }
+        };
+
+        const startLockoutCountdown = async (email) => {
+            stopLockoutCountdown(); // Clear any existing countdown
+
+            const updateCountdown = async () => {
+                const lockoutStatus = await checkLockoutStatus(email);
+                
                 if (!lockoutStatus.locked) {
-                    stopCountdown();
-                    localStorage.removeItem('last_locked_email');
+                    // Lockout expired
+                    stopLockoutCountdown();
                     loginStatus.textContent = "You can now try logging in again.";
                     loginStatus.classList.remove("status--error", "hidden");
                     loginStatus.classList.add("status--success");
@@ -93,91 +141,28 @@
                     return;
                 }
 
-                loginStatus.textContent = `Too many failed attempts. Please try again in ${lockoutStatus.remainingSeconds} second${lockoutStatus.remainingSeconds !== 1 ? 's' : ''}.`;
+                // Update timer display
+                const remaining = lockoutStatus.seconds_remaining || 0;
+                loginStatus.textContent = `Too many failed attempts. Try again in ${remaining} second${remaining !== 1 ? 's' : ''}.`;
                 loginStatus.classList.remove("status--success", "hidden");
                 loginStatus.classList.add("status--error");
             };
 
-            updateCountdown(); // Initial update
-            countdownInterval = setInterval(updateCountdown, 1000); // Update every second
+            // Initial update
+            await updateCountdown();
+            
+            // Update every second
+            lockoutCountdownInterval = setInterval(updateCountdown, 1000);
         };
 
-        const checkLockoutOnLoad = () => {
-            const email = emailInput.value.trim();
-            if (!email) {
-                // Check if there's a last locked email in localStorage
-                const lastEmail = localStorage.getItem('last_locked_email');
-                if (lastEmail) {
-                    const lockoutStatus = isLockedOut(lastEmail);
-                    if (lockoutStatus.locked) {
-                        emailInput.value = lastEmail;
-                        startCountdown(lastEmail);
-                    } else {
-                        localStorage.removeItem('last_locked_email');
-                    }
-                }
-                return;
-            }
-
-            const lockoutStatus = isLockedOut(email);
-            if (lockoutStatus.locked) {
-                startCountdown(email);
-            }
-        };
-
-        const getFailedAttempts = (email) => {
-            const key = `login_attempts_${email}`;
-            const data = localStorage.getItem(key);
-            if (!data) return { count: 0, lockoutUntil: null };
-            return JSON.parse(data);
-        };
-
-        const setFailedAttempts = (email, count, lockoutUntil = null) => {
-            const key = `login_attempts_${email}`;
-            localStorage.setItem(key, JSON.stringify({ count, lockoutUntil }));
-        };
-
-        const clearFailedAttempts = (email) => {
-            const key = `login_attempts_${email}`;
-            localStorage.removeItem(key);
-            localStorage.removeItem('last_locked_email');
-        };
-
-        const isLockedOut = (email) => {
-            const { count, lockoutUntil } = getFailedAttempts(email);
-            if (!lockoutUntil) return { locked: false };
-
-            const now = Date.now();
-            if (now < lockoutUntil) {
-                const remainingSeconds = Math.ceil((lockoutUntil - now) / 1000);
-                return { locked: true, remainingSeconds };
-            }
-
-            // Lockout expired, clear attempts
-            clearFailedAttempts(email);
-            return { locked: false };
-        };
-
-        const incrementFailedAttempts = (email) => {
-            const { count } = getFailedAttempts(email);
-            const newCount = count + 1;
-
-            if (newCount >= MAX_FAILED_ATTEMPTS) {
-                const lockoutUntil = Date.now() + LOCKOUT_DURATION;
-                setFailedAttempts(email, newCount, lockoutUntil);
-                localStorage.setItem('last_locked_email', email);
-                return { locked: true, remainingSeconds: LOCKOUT_DURATION / 1000 };
-            } else {
-                setFailedAttempts(email, newCount);
-                return { locked: false, attemptsRemaining: MAX_FAILED_ATTEMPTS - newCount };
-            }
-        };
+        // Clean up countdown on page unload
+        window.addEventListener("beforeunload", stopLockoutCountdown);
 
         const getRedirectPage = async (userId) => {
             try {
                 const { data, error } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("role, access_enabled")
                     .eq("id", userId)
                     .maybeSingle();
 
@@ -185,12 +170,27 @@
                     throw error;
                 }
 
+                // Check if user has access enabled
+                if (data?.access_enabled === false) {
+                    // User account is disabled
+                    await supabase.auth.signOut();
+                    throw new Error("Your account access has been disabled. Please contact an administrator to regain access.");
+                }
+
                 // Role-based redirect is for UX only. 
                 // Real access control is enforced by Supabase RLS policies.
                 const role = data?.role || "user";
-                return { role, page: role === "admin" ? "admin/admin.html" : "dashboard/dashboard.html" };
+                
+                // Redirect admin and super users to admin panel, regular users to dashboard
+                const page = (role === "admin" || role === "super") ? "admin/admin.html" : "dashboard/dashboard.html";
+                
+                return { role, page };
             } catch (error) {
                 console.error("Error fetching user role:", error);
+                // Re-throw error if it's about access being disabled
+                if (error.message && error.message.includes("disabled")) {
+                    throw error;
+                }
                 // Default to dashboard if role lookup fails
                 return { role: "user", page: "dashboard/dashboard.html" };
             }
@@ -210,10 +210,11 @@
                 return;
             }
 
-            // Check if account is locked out
-            const lockoutStatus = isLockedOut(email);
+            // ✅ Check lockout status from DATABASE (cannot be bypassed)
+            const lockoutStatus = await checkLockoutStatus(email);
             if (lockoutStatus.locked) {
-                startCountdown(email);
+                // Start dynamic countdown
+                startLockoutCountdown(email);
                 return;
             }
 
@@ -235,9 +236,8 @@
                     throw new Error("Unable to load user session.");
                 }
 
-                // Clear failed attempts on successful login
-                stopCountdown();
-                clearFailedAttempts(email);
+                // ✅ SUCCESS - Clear failed attempts from DATABASE
+                await clearLoginAttempts(email);
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -245,10 +245,9 @@
                 loginStatus.classList.remove("hidden");
                 loginStatus.classList.add("status--success");
 
-                // For admin users, generate and store a session token to enforce single-session
-                if (role === "admin") {
+                // For admin and super users, generate and store a session token to enforce single-session
+                if (role === "admin" || role === "super") {
                     const sessionToken = crypto.randomUUID();
-                    console.log("Generated session token for admin:", sessionToken);
                     localStorage.setItem('admin_session_token', sessionToken);
                     
                     // Wait for database update to complete before redirecting
@@ -260,8 +259,6 @@
                     if (updateError) {
                         console.error("Failed to update session token:", updateError);
                         loginStatus.textContent = "Warning: Session token update failed. " + updateError.message;
-                    } else {
-                        console.log("Session token successfully updated in database");
                     }
                     
                     // Add extra delay to ensure database propagation
@@ -274,13 +271,14 @@
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
 
-                // Increment failed attempts
-                const attemptResult = incrementFailedAttempts(email);
+                // ✅ FAILED - Record attempt in DATABASE (cannot be bypassed)
+                const attemptResult = await recordFailedAttempt(email);
 
                 if (attemptResult.locked) {
-                    startCountdown(email);
+                    // Start dynamic countdown
+                    startLockoutCountdown(email);
                 } else {
-                    const attemptsRemaining = attemptResult.attemptsRemaining;
+                    const attemptsRemaining = attemptResult.attempts_remaining || 0;
                     // Only show attempts remaining when 5 or fewer attempts left
                     if (attemptsRemaining <= 5) {
                         loginStatus.textContent = `${errorMessage}. ${attemptsRemaining} attempt${attemptsRemaining !== 1 ? 's' : ''} remaining.`;
@@ -320,22 +318,16 @@
             }
         });
 
-        // Check lockout status when email changes
-        emailInput.addEventListener("input", () => {
-            stopCountdown();
-            checkLockoutOnLoad();
-        });
-
-        // Check lockout status on page load
-        emailInput.addEventListener("blur", checkLockoutOnLoad);
-
-        // Clean up countdown on page unload
-        window.addEventListener("beforeunload", stopCountdown);
-
-        // Check for existing lockout on page load
-        checkLockoutOnLoad();
-
         redirectIfLoggedIn();
+
+        // Prevent browser back navigation after logout
+        // This prevents users from navigating back to authenticated pages after logging out
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                // Page was loaded from cache (back/forward button)
+                window.location.reload();
+            }
+        });
     </script>
 
     <div id="footer-container"></div>

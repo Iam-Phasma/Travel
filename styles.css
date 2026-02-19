@@ -1394,3 +1394,178 @@ button:hover {
     color: #a1251b;
     font-size: 0.92rem;
 }
+/* ============================================
+   USER MANAGEMENT STYLES
+   ============================================ */
+
+.panel-description {
+    font-size: 0.9rem;
+    color: rgba(11, 28, 59, 0.7);
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(47, 111, 179, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--sea);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-badge.role-user {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.role-badge.role-admin {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.role-badge.role-super {
+    background: #f3e5f5;
+    color: #6a1b9a;
+}
+
+.role-select {
+    padding: 8px 12px;
+    border: 1px solid rgba(15, 26, 31, 0.15);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+    min-width: 140px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230b1c3b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.role-select:hover {
+    border-color: rgba(15, 26, 31, 0.25);
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: var(--sea);
+    box-shadow: 0 0 0 3px rgba(47, 111, 179, 0.15);
+}
+
+.user-filter-bar {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(15, 26, 31, 0.08);
+}
+
+.user-filter-bar .filter-field {
+    max-width: 300px;
+}
+
+.user-filter-bar .filter-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.access-select {
+    padding: 8px 12px;
+    border: 1px solid rgba(15, 26, 31, 0.15);
+    border-radius: 8px;
+    background: white;
+    color: var(--ink);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+    min-width: 110px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230b1c3b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 32px;
+}
+
+.access-select:hover {
+    border-color: rgba(15, 26, 31, 0.25);
+}
+
+.access-select:focus {
+    outline: none;
+    border-color: var(--sea);
+    box-shadow: 0 0 0 3px rgba(47, 111, 179, 0.15);
+}
+
+.user-disabled {
+    opacity: 0.5;
+}
+
+.user-disabled td {
+    text-decoration: line-through;
+}
+
+/* Users Table Specific Styles */
+.users-panel {
+    width: auto;
+    max-width: min(1100px, calc(100vw - 36px));
+    min-width: min(850px, calc(100vw - 36px));
+}
+
+.users-table-wrap {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.users-table th,
+.users-table td {
+    width: auto;
+    white-space: nowrap;
+    padding: 12px 16px;
+}
+
+.users-table th:first-child,
+.users-table td:first-child {
+    position: static;
+    white-space: nowrap;
+    min-width: 180px;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) {
+    text-align: center;
+    min-width: 110px;
+}
+
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+    text-align: center;
+    min-width: 120px;
+}
+
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+    text-align: center;
+    min-width: 140px;
+}
+
+.text-left {
+    text-align: left !important;
+}

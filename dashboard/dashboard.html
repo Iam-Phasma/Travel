@@ -167,13 +167,39 @@
         const requireUser = async () => {
             const { data: sessionData, error } = await supabase.auth.getSession();
             if (error || !sessionData?.session) {
+                // No valid session - redirect to login
+                console.warn("No valid session found. Redirecting to login.");
                 window.location.href = "../index.html";
                 return;
             }
 
-            // Note: Access control is enforced by Supabase RLS policies.
+            const user = sessionData.session.user;
+            
+            // Verify user role from database (not localStorage which can be manipulated)
+            const role = await getUserRole(user.id);
+            
+            // If user is actually an admin, redirect to admin panel
+            if (role === "admin") {
+                window.location.href = "../admin/admin.html";
+                return;
+            }
+
+            // Note: Access control for data operations is enforced by Supabase RLS policies.
             // Client-side checks are for UX only and should not be relied upon for security.
         };
+
+        // Periodic session validation to detect session termination
+        // WARNING: Users can disable this in DevTools, so server-side security (RLS) is critical
+        const validateSession = async () => {
+            const { data: sessionData, error } = await supabase.auth.getSession();
+            if (error || !sessionData?.session) {
+                console.warn("Session expired or invalid. Redirecting to login.");
+                window.location.href = "../index.html";
+            }
+        };
+
+        // Check session every 30 seconds
+        setInterval(validateSession, 30000);
 
         const taBody = document.getElementById("ta-body");
         const taStatus = document.getElementById("ta-status");
@@ -494,6 +520,20 @@
         };
 
         init();
+
+        // Prevent browser back/forward navigation
+        // This prevents users from accidentally navigating back to login or other pages
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', () => {
+            history.pushState(null, null, location.href);
+        });
+
+        // Force page reload if loaded from cache (back/forward button)
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 
