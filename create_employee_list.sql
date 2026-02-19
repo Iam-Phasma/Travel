@@ -1,0 +1,36 @@
+-- Create employee_list table
+CREATE TABLE IF NOT EXISTS employee_list (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE employee_list ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow authenticated users to read employee list
+CREATE POLICY "Allow authenticated users to read employee list"
+ON employee_list
+FOR SELECT
+TO authenticated
+USING (true);
+
+-- Create policy to allow admin users to insert/update/delete
+CREATE POLICY "Allow admin users to manage employee list"
+ON employee_list
+FOR ALL
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid()
+        AND profiles.role = 'admin'
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM profiles
+        WHERE profiles.id = auth.uid()
+        AND profiles.role = 'admin'
+    )
+);

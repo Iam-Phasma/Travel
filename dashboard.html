@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,7 +17,40 @@
         <section class="panel wide-panel" id="ta-panel">
             <div class="panel-head">
                 <h2>Travel Authorities</h2>
-                <span class="pill">Read only</span>
+                <div class="panel-head-actions">
+                    <button id="filter-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle filters" title="Filter">
+                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                        </svg>
+                    </button>
+                    <span class="pill">Read only</span>
+                </div>
+            </div>
+            <div id="filter-panel" class="filter-panel">
+                <div class="filter-content">
+                    <h3>Filter Options</h3>
+                    <div class="filter-mode">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="filter-match-all">
+                            <span>Match all filters (AND)</span>
+                        </label>
+                        <p class="filter-mode-note">Unchecked: Match any filter (OR)</p>
+                    </div>
+                    <div class="filter-fields">
+                        <div class="filter-field">
+                            <label for="filter-ta-number">TA Number</label>
+                            <input type="text" id="filter-ta-number" placeholder="0000-00-0000" maxlength="12">
+                        </div>
+                        <div class="filter-field">
+                            <label for="filter-travel-date">Travel Date</label>
+                            <input type="text" id="filter-travel-date" placeholder="Select date">
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="apply-filter-btn" class="filter-btn apply-btn" type="button">Apply Filter</button>
+                        <button id="clear-filter-btn" class="filter-btn clear-btn" type="button">Clear Filter</button>
+                    </div>
+                </div>
             </div>
             <div class="table-wrap max-rows-10">
                 <table class="data-table" aria-describedby="ta-status">
@@ -26,6 +60,7 @@
                             <th scope="col">TA Number</th>
                             <th scope="col">Purpose</th>
                             <th scope="col">Destination</th>
+                            <th scope="col">Employees</th>
                             <th scope="col">Travel Date</th>
                             <th scope="col">Travel Until</th>
                             <th scope="col">File</th>
@@ -33,7 +68,7 @@
                     </thead>
                     <tbody id="ta-body">
                         <tr>
-                            <td colspan="7">Loading records...</td>
+                            <td colspan="8">Loading records...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -60,6 +95,10 @@
                 <div class="detail-row">
                     <span class="detail-label">Destination</span>
                     <span class="detail-value" id="view-destination">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Employees</span>
+                    <span class="detail-value" id="view-employees">-</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Travel Date</span>
@@ -136,6 +175,11 @@
         let taOffset = 0;
         let taRows = [];
         let taHasMore = true;
+        let activeFilters = {
+            taNumber: "",
+            travelDate: "",
+            matchAll: false
+        };
 
         const formatFileLabel = (value) => {
             const base = String(value || "Download");
@@ -150,22 +194,58 @@
         const viewTaNumber = document.getElementById("view-ta-number");
         const viewPurpose = document.getElementById("view-purpose");
         const viewDestination = document.getElementById("view-destination");
+        const viewEmployees = document.getElementById("view-employees");
         const viewTravelDate = document.getElementById("view-travel-date");
         const viewTravelUntil = document.getElementById("view-travel-until");
         const viewFileLink = document.getElementById("view-file-link");
 
+        const applyClientFilters = (rows) => {
+            // If no filters are active, return all rows
+            if (!activeFilters.taNumber && !activeFilters.travelDate) {
+                return rows;
+            }
+
+            return rows.filter(row => {
+                const checks = [];
+
+                // Check TA Number filter
+                if (activeFilters.taNumber) {
+                    const matchesTa = row.ta_number && row.ta_number.toLowerCase().includes(activeFilters.taNumber.toLowerCase());
+                    checks.push(matchesTa);
+                }
+
+                // Check Travel Date filter
+                if (activeFilters.travelDate) {
+                    const matchesDate = row.travel_date && row.travel_date === activeFilters.travelDate;
+                    checks.push(matchesDate);
+                }
+
+                // Return based on match mode (AND or OR)
+                if (activeFilters.matchAll) {
+                    // AND: all filters must match
+                    return checks.every(check => check === true);
+                } else {
+                    // OR: at least one filter must match
+                    return checks.some(check => check === true);
+                }
+            });
+        };
+
         const renderRows = (rows) => {
-            if (!rows.length) {
-                taBody.innerHTML = "<tr><td colspan=\"7\">No records yet.</td></tr>";
+            const filteredRows = applyClientFilters(rows);
+            
+            if (!filteredRows.length) {
+                taBody.innerHTML = "<tr><td colspan=\"8\">No records match the current filters.</td></tr>";
                 return;
             }
 
-            taBody.innerHTML = rows.map((row, index) => {
+            taBody.innerHTML = filteredRows.map((row, index) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
                 const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
                 const displayName = formatFileLabel(safeName);
+                const employeesText = row.employees || "-";
 
                 return `
                     <tr>
@@ -178,7 +258,8 @@
                         </td>
                         <td>${row.ta_number || "-"}</td>
                         <td><span class="truncate">${row.purpose || "-"}</span></td>
-                        <td><span class="truncate">${row.destination || "-"}</span></td>
+                        <td style="text-align: left;"><span class="truncate">${row.destination || "-"}</span></td>
+                        <td style="text-align: left;"><span class="truncate">${employeesText}</span></td>
                         <td>${dateText}</td>
                         <td>${untilText}</td>
                         <td>
@@ -191,12 +272,13 @@
             document.querySelectorAll(".view-btn").forEach((btn) => {
                 btn.addEventListener("click", (e) => {
                     const index = Number(e.currentTarget.getAttribute("data-index"));
-                    const record = rows[index];
+                    const record = filteredRows[index];
                     if (!record) return;
 
                     viewTaNumber.textContent = record.ta_number || "-";
                     viewPurpose.textContent = record.purpose || "-";
                     viewDestination.textContent = record.destination || "-";
+                    viewEmployees.textContent = record.employees || "-";
                     viewTravelDate.textContent = record.travel_date
                         ? new Date(record.travel_date).toLocaleDateString()
                         : "-";
@@ -218,8 +300,13 @@
         };
 
         const updateTaFooter = () => {
+            const filteredCount = applyClientFilters(taRows).length;
+            const hasActiveFilters = activeFilters.taNumber || activeFilters.travelDate;
+            
             if (!taRows.length) {
                 taStatus.textContent = "No records yet.";
+            } else if (hasActiveFilters) {
+                taStatus.textContent = `Showing ${filteredCount} of ${taRows.length} record${taRows.length === 1 ? "" : "s"} (filtered).`;
             } else if (!taHasMore) {
                 taStatus.textContent = "End of records.";
             } else {
@@ -250,7 +337,7 @@
                 const to = taOffset + pageSize - 1;
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("ta_number, purpose, destination, travel_date, travel_until, file_name, file_url, created_at")
+                    .select("ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at")
                     .order("created_at", { ascending: false })
                     .range(from, to);
 
@@ -287,6 +374,67 @@
             }
         });
 
+        // Filter panel functionality
+        const filterToggleBtn = document.getElementById("filter-toggle-btn");
+        const filterPanel = document.getElementById("filter-panel");
+        const applyFilterBtn = document.getElementById("apply-filter-btn");
+        const clearFilterBtn = document.getElementById("clear-filter-btn");
+        const filterTaNumberInput = document.getElementById("filter-ta-number");
+        const filterTravelDateInput = document.getElementById("filter-travel-date");
+        const filterMatchAllCheckbox = document.getElementById("filter-match-all");
+
+        // Auto-dash formatting for TA Number filter
+        const formatTaNumber = (value) => {
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            const part1 = digits.slice(0, 4);
+            const part2 = digits.slice(4, 6);
+            const part3 = digits.slice(6, 10);
+            if (digits.length <= 4) return part1;
+            if (digits.length <= 6) return `${part1}-${part2}`;
+            return `${part1}-${part2}-${part3}`;
+        };
+
+        filterTaNumberInput.addEventListener("input", () => {
+            filterTaNumberInput.value = formatTaNumber(filterTaNumberInput.value);
+        });
+
+        // Initialize flatpickr for date filter
+        window.flatpickr(filterTravelDateInput, {
+            dateFormat: "Y-m-d",
+            allowInput: true
+        });
+
+        filterToggleBtn.addEventListener("click", () => {
+            filterPanel.classList.toggle("show");
+        });
+
+        applyFilterBtn.addEventListener("click", () => {
+            activeFilters.taNumber = filterTaNumberInput.value.trim();
+            activeFilters.travelDate = filterTravelDateInput.value;
+            activeFilters.matchAll = filterMatchAllCheckbox.checked;
+            renderRows(taRows);
+            updateTaFooter();
+            filterPanel.classList.remove("show");
+        });
+
+        clearFilterBtn.addEventListener("click", () => {
+            activeFilters.taNumber = "";
+            activeFilters.travelDate = "";
+            activeFilters.matchAll = false;
+            filterTaNumberInput.value = "";
+            filterTravelDateInput.value = "";
+            filterMatchAllCheckbox.checked = false;
+            renderRows(taRows);
+            updateTaFooter();
+        });
+
+        // Close filter panel when clicking outside
+        document.addEventListener("click", (e) => {
+            if (!filterPanel.contains(e.target) && !filterToggleBtn.contains(e.target) && filterPanel.classList.contains("show")) {
+                filterPanel.classList.remove("show");
+            }
+        });
+
         const init = async () => {
             await requireUser();
             await loadTravelAuthorities(true);
@@ -294,5 +442,6 @@
 
         init();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 </body>
 </html>

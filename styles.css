@@ -837,3 +837,389 @@ button:hover {
         padding: 18px;
     }
 }
+
+/* Filter Panel Styles */
+.panel-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(47, 111, 179, 0.15);
+    color: var(--sea);
+    border: none;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+
+.filter-icon-btn:hover {
+    background: rgba(47, 111, 179, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.2);
+}
+
+.filter-icon-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+.filter-panel {
+    position: absolute;
+    top: 70px;
+    right: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(15, 26, 31, 0.25);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    z-index: 100;
+    min-width: 320px;
+    max-width: 400px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 250ms ease;
+}
+
+.filter-panel.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.filter-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: var(--ink);
+}
+
+.filter-mode {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(15, 26, 31, 0.1);
+}
+
+.filter-mode .checkbox-label {
+    margin-bottom: 4px;
+}
+
+.filter-mode-note {
+    font-size: 0.78rem;
+    color: rgba(15, 26, 31, 0.55);
+    margin: 4px 0 0 26px;
+    line-height: 1.3;
+}
+
+.filter-note {
+    font-size: 0.82rem;
+    color: rgba(15, 26, 31, 0.65);
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+}
+
+.filter-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-field label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--ink);
+}
+
+.filter-field input[type="text"],
+.filter-field input[type="month"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 26, 31, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 200ms ease;
+    cursor: text;
+}
+
+.filter-field input[type="text"].flatpickr-input {
+    cursor: pointer;
+}
+
+.filter-field input:focus {
+    border-color: var(--sea);
+    box-shadow: 0 0 0 3px rgba(47, 111, 179, 0.15);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 18px;
+}
+
+.filter-btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+
+.apply-btn {
+    background: var(--sea);
+    color: white;
+}
+
+.apply-btn:hover {
+    background: #2561a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.3);
+}
+
+.clear-btn {
+    background: rgba(15, 26, 31, 0.1);
+    color: var(--ink);
+}
+
+.clear-btn:hover {
+    background: rgba(15, 26, 31, 0.18);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(15, 26, 31, 0.15);
+}
+
+/* Multiselect Component Styles */
+.multiselect-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.multiselect-display {
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    background: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    transition: all 200ms ease;
+}
+
+.multiselect-display:hover {
+    border-color: rgba(15, 26, 31, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.multiselect-placeholder {
+    color: rgba(15, 26, 31, 0.5);
+    font-size: 1rem;
+}
+
+.multiselect-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--sea);
+    color: white;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.multiselect-remove {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 150ms ease;
+}
+
+.multiselect-remove:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: none;
+    box-shadow: none;
+}
+
+.multiselect-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    box-shadow: 0 8px 24px rgba(15, 26, 31, 0.15);
+    max-height: 280px;
+    overflow: hidden;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 200ms ease;
+}
+
+.multiselect-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.multiselect-search-wrapper {
+    padding: 10px;
+    border-bottom: 1px solid rgba(15, 26, 31, 0.08);
+}
+
+.multiselect-search {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 0.92rem;
+    outline: none;
+}
+
+.multiselect-search:focus {
+    border-color: var(--sea);
+    box-shadow: 0 0 0 2px rgba(47, 111, 179, 0.15);
+}
+
+.multiselect-options {
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.multiselect-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.92rem;
+    transition: background 150ms ease;
+}
+
+.multiselect-option:hover {
+    background: rgba(47, 111, 179, 0.1);
+}
+
+.multiselect-no-options {
+    padding: 14px;
+    text-align: center;
+    color: rgba(15, 26, 31, 0.5);
+    font-size: 0.88rem;
+}
+
+/* Employee Management Styles */
+.employee-list-container {
+    margin-top: 32px;
+}
+
+.employee-list-container h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    color: var(--ink);
+}
+
+.employee-list {
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 16px;
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.employee-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(15, 26, 31, 0.08);
+    transition: background 150ms ease;
+}
+
+.employee-item:last-child {
+    border-bottom: none;
+}
+
+.employee-item:hover {
+    background: rgba(47, 111, 179, 0.05);
+}
+
+.employee-name {
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-weight: 500;
+}
+
+.delete-employee-btn {
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(161, 37, 27, 0.15);
+    color: #a1251b;
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+}
+
+.delete-employee-btn:hover {
+    background: rgba(161, 37, 27, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
+.delete-employee-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.loading-text {
+    text-align: center;
+    padding: 20px;
+    color: rgba(15, 26, 31, 0.6);
+    font-size: 0.92rem;
+}
+
+.no-employees {
+    text-align: center;
+    padding: 24px;
+    color: rgba(15, 26, 31, 0.5);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+.error-text {
+    text-align: center;
+    padding: 20px;
+    color: #a1251b;
+    font-size: 0.92rem;
+}
