@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="login/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
@@ -16,7 +16,7 @@
     <div class="panel-switcher">
         <button class="switch-btn active" data-panel="upload-panel">Upload Files</button>
         <button class="switch-btn" data-panel="view-panel">View & Manage</button>
-        <button class="switch-btn" data-panel="employees-panel">Manage Employees</button>
+        <button class="switch-btn" data-panel="employees-panel">Employees</button>
     </div>
     <section class="panel" id="upload-panel">
         <h2>Travel Authority Upload</h2>
@@ -101,7 +101,7 @@
             <div class="auto-clear-bottom">
                 <label class="checkbox-label">
                     <input type="checkbox" id="auto-clear-checkbox">
-                    <span>Auto clear fields</span>
+                    <span>Clear fields after successful upload</span>
                 </label>
             </div>
         </div>
@@ -983,6 +983,45 @@
         const toast = document.getElementById("toast");
         bindTaFormatter(taNumberInput);
         bindTaFormatter(updateTaInput);
+        
+        // Real-time TA number validation for upload modal
+        let taCheckTimer = null;
+        taNumberInput.addEventListener("input", async () => {
+            const taNumber = taNumberInput.value.trim();
+            
+            // Clear existing timer
+            if (taCheckTimer) {
+                clearTimeout(taCheckTimer);
+            }
+            
+            // Only check if TA number is valid (matches pattern)
+            if (isValidTaNumber(taNumber)) {
+                // Debounce the database check by 500ms
+                taCheckTimer = setTimeout(async () => {
+                    try {
+                        const { data, error } = await supabase
+                            .from("travel_authorities")
+                            .select("ta_number")
+                            .eq("ta_number", taNumber)
+                            .maybeSingle();
+                        
+                        if (error && error.code !== 'PGRST116') {
+                            // PGRST116 is "no rows returned" - that's expected if TA doesn't exist
+                            console.error("Error checking TA number:", error);
+                            return;
+                        }
+                        
+                        if (data) {
+                            // TA number already exists
+                            showToast(`TA ${taNumber} already exists in the database.`);
+                        }
+                    } catch (err) {
+                        console.error("Error checking TA number:", err);
+                    }
+                }, 500);
+            }
+        });
+        
         const recordCache = new Map();
         const pageSize = 20;
         let viewOffset = 0;
@@ -1867,7 +1906,7 @@
 
     <div id="footer-container"></div>
     <script>
-        fetch('footer.html')
+        fetch('footer/footer.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('footer-container').innerHTML = data;
