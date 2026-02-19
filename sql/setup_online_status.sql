@@ -62,8 +62,6 @@ $$;
 
 GRANT EXECUTE ON FUNCTION update_last_seen() TO authenticated;
 
-RAISE NOTICE '✓ Created/updated update_last_seen function';
-
 -- Step 3: Update the get_all_users_with_emails function to include online status
 CREATE OR REPLACE FUNCTION get_all_users_with_emails()
 RETURNS TABLE (
@@ -107,8 +105,6 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION get_all_users_with_emails() TO authenticated;
-
-RAISE NOTICE '✓ Updated get_all_users_with_emails function';
 
 -- Step 4: Test the setup
 DO $$
