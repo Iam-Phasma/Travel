@@ -20,12 +20,6 @@
     </div>
     <section class="panel" id="upload-panel">
         <h2>Travel Authority Upload</h2>
-        <div class="auto-clear-top">
-            <label class="checkbox-label">
-                <input type="checkbox" id="auto-clear-checkbox">
-                <span>Auto clear fields</span>
-            </label>
-        </div>
         <div class="fields">
             <div>
                 <label for="ta-number">TA Number <span class="required">*</span></label>
@@ -89,7 +83,7 @@
                     </div>
                 </div>
                 <div>
-                    <label for="travel-until">Travel Until</label>
+                    <label for="travel-until">Travel End</label>
                     <div class="input-wrap">
                         <span class="icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -103,6 +97,12 @@
             <div>
                 <label for="scan-file">Upload Scanned <span class="required">*</span></label>
                 <input id="scan-file" type="file" accept="application/pdf,.pdf" required>
+            </div>
+            <div class="auto-clear-bottom">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="auto-clear-checkbox">
+                    <span>Auto clear fields</span>
+                </label>
             </div>
         </div>
         <div class="upload-controls">
@@ -165,7 +165,7 @@
                         <th scope="col">Destination</th>
                         <th scope="col">Employees</th>
                         <th scope="col">Travel Date</th>
-                        <th scope="col">Travel Until</th>
+                        <th scope="col">Travel End</th>
                         <th scope="col">File</th>
                         <th scope="col">Actions</th>
                     </tr>
@@ -226,6 +226,23 @@
         </div>
     </div>
 
+    <div id="edit-employee-modal" class="modal">
+        <div class="modal-content modal-form">
+            <h3>Edit Employee Name</h3>
+            <div class="fields">
+                <div>
+                    <label for="edit-employee-name">Employee Name <span class="required">*</span></label>
+                    <input id="edit-employee-name" type="text" placeholder="Enter employee name" required>
+                </div>
+            </div>
+            <span class="status hidden" id="edit-employee-status"></span>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancel-edit-employee">Cancel</button>
+                <button class="modal-btn confirm" id="confirm-edit-employee">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <div id="view-modal" class="modal">
@@ -253,7 +270,7 @@
                     <span class="detail-value" id="view-travel-date">-</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Travel Until</span>
+                    <span class="detail-label">Travel End</span>
                     <span class="detail-value" id="view-travel-until">-</span>
                 </div>
                 <div class="detail-row">
@@ -334,7 +351,7 @@
                         </div>
                     </div>
                     <div>
-                        <label for="update-travel-until">Travel Until</label>
+                        <label for="update-travel-until">Travel End</label>
                         <div class="input-wrap">
                             <span class="icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -760,7 +777,7 @@
                 }
 
                 if (start > end) {
-                    uploadStatus.textContent = "Travel date cannot be after travel until.";
+                    uploadStatus.textContent = "Travel date cannot be after travel end.";
                     uploadStatus.classList.add("status--error");
                     uploadStatus.classList.remove("status--shake");
                     void uploadStatus.offsetWidth;
@@ -1432,7 +1449,7 @@
             }
 
             if (start > end) {
-                updateStatus.textContent = "Travel date cannot be after travel until.";
+                updateStatus.textContent = "Travel date cannot be after travel end.";
                 updateStatus.classList.add("status--error");
                 updateStatus.classList.remove("status--shake", "hidden");
                 void updateStatus.offsetWidth;
@@ -1595,7 +1612,13 @@
         const deleteEmployeeModal = document.getElementById("delete-employee-modal");
         const cancelDeleteEmployeeBtn = document.getElementById("cancel-delete-employee");
         const confirmDeleteEmployeeBtn = document.getElementById("confirm-delete-employee");
+        const editEmployeeModal = document.getElementById("edit-employee-modal");
+        const editEmployeeNameInput = document.getElementById("edit-employee-name");
+        const editEmployeeStatus = document.getElementById("edit-employee-status");
+        const cancelEditEmployeeBtn = document.getElementById("cancel-edit-employee");
+        const confirmEditEmployeeBtn = document.getElementById("confirm-edit-employee");
         let deleteEmployeeData = null;
+        let editEmployeeData = null;
 
         const renderEmployeeList = async () => {
             try {
@@ -1616,13 +1639,33 @@
                 employeeListContainer.innerHTML = data.map(emp => `
                     <div class="employee-item">
                         <span class="employee-name">${emp.name}</span>
-                        <button class="delete-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Delete employee">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M9 3h6l1 2h4a1 1 0 1 1 0 2h-1l-1.1 12.1a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9L5 7H4a1 1 0 0 1 0-2h4l1-2Zm1.1 7a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Zm5.9 0a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Z" />
-                            </svg>
-                        </button>
+                        <div class="employee-item-actions">
+                            <button class="edit-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Edit employee">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                </svg>
+                            </button>
+                            <button class="delete-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Delete employee">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M9 3h6l1 2h4a1 1 0 1 1 0 2h-1l-1.1 12.1a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9L5 7H4a1 1 0 0 1 0-2h4l1-2Zm1.1 7a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Zm5.9 0a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 `).join('');
+
+                // Add edit button listeners
+                document.querySelectorAll('.edit-employee-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        editEmployeeData = {
+                            id: btn.getAttribute('data-id'),
+                            name: btn.getAttribute('data-name')
+                        };
+                        editEmployeeNameInput.value = editEmployeeData.name;
+                        editEmployeeStatus.classList.add('hidden');
+                        editEmployeeModal.classList.add('show');
+                    });
+                });
 
                 // Add delete button listeners
                 document.querySelectorAll('.delete-employee-btn').forEach(btn => {
@@ -1722,6 +1765,80 @@
             if (e.target === deleteEmployeeModal) {
                 deleteEmployeeModal.classList.remove("show");
                 deleteEmployeeData = null;
+            }
+        });
+
+        cancelEditEmployeeBtn.addEventListener("click", () => {
+            editEmployeeModal.classList.remove("show");
+            editEmployeeData = null;
+            editEmployeeNameInput.value = "";
+            editEmployeeStatus.classList.add("hidden");
+        });
+
+        confirmEditEmployeeBtn.addEventListener("click", async () => {
+            if (!editEmployeeData || !editEmployeeData.id) return;
+
+            const newName = editEmployeeNameInput.value.trim();
+            if (!newName) {
+                editEmployeeStatus.textContent = "Please enter an employee name.";
+                editEmployeeStatus.classList.remove("hidden", "status--success");
+                editEmployeeStatus.classList.add("status--error", "status--shake");
+                return;
+            }
+
+            if (newName === editEmployeeData.name) {
+                editEmployeeStatus.textContent = "No changes made.";
+                editEmployeeStatus.classList.remove("hidden", "status--error");
+                editEmployeeStatus.classList.add("status--success");
+                return;
+            }
+
+            try {
+                editEmployeeStatus.textContent = "Updating employee...";
+                editEmployeeStatus.classList.remove("hidden", "status--error", "status--success");
+
+                const { error } = await supabase
+                    .from("employee_list")
+                    .update({ name: newName })
+                    .eq("id", editEmployeeData.id);
+
+                if (error) {
+                    if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+                        throw new Error("This employee name already exists.");
+                    }
+                    throw error;
+                }
+
+                editEmployeeStatus.textContent = "Employee updated successfully!";
+                editEmployeeStatus.classList.add("status--success");
+                editEmployeeStatus.classList.remove("status--error");
+                
+                setTimeout(() => {
+                    editEmployeeModal.classList.remove("show");
+                    editEmployeeData = null;
+                    editEmployeeNameInput.value = "";
+                    editEmployeeStatus.classList.add("hidden");
+                }, 1000);
+                
+                await renderEmployeeList();
+                showToast("Employee updated successfully!");
+            } catch (error) {
+                console.error("Edit employee error:", error);
+                const message = error && error.message ? error.message : "Failed to update employee.";
+                editEmployeeStatus.textContent = message;
+                editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
+                editEmployeeStatus.classList.add("status--error");
+                void editEmployeeStatus.offsetWidth;
+                editEmployeeStatus.classList.add("status--shake");
+            }
+        });
+
+        editEmployeeModal.addEventListener("click", (e) => {
+            if (e.target === editEmployeeModal) {
+                editEmployeeModal.classList.remove("show");
+                editEmployeeData = null;
+                editEmployeeNameInput.value = "";
+                editEmployeeStatus.classList.add("hidden");
             }
         });
 

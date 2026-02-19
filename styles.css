@@ -101,7 +101,7 @@ h1 {
 .panel {
     background: var(--glass);
     border-radius: 24px;
-    padding: 28px;
+    padding: 28px 28px 18px 28px;
     width: min(640px, 100%);
     box-shadow: var(--shadow);
     backdrop-filter: blur(12px);
@@ -132,12 +132,18 @@ h1 {
     margin-bottom: 20px;
 }
 
+.auto-clear-bottom {
+    text-align: left;
+    margin-top: 12px;
+}
+
 .upload-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-top: 10px;
 }
 
 #upload-btn {
@@ -191,7 +197,6 @@ label {
 
 label.checkbox-label {
     display: inline-flex !important;
-    margin-bottom: 0;
 }
 
 .required {
@@ -483,7 +488,7 @@ button:hover {
     white-space: nowrap;
 }
 
-/* Travel Until - fixed width */
+/* Travel End - fixed width */
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
     width: 110px;
@@ -506,13 +511,13 @@ button:hover {
 
 /* Center alignment */
 .data-table th:nth-child(2),
-.data-table th:nth-child(7),
-.data-table th:nth-child(8) {
+.data-table th:nth-child(7) {
     text-align: center;
 }
 
 .data-table td:nth-child(5),
-.data-table td:nth-child(6) {
+.data-table td:nth-child(6),
+.data-table td:nth-child(7) {
     text-align: center;
 }
 
@@ -778,6 +783,7 @@ button:hover {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+    margin-top: 20px;
 }
 
 .modal-btn {
@@ -1230,6 +1236,32 @@ button:hover {
     font-size: 0.95rem;
     color: var(--ink);
     font-weight: 500;
+}
+
+.employee-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-employee-btn {
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(47, 111, 179, 0.15);
+    color: #2f6fb3;
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+}
+
+.edit-employee-btn:hover {
+    background: rgba(47, 111, 179, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
+.edit-employee-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 .delete-employee-btn {
