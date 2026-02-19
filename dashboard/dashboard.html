@@ -134,6 +134,48 @@
         const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // Periodically check if current user's access_enabled is still true
+        const checkAccessEnabled = async () => {
+            try {
+                const { data: sessionData } = await supabase.auth.getSession();
+                const user = sessionData?.session?.user;
+                if (!user) return;
+
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("access_enabled")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Error checking access_enabled:", error);
+                    return;
+                }
+
+                if (data && data.access_enabled === false) {
+                    // Show toast notification or alert
+                    let toastEl = document.getElementById("toast");
+                    if (!toastEl) {
+                        toastEl = document.createElement("div");
+                        toastEl.id = "toast";
+                        toastEl.className = "toast toast--error";
+                        document.body.appendChild(toastEl);
+                    }
+                    toastEl.textContent = "Access disabled: You have been logged out.";
+                    toastEl.classList.add("show", "toast--error");
+                    // Wait 2 seconds for user to see the toast
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await supabase.auth.signOut();
+                    window.location.href = '../index.html';
+                }
+            } catch (err) {
+                console.error("Error in checkAccessEnabled:", err);
+            }
+        };
+        // Check every 5 seconds
+        setInterval(checkAccessEnabled, 5000);
+        setTimeout(checkAccessEnabled, 3000); // First check after 3 seconds
+
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
             try {
