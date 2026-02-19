@@ -1262,7 +1262,7 @@ button:hover {
 }
 
 .edit-employee-btn {
-    padding: 6px 8px;
+    padding: 6px 12px;
     border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: #2f6fb3;
@@ -1283,7 +1283,7 @@ button:hover {
 }
 
 .delete-employee-btn {
-    padding: 6px 8px;
+    padding: 6px 12px;
     border-radius: 8px;
     background: rgba(161, 37, 27, 0.15);
     color: #a1251b;
@@ -1301,6 +1301,36 @@ button:hover {
 .delete-employee-btn svg {
     width: 14px;
     height: 14px;
+}
+
+.toggle-employee-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(76, 153, 76, 0.15);
+    color: #4c994c;
+    border: none;
+    cursor: pointer;
+    transition: background 200ms ease;
+}
+
+.toggle-employee-btn:hover {
+    background: rgba(76, 153, 76, 0.25);
+    transform: none;
+    box-shadow: none;
+}
+
+.toggle-employee-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.employee-inactive .toggle-employee-btn {
+    background: rgba(153, 102, 51, 0.15);
+    color: #996633;
+}
+
+.employee-inactive .toggle-employee-btn:hover {
+    background: rgba(153, 102, 51, 0.25);
 }
 
 .loading-text {
