@@ -765,9 +765,41 @@ button:hover {
 }
 
 .detail-list {
-    display: grid;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     margin: 18px 0 24px;
+}
+
+.detail-row-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-divider {
+    border: none;
+    border-top: 1px solid #e3e8f0;
+    margin: 0 0;
+    opacity: 0.7;
+}
+.detail-divider--spaced {
+    margin: 18px 0;
+}
+
+.file-link {
+    display: inline-block;
+    background: #e3f1ff;
+    color: #2f6fb3;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.file-link:hover {
+    background: #cfe4ff;
+    color: #174a7c;
 }
 
 .detail-row {
@@ -776,10 +808,11 @@ button:hover {
 }
 
 .detail-label {
-    font-size: 0.85rem;
-    color: rgba(15, 26, 31, 0.6);
+    font-size: 0.95rem;
+    color: rgba(15, 26, 31, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.02em;
+    font-weight: 700;
 }
 
 .detail-value {
