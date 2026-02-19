@@ -483,8 +483,7 @@
                         toastEl.textContent = "Access disabled: You have been logged out.";
                         toastEl.classList.add("show", "toast--error");
                     }
-                    // Wait 2 seconds for user to see the toast
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Immediate logout
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
                     window.location.href = '../index.html';
@@ -551,7 +550,7 @@
                     }
                     
                     // Wait 2 seconds for user to see the toast
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
