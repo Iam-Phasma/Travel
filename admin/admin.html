@@ -452,7 +452,7 @@
                     
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
-                    window.location.href = 'index.html';
+                    window.location.href = '../index.html';
                 }
             } catch (err) {
                 console.error("Error in checkAdminSession:", err);
@@ -485,7 +485,7 @@
         const requireAdmin = async () => {
             const { data: sessionData, error } = await supabase.auth.getSession();
             if (error || !sessionData?.session) {
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
                 return;
             }
 
