@@ -517,6 +517,22 @@
             await requireUser();
             await loadEmployeesForFilter();
             await loadTravelAuthorities(true);
+            
+            // Start heartbeat to track online status
+            const updateHeartbeat = async () => {
+                try {
+                    await supabase.rpc('update_last_seen');
+                } catch (error) {
+                    // Silently fail - user might not have the function yet
+                    console.debug('Heartbeat update skipped');
+                }
+            };
+            
+            // Update immediately
+            updateHeartbeat();
+            
+            // Update every 10 seconds
+            setInterval(updateHeartbeat, 10000);
         };
 
         init();

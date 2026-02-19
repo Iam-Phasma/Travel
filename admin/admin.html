@@ -2458,6 +2458,19 @@
             const userRole = await requireAdmin();
             if (!userRole) return; // Redirected to login or dashboard
             
+            // Start global heartbeat for current user (runs on all panels)
+            const updateHeartbeat = async () => {
+                try {
+                    await supabase.rpc('update_last_seen');
+                } catch (error) {
+                    console.debug('Heartbeat update skipped');
+                }
+            };
+            
+            // Update immediately and then every 10 seconds
+            updateHeartbeat();
+            setInterval(updateHeartbeat, 10000);
+            
             // Show User Management panel only for super users
             if (userRole === 'super') {
                 const usersPanelBtn = document.getElementById('users-panel-btn');
@@ -2470,26 +2483,13 @@
                 // Start auto-refresh for user management panel (every 10 seconds)
                 let userRefreshInterval = null;
                 
-                // Update last_seen heartbeat for current user
-                const updateHeartbeat = async () => {
-                    try {
-                        await supabase.rpc('update_last_seen');
-                    } catch (error) {
-                        console.error('Failed to update heartbeat:', error);
-                    }
-                };
-                
                 // Set up interval to refresh users table when panel is visible
                 const startUserRefresh = () => {
                     if (userRefreshInterval) return; // Already running
                     
-                    // Update heartbeat immediately
-                    updateHeartbeat();
-                    
                     userRefreshInterval = setInterval(async () => {
                         // Only refresh if users panel is visible
                         if (usersPanel && !usersPanel.classList.contains('hidden')) {
-                            await updateHeartbeat();
                             await loadUsers();
                         }
                     }, 10000); // 10 seconds
