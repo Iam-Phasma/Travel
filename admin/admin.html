@@ -2186,11 +2186,16 @@
                 const isOnline = user.is_online === true;
                 const statusClass = isOnline ? 'status-online' : 'status-offline';
                 const statusText = isOnline ? 'Online' : 'Offline';
-                
+                // Show last seen for offline users
+                let lastSeenText = '';
+                if (!isOnline && user.last_seen) {
+                    const d = new Date(user.last_seen);
+                    lastSeenText = `<br><span class='last-seen'>Last seen: ${d.toLocaleString()}</span>`;
+                }
                 return `
                 <tr class="${!accessEnabled ? 'user-disabled' : ''}">
                     <td class="text-left" title="${fullEmail}">${displayEmail}</td>
-                    <td><span class="status-indicator ${statusClass}">${statusText}</span></td>
+                    <td><span class="status-indicator ${statusClass}">${statusText}</span>${lastSeenText}</td>
                     <td><span class="role-badge role-${user.role}">${user.role}</span></td>
                     <td>
                         <select class="access-select" data-user-id="${user.id}" data-current-access="${accessEnabled}">
@@ -2272,11 +2277,11 @@
             try {
                 usersStatus.textContent = 'Loading users...';
                 usersStatus.classList.remove('status--error');
-                
+                console.log('[DEBUG] Calling get_all_users_with_emails RPC...');
                 // Use RPC function to get users with emails from auth.users
                 // This is secure because the RPC function validates super user permission
                 const { data, error } = await supabase.rpc('get_all_users_with_emails');
-                
+                console.log('[DEBUG] RPC result:', { data, error });
                 if (error) {
                     console.error('Error loading users:', error);
                     console.error('Error details:', {
@@ -2285,7 +2290,6 @@
                         hint: error.hint,
                         code: error.code
                     });
-                    
                     // Provide helpful error messages
                     if (error.message.includes('function') && error.message.includes('does not exist')) {
                         throw new Error('Database function not found. Please run the SQL script: create_get_users_function.sql');
@@ -2295,21 +2299,18 @@
                         throw error;
                     }
                 }
-
                 if (!data || data.length === 0) {
                     allUsersData = [];
                     renderUsersTable([]);
                     return;
                 }
-
                 // Debug: Log user data to check online status
-                console.log('Users data:', data.map(u => ({
+                console.log('[DEBUG] Users data:', data.map(u => ({
                     email: u.email,
                     role: u.role,
                     is_online: u.is_online,
                     last_seen: u.last_seen
                 })));
-
                 // Sort by role priority: super > admin > user
                 allUsersData = data.sort((a, b) => {
                     const priorityDiff = getRolePriority(b.role) - getRolePriority(a.role);
@@ -2317,9 +2318,7 @@
                     // If same role, sort by email
                     return (a.email || '').localeCompare(b.email || '');
                 });
-
                 renderUsersTable(allUsersData);
-
             } catch (error) {
                 console.error('Failed to load users:', error);
                 usersBody.innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
@@ -2469,14 +2468,15 @@
             // Start global heartbeat for current user (runs on all panels)
             const updateHeartbeat = async () => {
                 try {
+                    console.log('[DEBUG] Calling update_last_seen RPC...');
                     const { data, error } = await supabase.rpc('update_last_seen');
                     if (error) {
-                        console.warn('Heartbeat error:', error.message);
+                        console.warn('[DEBUG] Heartbeat error:', error.message);
                     } else {
-                        console.debug('Heartbeat updated:', data);
+                        console.debug('[DEBUG] Heartbeat updated:', data);
                     }
                 } catch (error) {
-                    console.debug('Heartbeat update skipped:', error.message);
+                    console.debug('[DEBUG] Heartbeat update skipped:', error.message);
                 }
             };
             
