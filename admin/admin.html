@@ -230,6 +230,7 @@
                 <thead>
                     <tr>
                         <th scope="col" class="text-left">Email</th>
+                        <th scope="col">Status</th>
                         <th scope="col">Current Role</th>
                         <th scope="col">Access</th>
                         <th scope="col">Change Role</th>
@@ -237,7 +238,7 @@
                 </thead>
                 <tbody id="users-body">
                     <tr>
-                        <td colspan="4">Loading users...</td>
+                        <td colspan="5">Loading users...</td>
                     </tr>
                 </tbody>
             </table>
@@ -2172,7 +2173,7 @@
 
         const renderUsersTable = (users) => {
             if (!users || users.length === 0) {
-                usersBody.innerHTML = '<tr><td colspan="4">No users found.</td></tr>';
+                usersBody.innerHTML = '<tr><td colspan="5">No users found.</td></tr>';
                 usersStatus.textContent = 'No users available.';
                 return;
             }
@@ -2182,10 +2183,14 @@
                 const accessEnabled = user.access_enabled !== false;
                 const displayEmail = truncateEmail(user.email || 'No email', 10);
                 const fullEmail = user.email || 'No email';
+                const isOnline = user.is_online === true;
+                const statusClass = isOnline ? 'status-online' : 'status-offline';
+                const statusText = isOnline ? 'Online' : 'Offline';
                 
                 return `
                 <tr class="${!accessEnabled ? 'user-disabled' : ''}">
                     <td class="text-left" title="${fullEmail}">${displayEmail}</td>
+                    <td><span class="status-indicator ${statusClass}">${statusText}</span></td>
                     <td><span class="role-badge role-${user.role}">${user.role}</span></td>
                     <td>
                         <select class="access-select" data-user-id="${user.id}" data-current-access="${accessEnabled}">
@@ -2461,6 +2466,59 @@
                 }
                 // Load users for the User Management panel
                 await loadUsers();
+                
+                // Start auto-refresh for user management panel (every 10 seconds)
+                let userRefreshInterval = null;
+                
+                // Update last_seen heartbeat for current user
+                const updateHeartbeat = async () => {
+                    try {
+                        await supabase.rpc('update_last_seen');
+                    } catch (error) {
+                        console.error('Failed to update heartbeat:', error);
+                    }
+                };
+                
+                // Set up interval to refresh users table when panel is visible
+                const startUserRefresh = () => {
+                    if (userRefreshInterval) return; // Already running
+                    
+                    // Update heartbeat immediately
+                    updateHeartbeat();
+                    
+                    userRefreshInterval = setInterval(async () => {
+                        // Only refresh if users panel is visible
+                        if (usersPanel && !usersPanel.classList.contains('hidden')) {
+                            await updateHeartbeat();
+                            await loadUsers();
+                        }
+                    }, 10000); // 10 seconds
+                };
+                
+                const stopUserRefresh = () => {
+                    if (userRefreshInterval) {
+                        clearInterval(userRefreshInterval);
+                        userRefreshInterval = null;
+                    }
+                };
+                
+                // Monitor panel visibility
+                const panelSwitchers = document.querySelectorAll('.switch-btn');
+                panelSwitchers.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const targetPanel = btn.getAttribute('data-panel');
+                        if (targetPanel === 'users-panel') {
+                            startUserRefresh();
+                        } else {
+                            stopUserRefresh();
+                        }
+                    });
+                });
+                
+                // Start if users panel is initially visible
+                if (usersPanel && !usersPanel.classList.contains('hidden')) {
+                    startUserRefresh();
+                }
             }
         })();
         

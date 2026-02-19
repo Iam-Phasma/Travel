@@ -16,7 +16,9 @@ RETURNS TABLE (
     id UUID,
     email TEXT,
     role TEXT,
-    access_enabled BOOLEAN
+    access_enabled BOOLEAN,
+    is_online BOOLEAN,
+    last_seen TIMESTAMPTZ
 )
 LANGUAGE plpgsql
 SECURITY DEFINER -- This allows the function to access auth.users
@@ -33,14 +35,17 @@ BEGIN
         RAISE EXCEPTION 'Permission denied: Only super users can view all users';
     END IF;
     
-    -- Return all users with their emails and roles
-    -- Joins auth.users (for email) with profiles (for role and access_enabled)
+    -- Return all users with their emails, roles, and online status
+    -- A user is considered online if they were active in the last 5 minutes
+    -- Joins auth.users (for email) with profiles (for role, access_enabled, and last_seen)
     RETURN QUERY
     SELECT 
         au.id::UUID,
         au.email::TEXT,
         COALESCE(p.role, 'user')::TEXT as role,
-        COALESCE(p.access_enabled, true)::BOOLEAN as access_enabled
+        COALESCE(p.access_enabled, true)::BOOLEAN as access_enabled,
+        (p.last_seen IS NOT NULL AND p.last_seen > NOW() - INTERVAL '5 minutes')::BOOLEAN as is_online,
+        p.last_seen::TIMESTAMPTZ
     FROM auth.users au
     LEFT JOIN profiles p ON p.id = au.id
     ORDER BY au.email;
