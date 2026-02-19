@@ -2302,6 +2302,14 @@
                     return;
                 }
 
+                // Debug: Log user data to check online status
+                console.log('Users data:', data.map(u => ({
+                    email: u.email,
+                    role: u.role,
+                    is_online: u.is_online,
+                    last_seen: u.last_seen
+                })));
+
                 // Sort by role priority: super > admin > user
                 allUsersData = data.sort((a, b) => {
                     const priorityDiff = getRolePriority(b.role) - getRolePriority(a.role);
@@ -2314,7 +2322,7 @@
 
             } catch (error) {
                 console.error('Failed to load users:', error);
-                usersBody.innerHTML = '<tr><td colspan="4">Error loading users.</td></tr>';
+                usersBody.innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
                 usersStatus.textContent = 'Failed to load users.';
             }
         };
@@ -2461,9 +2469,14 @@
             // Start global heartbeat for current user (runs on all panels)
             const updateHeartbeat = async () => {
                 try {
-                    await supabase.rpc('update_last_seen');
+                    const { data, error } = await supabase.rpc('update_last_seen');
+                    if (error) {
+                        console.warn('Heartbeat error:', error.message);
+                    } else {
+                        console.debug('Heartbeat updated:', data);
+                    }
                 } catch (error) {
-                    console.debug('Heartbeat update skipped');
+                    console.debug('Heartbeat update skipped:', error.message);
                 }
             };
             
