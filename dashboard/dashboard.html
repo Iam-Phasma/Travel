@@ -194,8 +194,9 @@
             const base = String(value || "Download");
             const extMatch = base.match(/\.([a-z0-9]{1,5})$/i);
             const ext = extMatch ? `.${extMatch[1]}` : "";
-            const compact = base.replace(/[^a-z0-9]/gi, "");
-            if (compact.length <= 12) return compact || "File";
+            const nameWithoutExt = extMatch ? base.slice(0, -ext.length) : base;
+            const compact = nameWithoutExt.replace(/[^a-z0-9-]/gi, "");
+            if (compact.length <= 12) return compact + ext || "File";
             return `${compact.slice(0, 12)}...${ext}`;
         };
         const viewModal = document.getElementById("view-modal");
