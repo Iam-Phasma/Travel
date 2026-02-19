@@ -640,7 +640,8 @@
                     }).join('');
                     
                     options.querySelectorAll('.multiselect-option').forEach(opt => {
-                        opt.addEventListener('click', () => {
+                        opt.addEventListener('click', (e) => {
+                            e.stopPropagation();
                             const name = opt.getAttribute('data-name');
                             if (!selectedArray.includes(name)) {
                                 selectedArray.push(name);
@@ -1151,8 +1152,12 @@
                             <a class="link-btn" href="${fileUrl}" target="_blank" rel="noopener">${displayName}</a>
                         </td>
                         <td class="actions-cell">
-                            <button class="update-btn" data-id="${row.id}">Update</button>
-                            <button class="delete-btn icon-btn" data-id="${row.id}" aria-label="Delete">
+                            <button class="update-btn icon-btn" data-id="${row.id}" aria-label="Update" title="Update">
+                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                </svg>
+                            </button>
+                            <button class="delete-btn icon-btn" data-id="${row.id}" aria-label="Delete" title="Delete">
                                 <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
                                     <path d="M9 3h6l1 2h4a1 1 0 1 1 0 2h-1l-1.1 12.1a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9L5 7H4a1 1 0 0 1 0-2h4l1-2Zm1.1 7a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Zm5.9 0a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Z" />
                                 </svg>
