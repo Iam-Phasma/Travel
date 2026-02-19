@@ -2350,8 +2350,8 @@
 
                 // Update success
                 selectElement.setAttribute('data-current-role', newRole);
-                usersStatus.textContent = `User role changed to "${newRole}" successfully!`;
-                showToast(`User role changed to "${newRole}"`);
+                usersStatus.textContent = 'Role updated successfully';
+                showToast(`Role changed to ${newRole}`);
                 
                 // Reload users to refresh the display
                 await loadUsers();
@@ -2362,8 +2362,25 @@
                 // Revert select to original role
                 selectElement.value = originalRole;
                 
-                // Show error message
-                const errorMessage = error.message || 'Failed to change user role. You may not have permission.';
+                // Show user-friendly error message
+                let errorMessage = 'Failed to change role';
+                
+                if (error.hint) {
+                    errorMessage = error.hint;
+                } else if (error.message) {
+                    if (error.message.includes('last super user')) {
+                        errorMessage = 'You are the last super user. There must be at least one super user.';
+                    } else if (error.message.includes('Permission denied')) {
+                        errorMessage = 'Permission denied. Only super users can change roles.';
+                    } else if (error.message.includes('Invalid role')) {
+                        errorMessage = 'Invalid role selected.';
+                    } else if (error.message.includes('User not found')) {
+                        errorMessage = 'User not found.';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
                 usersStatus.textContent = errorMessage;
                 usersStatus.classList.add('status--error');
                 showToast(errorMessage);
@@ -2390,8 +2407,8 @@
 
                 // Update success
                 const action = newAccessEnabled ? 'enabled' : 'disabled';
-                usersStatus.textContent = `User access ${action} successfully!`;
-                showToast(`User access ${action}`);
+                usersStatus.textContent = 'Access updated successfully';
+                showToast(`Access ${action}`);
                 
                 // Reload users to refresh the display
                 await loadUsers();
@@ -2402,8 +2419,25 @@
                 // Revert select to original value
                 selectElement.value = originalAccess.toString();
                 
-                // Show error message
-                const errorMessage = error.message || 'Failed to toggle user access. You may not have permission.';
+                // Show user-friendly error message
+                let errorMessage = 'Failed to change access';
+                
+                if (error.hint) {
+                    errorMessage = error.hint;
+                } else if (error.message) {
+                    if (error.message.includes('last super user')) {
+                        errorMessage = 'You are the last super user. There must be at least one super user with access.';
+                    } else if (error.message.includes('Cannot disable your own access')) {
+                        errorMessage = 'You cannot disable your own access.';
+                    } else if (error.message.includes('Permission denied')) {
+                        errorMessage = 'Permission denied. Only super users can change access.';
+                    } else if (error.message.includes('User not found')) {
+                        errorMessage = 'User not found.';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
                 usersStatus.textContent = errorMessage;
                 usersStatus.classList.add('status--error');
                 showToast(errorMessage);
