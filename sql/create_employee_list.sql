@@ -2,8 +2,12 @@
 CREATE TABLE IF NOT EXISTS employee_list (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- If table already exists, add is_active column (run this if updating existing table)
+-- ALTER TABLE employee_list ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 -- Enable Row Level Security
 ALTER TABLE employee_list ENABLE ROW LEVEL SECURITY;

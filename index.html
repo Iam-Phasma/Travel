@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Login</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="footer/footer.css">
 </head>
 <body>
     <main class="shell">
         <header>
             <div class="logo-row" aria-label="Government logos">
-                <img src="CHED-Logo.png" alt="CHED logo">
-                <img src="Bagong_Pilipinas_logo.png" alt="Bagong Pilipinas logo">
+                <img src="assets/CHED-Logo.png" alt="CHED logo">
+                <img src="assets/Bagong_Pilipinas_logo.png" alt="Bagong Pilipinas logo">
             </div>
             <h1>CHEDRO IV TRAVEL AUTHORITY ARCHIVE</h1>
             <p class="tagline">This portal stores scanned copies of travel authority documents filed by CHEDRO IV employees. Use a given email and password to view and download files.</p>
@@ -187,11 +188,11 @@
                 // Role-based redirect is for UX only. 
                 // Real access control is enforced by Supabase RLS policies.
                 const role = data?.role || "user";
-                return { role, page: role === "admin" ? "admin.html" : "dashboard.html" };
+                return { role, page: role === "admin" ? "admin/admin.html" : "dashboard/dashboard.html" };
             } catch (error) {
                 console.error("Error fetching user role:", error);
                 // Default to dashboard if role lookup fails
-                return { role: "user", page: "dashboard.html" };
+                return { role: "user", page: "dashboard/dashboard.html" };
             }
         };
 
@@ -339,10 +340,11 @@
 
     <div id="footer-container"></div>
     <script>
-        fetch('footer.html')
+        fetch('footer/footer.html')
             .then(response => response.text())
             .then(data => {
-                document.getElementById('footer-container').innerHTML = data;
+                const footerHTML = data.replace(/FOOTER_ASSETS_PATH/g, 'assets');
+                document.getElementById('footer-container').innerHTML = footerHTML;
             })
             .catch(error => console.error('Error loading footer:', error));
     </script>

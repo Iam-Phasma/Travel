@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Upload</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="login/styles.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../footer/footer.css">
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
@@ -499,11 +500,11 @@
                 // Clear admin session token
                 localStorage.removeItem('admin_session_token');
                 await supabase.auth.signOut();
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
             } catch (error) {
                 console.error("Logout error:", error);
                 localStorage.removeItem('admin_session_token');
-                window.location.href = "index.html";
+                window.location.href = "../index.html";
             }
         });
 
@@ -580,11 +581,12 @@
             try {
                 const { data, error } = await supabase
                     .from("employee_list")
-                    .select("name")
+                    .select("name, is_active")
+                    .order("is_active", { ascending: false })
                     .order("name", { ascending: true });
 
                 if (error) throw error;
-                employeesList = data.map(e => e.name);
+                employeesList = data || [];
                 renderEmployeesOptions();
                 renderUpdateEmployeesOptions();
             } catch (error) {
@@ -624,16 +626,18 @@
 
             const renderOptions = () => {
                 const searchTerm = search.value.toLowerCase();
-                const filtered = employeesList.filter(name => 
-                    name.toLowerCase().includes(searchTerm) && !selectedArray.includes(name)
+                const filtered = employeesList.filter(emp => 
+                    emp.name.toLowerCase().includes(searchTerm) && !selectedArray.includes(emp.name)
                 );
                 
                 if (filtered.length === 0) {
                     options.innerHTML = '<div class=\"multiselect-no-options\">No options available</div>';
                 } else {
-                    options.innerHTML = filtered.map(name =>
-                        `<div class=\"multiselect-option\" data-name=\"${name}\">${name}</div>`
-                    ).join('');
+                    options.innerHTML = filtered.map(emp => {
+                        const inactiveClass = emp.is_active === false ? ' inactive-employee' : '';
+                        const inactiveLabel = emp.is_active === false ? ' <span class=\"inactive-label\">(Inactive)</span>' : '';
+                        return `<div class=\"multiselect-option${inactiveClass}\" data-name=\"${emp.name}\">${emp.name}${inactiveLabel}</div>`;
+                    }).join('');
                     
                     options.querySelectorAll('.multiselect-option').forEach(opt => {
                         opt.addEventListener('click', () => {
@@ -1338,15 +1342,19 @@
             try {
                 const { data, error } = await supabase
                     .from("employee_list")
-                    .select("name")
+                    .select("name, is_active")
+                    .order("is_active", { ascending: false })
                     .order("name", { ascending: true });
 
                 if (error) throw error;
-                adminEmployeesListForFilter = data ? data.map(e => e.name) : [];
+                adminEmployeesListForFilter = data ? data : [];
                 
                 // Populate filter dropdown
                 adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
-                    adminEmployeesListForFilter.map(name => `<option value="${name}">${name}</option>`).join('');
+                    adminEmployeesListForFilter.map(emp => {
+                        const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
+                        return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
+                    }).join('');
             } catch (error) {
                 console.error("Failed to load employees for admin filter:", error);
                 adminEmployeesListForFilter = [];
@@ -1515,15 +1523,17 @@
             }
 
             try {
-                // Show initial file size
-                const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                updateStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
+                updateStatus.textContent = "Updating record...";
                 updateStatus.classList.remove("status--error", "hidden");
 
                 let fileUrl = updateRecordData.file_url || "";
                 let fileName = updateRecordData.file_name || "";
 
                 if (file) {
+                    // Show initial file size
+                    const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                    updateStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
+                    
                     // Compress PDF before uploading
                     const processedFile = await compressPDF(file);
                     const compressedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
@@ -1683,7 +1693,8 @@
                 
                 const { data, error } = await supabase
                     .from("employee_list")
-                    .select("id, name")
+                    .select("id, name, is_active")
+                    .order("is_active", { ascending: false })
                     .order("name", { ascending: true });
 
                 if (error) throw error;
@@ -1693,9 +1704,12 @@
                     return;
                 }
 
-                employeeListContainer.innerHTML = data.map(emp => `
-                    <div class="employee-item">
-                        <span class="employee-name">${emp.name}</span>
+                employeeListContainer.innerHTML = data.map(emp => {
+                    const inactiveClass = emp.is_active === false ? ' employee-inactive' : '';
+                    const inactiveLabel = emp.is_active === false ? ' <span class="inactive-badge">Inactive</span>' : '';
+                    return `
+                    <div class="employee-item${inactiveClass}">
+                        <span class="employee-name">${emp.name}${inactiveLabel}</span>
                         <div class="employee-item-actions">
                             <button class="edit-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Edit employee">
                                 <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -1709,7 +1723,8 @@
                             </button>
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 // Add edit button listeners
                 document.querySelectorAll('.edit-employee-btn').forEach(btn => {
@@ -1736,14 +1751,17 @@
                 });
 
                 // Reload employee options in multiselects and filter
-                employeesList = data.map(e => e.name);
+                employeesList = data || [];
                 renderEmployeesOptions();
                 renderUpdateEmployeesOptions();
                 
                 // Update admin filter dropdown
-                adminEmployeesListForFilter = data.map(e => e.name);
+                adminEmployeesListForFilter = data ? data : [];
                 adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
-                    adminEmployeesListForFilter.map(name => `<option value="${name}">${name}</option>`).join('');
+                    adminEmployeesListForFilter.map(emp => {
+                        const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
+                        return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
+                    }).join('');
             } catch (error) {
                 console.error("Failed to load employees:", error);
                 employeeListContainer.innerHTML = '<p class="error-text">Failed to load employees.</p>';
@@ -1766,13 +1784,32 @@
                 employeeStatus.textContent = "Adding employee...";
                 employeeStatus.classList.remove("status--error");
 
+                // Check if employee already exists in the current list
+                const existingEmployee = employeesList.find(emp => emp.name.toLowerCase() === employeeName.toLowerCase());
+                if (existingEmployee) {
+                    throw new Error(`Employee "${existingEmployee.name}" already exists.`);
+                }
+
                 const { error } = await supabase
                     .from("employee_list")
                     .insert([{ name: employeeName }]);
 
                 if (error) {
+                    console.error("Database insert error:", error);
                     if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-                        throw new Error("This employee name already exists.");
+                        // Try to fetch the conflicting record
+                        const { data: existingData } = await supabase
+                            .from("employee_list")
+                            .select("*")
+                            .ilike("name", employeeName)
+                            .limit(1);
+                        
+                        if (existingData && existingData.length > 0) {
+                            console.log("Existing employee in database:", existingData[0]);
+                            throw new Error(`Employee "${existingData[0].name}" already exists (ID: ${existingData[0].id}).`);
+                        } else {
+                            throw new Error("This employee name already exists in the database.");
+                        }
                     }
                     throw error;
                 }
@@ -1906,10 +1943,11 @@
 
     <div id="footer-container"></div>
     <script>
-        fetch('footer/footer.html')
+        fetch('../footer/footer.html')
             .then(response => response.text())
             .then(data => {
-                document.getElementById('footer-container').innerHTML = data;
+                const footerHTML = data.replace(/FOOTER_ASSETS_PATH/g, '../assets');
+                document.getElementById('footer-container').innerHTML = footerHTML;
             })
             .catch(error => console.error('Error loading footer:', error));
     </script>
