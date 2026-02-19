@@ -1,3 +1,8 @@
+#login-status {
+    display: block;
+    text-align: center;
+    width: 100%;
+}
 :root {
     --ink: #0b1c3b;
     --mist: #f5f9ff;

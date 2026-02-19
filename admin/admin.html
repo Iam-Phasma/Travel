@@ -214,14 +214,32 @@
         <p class="panel-description">Manage user accounts and roles. Only super users can modify user roles.</p>
         
         <div class="user-filter-bar">
-            <div class="filter-field">
-                <label for="users-role-filter">Filter by Role</label>
-                <select id="users-role-filter" class="filter-select">
-                    <option value="">All Roles</option>
-                    <option value="super">Super</option>
-                    <option value="admin">Admin</option>
-                    <option value="user">User</option>
-                </select>
+            <div style="display: flex; gap: 1rem; width: 100%;">
+                <div class="filter-field" style="flex: 1; min-width: 120px;">
+                    <label for="users-role-filter">Role</label>
+                    <select id="users-role-filter" class="filter-select" style="width: 100%;">
+                        <option value="">All Roles</option>
+                        <option value="super">Super</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+                <div class="filter-field" style="flex: 1; min-width: 120px;">
+                    <label for="users-access-filter">Access</label>
+                    <select id="users-access-filter" class="filter-select" style="width: 100%;">
+                        <option value="">All Access</option>
+                        <option value="enabled">Enabled</option>
+                        <option value="disabled">Disabled</option>
+                    </select>
+                </div>
+                <div class="filter-field" style="flex: 1; min-width: 120px;">
+                    <label for="users-status-filter">Status</label>
+                    <select id="users-status-filter" class="filter-select" style="width: 100%;">
+                        <option value="">All Status</option>
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
             </div>
         </div>
         
@@ -231,7 +249,6 @@
                     <tr>
                         <th scope="col" class="text-left">Email</th>
                         <th scope="col">Status</th>
-                        <th scope="col">Current Role</th>
                         <th scope="col">Access</th>
                         <th scope="col">Change Role</th>
                     </tr>
@@ -2186,17 +2203,10 @@
                 const isOnline = user.is_online === true;
                 const statusClass = isOnline ? 'status-online' : 'status-offline';
                 const statusText = isOnline ? 'Online' : 'Offline';
-                // Show last seen for offline users
-                let lastSeenText = '';
-                if (!isOnline && user.last_seen) {
-                    const d = new Date(user.last_seen);
-                    lastSeenText = `<br><span class='last-seen'>Last seen: ${d.toLocaleString()}</span>`;
-                }
                 return `
                 <tr class="${!accessEnabled ? 'user-disabled' : ''}">
                     <td class="text-left" title="${fullEmail}">${displayEmail}</td>
-                    <td><span class="status-indicator ${statusClass}">${statusText}</span>${lastSeenText}</td>
-                    <td><span class="role-badge role-${user.role}">${user.role}</span></td>
+                    <td><span class="status-indicator ${statusClass}">${statusText}</span></td>
                     <td>
                         <select class="access-select" data-user-id="${user.id}" data-current-access="${accessEnabled}">
                             <option value="true" ${accessEnabled ? 'selected' : ''}>Enabled</option>
@@ -2277,11 +2287,9 @@
             try {
                 usersStatus.textContent = 'Loading users...';
                 usersStatus.classList.remove('status--error');
-                console.log('[DEBUG] Calling get_all_users_with_emails RPC...');
                 // Use RPC function to get users with emails from auth.users
                 // This is secure because the RPC function validates super user permission
                 const { data, error } = await supabase.rpc('get_all_users_with_emails');
-                console.log('[DEBUG] RPC result:', { data, error });
                 if (error) {
                     console.error('Error loading users:', error);
                     console.error('Error details:', {
@@ -2304,13 +2312,6 @@
                     renderUsersTable([]);
                     return;
                 }
-                // Debug: Log user data to check online status
-                console.log('[DEBUG] Users data:', data.map(u => ({
-                    email: u.email,
-                    role: u.role,
-                    is_online: u.is_online,
-                    last_seen: u.last_seen
-                })));
                 // Sort by role priority: super > admin > user
                 allUsersData = data.sort((a, b) => {
                     const priorityDiff = getRolePriority(b.role) - getRolePriority(a.role);
@@ -2319,6 +2320,42 @@
                     return (a.email || '').localeCompare(b.email || '');
                 });
                 renderUsersTable(allUsersData);
+                // Attach filter listeners after table is rendered
+                const usersRoleFilter = document.getElementById('users-role-filter');
+                const usersAccessFilter = document.getElementById('users-access-filter');
+                const usersStatusFilter = document.getElementById('users-status-filter');
+
+                const filterUsers = () => {
+                    let filtered = allUsersData;
+                    const role = usersRoleFilter.value;
+                    const access = usersAccessFilter.value;
+                    const status = usersStatusFilter.value;
+                    if (role) {
+                        filtered = filtered.filter(u => u.role === role);
+                    }
+                    if (access) {
+                        filtered = filtered.filter(u => {
+                            if (access === 'enabled') return u.access_enabled === true;
+                            if (access === 'disabled') return u.access_enabled === false;
+                            return true;
+                        });
+                    }
+                    if (status) {
+                        filtered = filtered.filter(u => {
+                            if (status === 'online') return u.is_online === true;
+                            if (status === 'offline') return u.is_online === false;
+                            return true;
+                        });
+                    }
+                    renderUsersTable(filtered);
+                };
+
+                usersRoleFilter.onchange = filterUsers;
+                usersAccessFilter.onchange = filterUsers;
+                usersStatusFilter.onchange = filterUsers;
+            
+                // Also filter on load if any filter is set
+                filterUsers();
             } catch (error) {
                 console.error('Failed to load users:', error);
                 usersBody.innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
@@ -2468,15 +2505,14 @@
             // Start global heartbeat for current user (runs on all panels)
             const updateHeartbeat = async () => {
                 try {
-                    console.log('[DEBUG] Calling update_last_seen RPC...');
                     const { data, error } = await supabase.rpc('update_last_seen');
                     if (error) {
-                        console.warn('[DEBUG] Heartbeat error:', error.message);
+                        console.warn('Heartbeat error:', error.message);
                     } else {
-                        console.debug('[DEBUG] Heartbeat updated:', data);
+                        // Heartbeat updated
                     }
                 } catch (error) {
-                    console.debug('[DEBUG] Heartbeat update skipped:', error.message);
+                    // Heartbeat update skipped
                 }
             };
             
