@@ -418,6 +418,10 @@ button:hover {
     z-index: 3;
 }
 
+.data-table .actions-cell {
+    white-space: nowrap;
+}
+
 .data-table th {
     font-size: 0.8rem;
     letter-spacing: 0.02em;
@@ -961,7 +965,33 @@ button:hover {
     cursor: pointer;
 }
 
+.filter-field select.filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 26, 31, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 200ms ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230b1c3b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.filter-field select.filter-select:hover {
+    border-color: rgba(15, 26, 31, 0.25);
+}
+
 .filter-field input:focus {
+    border-color: var(--sea);
+    box-shadow: 0 0 0 3px rgba(47, 111, 179, 0.15);
+}
+
+.filter-field select.filter-select:focus {
     border-color: var(--sea);
     box-shadow: 0 0 0 3px rgba(47, 111, 179, 0.15);
 }

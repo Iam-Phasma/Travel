@@ -138,6 +138,12 @@
                         <input type="text" id="admin-filter-ta-number" placeholder="0000-00-0000" maxlength="12">
                     </div>
                     <div class="filter-field">
+                        <label for="admin-filter-employee">Employee</label>
+                        <select id="admin-filter-employee" class="filter-select">
+                            <option value="">All Employees</option>
+                        </select>
+                    </div>
+                    <div class="filter-field">
                         <label for="admin-filter-travel-date">Travel Date</label>
                         <input type="text" id="admin-filter-travel-date" placeholder="Select date">
                     </div>
@@ -876,9 +882,11 @@
         let toastTimer = null;
         let adminActiveFilters = {
             taNumber: "",
+            employee: "",
             travelDate: "",
             matchAll: false
         };
+        let adminEmployeesListForFilter = [];
 
         const showToast = (message) => {
             if (!toast) return;
@@ -904,7 +912,7 @@
 
         const applyAdminClientFilters = (rows) => {
             // If no filters are active, return all rows
-            if (!adminActiveFilters.taNumber && !adminActiveFilters.travelDate) {
+            if (!adminActiveFilters.taNumber && !adminActiveFilters.employee && !adminActiveFilters.travelDate) {
                 return rows;
             }
 
@@ -915,6 +923,12 @@
                 if (adminActiveFilters.taNumber) {
                     const matchesTa = row.ta_number && row.ta_number.toLowerCase().includes(adminActiveFilters.taNumber.toLowerCase());
                     checks.push(matchesTa);
+                }
+
+                // Check Employee filter (contains match for comma-separated values)
+                if (adminActiveFilters.employee) {
+                    const matchesEmployee = row.employees && row.employees.toLowerCase().includes(adminActiveFilters.employee.toLowerCase());
+                    checks.push(matchesEmployee);
                 }
 
                 // Check Travel Date filter
@@ -954,7 +968,15 @@
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
                 const displayName = formatFileLabel(safeName);
-                const employeesText = row.employees || "-";
+                
+                // Truncate employees to show max 2
+                let employeesText = row.employees || "-";
+                if (employeesText !== "-") {
+                    const employeeArray = employeesText.split(",").map(e => e.trim());
+                    if (employeeArray.length > 2) {
+                        employeesText = employeeArray.slice(0, 2).join(", ") + "...";
+                    }
+                }
 
                 return `
                     <tr data-id="${row.id}">
@@ -974,7 +996,7 @@
                         <td>
                             <a class="link-btn" href="${fileUrl}" target="_blank" rel="noopener">${displayName}</a>
                         </td>
-                        <td>
+                        <td class="actions-cell">
                             <button class="update-btn" data-id="${row.id}">Update</button>
                             <button class="delete-btn icon-btn" data-id="${row.id}" aria-label="Delete">
                                 <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -1072,7 +1094,7 @@
 
         const updateViewFooter = () => {
             const filteredCount = applyAdminClientFilters(viewRows).length;
-            const hasActiveFilters = adminActiveFilters.taNumber || adminActiveFilters.travelDate;
+            const hasActiveFilters = adminActiveFilters.taNumber || adminActiveFilters.employee || adminActiveFilters.travelDate;
             
             if (!viewRows.length) {
                 viewStatus.textContent = "No records yet.";
@@ -1157,8 +1179,29 @@
         const adminApplyFilterBtn = document.getElementById("admin-apply-filter-btn");
         const adminClearFilterBtn = document.getElementById("admin-clear-filter-btn");
         const adminFilterTaNumberInput = document.getElementById("admin-filter-ta-number");
+        const adminFilterEmployeeSelect = document.getElementById("admin-filter-employee");
         const adminFilterTravelDateInput = document.getElementById("admin-filter-travel-date");
         const adminFilterMatchAllCheckbox = document.getElementById("admin-filter-match-all");
+
+        // Load employees for admin filter
+        const loadAdminEmployeesForFilter = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("employee_list")
+                    .select("name")
+                    .order("name", { ascending: true });
+
+                if (error) throw error;
+                adminEmployeesListForFilter = data ? data.map(e => e.name) : [];
+                
+                // Populate filter dropdown
+                adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                    adminEmployeesListForFilter.map(name => `<option value="${name}">${name}</option>`).join('');
+            } catch (error) {
+                console.error("Failed to load employees for admin filter:", error);
+                adminEmployeesListForFilter = [];
+            }
+        };
 
         // Auto-dash formatting for TA Number filter
         const formatAdminTaNumber = (value) => {
@@ -1187,6 +1230,7 @@
 
         adminApplyFilterBtn.addEventListener("click", () => {
             adminActiveFilters.taNumber = adminFilterTaNumberInput.value.trim();
+            adminActiveFilters.employee = adminFilterEmployeeSelect.value;
             adminActiveFilters.travelDate = adminFilterTravelDateInput.value;
             adminActiveFilters.matchAll = adminFilterMatchAllCheckbox.checked;
             renderViewRows(viewRows);
@@ -1196,9 +1240,11 @@
 
         adminClearFilterBtn.addEventListener("click", () => {
             adminActiveFilters.taNumber = "";
+            adminActiveFilters.employee = "";
             adminActiveFilters.travelDate = "";
             adminActiveFilters.matchAll = false;
             adminFilterTaNumberInput.value = "";
+            adminFilterEmployeeSelect.value = "";
             adminFilterTravelDateInput.value = "";
             adminFilterMatchAllCheckbox.checked = false;
             renderViewRows(viewRows);
@@ -1494,10 +1540,15 @@
                     });
                 });
 
-                // Reload employee options in multiselects
+                // Reload employee options in multiselects and filter
                 employeesList = data.map(e => e.name);
                 renderEmployeesOptions();
                 renderUpdateEmployeesOptions();
+                
+                // Update admin filter dropdown
+                adminEmployeesListForFilter = data.map(e => e.name);
+                adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                    adminEmployeesListForFilter.map(name => `<option value="${name}">${name}</option>`).join('');
             } catch (error) {
                 console.error("Failed to load employees:", error);
                 employeeListContainer.innerHTML = '<p class="error-text">Failed to load employees.</p>';
@@ -1581,6 +1632,7 @@
 
         requireAdmin();
         loadEmployees();
+        loadAdminEmployeesForFilter();
     </script>
 </body>
 </html>

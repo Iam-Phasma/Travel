@@ -42,6 +42,12 @@
                             <input type="text" id="filter-ta-number" placeholder="0000-00-0000" maxlength="12">
                         </div>
                         <div class="filter-field">
+                            <label for="filter-employee">Employee</label>
+                            <select id="filter-employee" class="filter-select">
+                                <option value="">All Employees</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
                             <label for="filter-travel-date">Travel Date</label>
                             <input type="text" id="filter-travel-date" placeholder="Select date">
                         </div>
@@ -177,9 +183,11 @@
         let taHasMore = true;
         let activeFilters = {
             taNumber: "",
+            employee: "",
             travelDate: "",
             matchAll: false
         };
+        let employeesListForFilter = [];
 
         const formatFileLabel = (value) => {
             const base = String(value || "Download");
@@ -201,7 +209,7 @@
 
         const applyClientFilters = (rows) => {
             // If no filters are active, return all rows
-            if (!activeFilters.taNumber && !activeFilters.travelDate) {
+            if (!activeFilters.taNumber && !activeFilters.employee && !activeFilters.travelDate) {
                 return rows;
             }
 
@@ -212,6 +220,12 @@
                 if (activeFilters.taNumber) {
                     const matchesTa = row.ta_number && row.ta_number.toLowerCase().includes(activeFilters.taNumber.toLowerCase());
                     checks.push(matchesTa);
+                }
+
+                // Check Employee filter (contains match for comma-separated values)
+                if (activeFilters.employee) {
+                    const matchesEmployee = row.employees && row.employees.toLowerCase().includes(activeFilters.employee.toLowerCase());
+                    checks.push(matchesEmployee);
                 }
 
                 // Check Travel Date filter
@@ -245,7 +259,15 @@
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
                 const displayName = formatFileLabel(safeName);
-                const employeesText = row.employees || "-";
+                
+                // Truncate employees to show max 2
+                let employeesText = row.employees || "-";
+                if (employeesText !== "-") {
+                    const employeeArray = employeesText.split(",").map(e => e.trim());
+                    if (employeeArray.length > 2) {
+                        employeesText = employeeArray.slice(0, 2).join(", ") + "...";
+                    }
+                }
 
                 return `
                     <tr>
@@ -301,7 +323,7 @@
 
         const updateTaFooter = () => {
             const filteredCount = applyClientFilters(taRows).length;
-            const hasActiveFilters = activeFilters.taNumber || activeFilters.travelDate;
+            const hasActiveFilters = activeFilters.taNumber || activeFilters.employee || activeFilters.travelDate;
             
             if (!taRows.length) {
                 taStatus.textContent = "No records yet.";
@@ -380,8 +402,29 @@
         const applyFilterBtn = document.getElementById("apply-filter-btn");
         const clearFilterBtn = document.getElementById("clear-filter-btn");
         const filterTaNumberInput = document.getElementById("filter-ta-number");
+        const filterEmployeeSelect = document.getElementById("filter-employee");
         const filterTravelDateInput = document.getElementById("filter-travel-date");
         const filterMatchAllCheckbox = document.getElementById("filter-match-all");
+
+        // Load employees for filter
+        const loadEmployeesForFilter = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from("employee_list")
+                    .select("name")
+                    .order("name", { ascending: true });
+
+                if (error) throw error;
+                employeesListForFilter = data ? data.map(e => e.name) : [];
+                
+                // Populate filter dropdown
+                filterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                    employeesListForFilter.map(name => `<option value="${name}">${name}</option>`).join('');
+            } catch (error) {
+                console.error("Failed to load employees for filter:", error);
+                employeesListForFilter = [];
+            }
+        };
 
         // Auto-dash formatting for TA Number filter
         const formatTaNumber = (value) => {
@@ -410,6 +453,7 @@
 
         applyFilterBtn.addEventListener("click", () => {
             activeFilters.taNumber = filterTaNumberInput.value.trim();
+            activeFilters.employee = filterEmployeeSelect.value;
             activeFilters.travelDate = filterTravelDateInput.value;
             activeFilters.matchAll = filterMatchAllCheckbox.checked;
             renderRows(taRows);
@@ -419,9 +463,11 @@
 
         clearFilterBtn.addEventListener("click", () => {
             activeFilters.taNumber = "";
+            activeFilters.employee = "";
             activeFilters.travelDate = "";
             activeFilters.matchAll = false;
             filterTaNumberInput.value = "";
+            filterEmployeeSelect.value = "";
             filterTravelDateInput.value = "";
             filterMatchAllCheckbox.checked = false;
             renderRows(taRows);
@@ -437,6 +483,7 @@
 
         const init = async () => {
             await requireUser();
+            await loadEmployeesForFilter();
             await loadTravelAuthorities(true);
         };
 
