@@ -107,7 +107,10 @@
         </div>
         <div class="upload-controls">
             <span class="status" id="upload-status">Complete the required fields.</span>
-            <button id="upload-btn" type="button">Upload</button>
+            <div class="upload-buttons">
+                <button id="clear-upload-btn" type="button" class="secondary-btn">Clear</button>
+                <button id="upload-btn" type="button">Upload</button>
+            </div>
         </div>
     </section>
 
@@ -903,6 +906,21 @@
                 void uploadStatus.offsetWidth;
                 uploadStatus.classList.add("status--shake");
             }
+        });
+
+        // Clear upload fields button
+        document.getElementById("clear-upload-btn").addEventListener("click", () => {
+            taNumberInput.value = "";
+            purposeInput.value = "";
+            destinationInput.value = "";
+            travelDateInput.value = "";
+            travelUntilInput.value = "";
+            scanFileInput.value = "";
+            selectedEmployees.length = 0;
+            employeesMultiSelect.updateDisplay();
+            employeesMultiSelect.renderOptions();
+            uploadStatus.textContent = "Fields cleared.";
+            uploadStatus.classList.remove("status--error");
         });
 
         // Panel switching logic

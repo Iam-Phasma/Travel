@@ -146,8 +146,26 @@ h1 {
     margin-top: 10px;
 }
 
-#upload-btn {
-    width: 30%;
+.upload-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+#upload-btn,
+#clear-upload-btn {
+    width: 120px;
+}
+
+.secondary-btn {
+    background: rgba(15, 26, 31, 0.1);
+    color: var(--ink);
+}
+
+.secondary-btn:hover {
+    background: rgba(15, 26, 31, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 26, 31, 0.15);
 }
 
 .checkbox-label {
