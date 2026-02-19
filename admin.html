@@ -6,6 +6,7 @@
     <title>File Upload</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
     <header class="header">
@@ -19,6 +20,12 @@
     </div>
     <section class="panel" id="upload-panel">
         <h2>Travel Authority Upload</h2>
+        <div class="auto-clear-top">
+            <label class="checkbox-label">
+                <input type="checkbox" id="auto-clear-checkbox">
+                <span>Auto clear fields</span>
+            </label>
+        </div>
         <div class="fields">
             <div>
                 <label for="ta-number">TA Number <span class="required">*</span></label>
@@ -95,18 +102,12 @@
             </div>
             <div>
                 <label for="scan-file">Upload Scanned <span class="required">*</span></label>
-                <input id="scan-file" type="file" required>
+                <input id="scan-file" type="file" accept="application/pdf,.pdf" required>
             </div>
         </div>
-        <div class="row">
+        <div class="upload-controls">
             <button id="upload-btn" type="button">Upload</button>
             <span class="status" id="upload-status">Complete the required fields.</span>
-        </div>
-        <div class="auto-clear-container">
-            <label class="checkbox-label">
-                <input type="checkbox" id="auto-clear-checkbox">
-                <span>Auto clear fields</span>
-            </label>
         </div>
     </section>
 
@@ -346,7 +347,7 @@
                 </div>
                 <div>
                     <label for="update-scan-file">Upload Scanned</label>
-                    <input id="update-scan-file" type="file">
+                    <input id="update-scan-file" type="file" accept="application/pdf,.pdf">
                     <p class="disclaimer">Leave empty to keep the current file.</p>
                 </div>
             </div>
@@ -493,6 +494,62 @@
         const travelDateInput = document.getElementById("travel-date");
         const travelUntilInput = document.getElementById("travel-until");
         const scanFileInput = document.getElementById("scan-file");
+
+        // PDF compression function with multiple strategies
+        const compressPDF = async (file, maxSizeMB = 5) => {
+            // Only process PDFs
+            if (file.type !== 'application/pdf') {
+                return file;
+            }
+
+            try {
+                console.log(`Original PDF size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+
+                const arrayBuffer = await file.arrayBuffer();
+                const { PDFDocument } = window.PDFLib;
+                const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+                // Try multiple compression strategies
+                let compressedPdfBytes;
+                
+                // Strategy 1: Maximum compression with object streams
+                try {
+                    compressedPdfBytes = await pdfDoc.save({
+                        useObjectStreams: true,
+                        addDefaultPage: false,
+                        objectsPerTick: 50
+                    });
+                } catch (e) {
+                    // Strategy 2: Fallback without object streams
+                    console.log('Trying fallback compression...');
+                    compressedPdfBytes = await pdfDoc.save({
+                        useObjectStreams: false,
+                        addDefaultPage: false
+                    });
+                }
+
+                const compressedSize = compressedPdfBytes.length;
+                const compressionRatio = ((1 - compressedSize / file.size) * 100).toFixed(1);
+                console.log(`Compressed PDF size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB (${compressionRatio}% reduction)`);
+
+                // Create a new File object from the compressed bytes
+                const compressedFile = new File([compressedPdfBytes], file.name, {
+                    type: 'application/pdf',
+                    lastModified: Date.now()
+                });
+
+                // Warn if still too large
+                if (compressedSize > maxSizeMB * 1024 * 1024) {
+                    console.warn(`PDF still exceeds ${maxSizeMB}MB after compression. Current size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB`);
+                }
+
+                return compressedFile;
+            } catch (error) {
+                console.error('PDF compression error:', error);
+                // Return original file if compression fails
+                return file;
+            }
+        };
 
         // Multi-select employees functionality
         let employeesList = [];
@@ -713,8 +770,27 @@
             }
 
             try {
-                uploadStatus.textContent = "Uploading...";
+                // Show initial file size
+                const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                uploadStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
                 uploadStatus.classList.remove("status--error");
+
+                // Compress PDF before uploading
+                const processedFile = await compressPDF(file);
+                const compressedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
+                
+                // Check if compressed file is still too large (adjust maxAllowedMB based on your storage bucket limit)
+                const maxAllowedMB = 5;
+                if (processedFile.size > maxAllowedMB * 1024 * 1024) {
+                    uploadStatus.textContent = `File too large: ${compressedSizeMB}MB (max ${maxAllowedMB}MB). Please use a smaller PDF or compress it externally.`;
+                    uploadStatus.classList.add("status--error");
+                    uploadStatus.classList.remove("status--shake");
+                    void uploadStatus.offsetWidth;
+                    uploadStatus.classList.add("status--shake");
+                    return;
+                }
+
+                uploadStatus.textContent = `Uploading ${compressedSizeMB}MB...`;
 
                 // Verify user is authenticated
                 const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -741,14 +817,14 @@
                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                 
                 // Extract file extension and rename file to TA number
-                const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
+                const fileExtension = processedFile.name.substring(processedFile.name.lastIndexOf('.'));
                 const newFileName = `${taNumber}${fileExtension}`;
                 const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
 
                 const { error: uploadError } = await supabase
                     .storage
                     .from("ta-files")
-                    .upload(filePath, file, { upsert: false });
+                    .upload(filePath, processedFile, { upsert: false });
 
                 if (uploadError) {
                     throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
@@ -1365,25 +1441,44 @@
             }
 
             try {
-                updateStatus.textContent = "Updating...";
+                // Show initial file size
+                const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                updateStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
                 updateStatus.classList.remove("status--error", "hidden");
 
                 let fileUrl = updateRecordData.file_url || "";
                 let fileName = updateRecordData.file_name || "";
 
                 if (file) {
+                    // Compress PDF before uploading
+                    const processedFile = await compressPDF(file);
+                    const compressedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
+                    
+                    // Check if compressed file is still too large
+                    const maxAllowedMB = 5;
+                    if (processedFile.size > maxAllowedMB * 1024 * 1024) {
+                        updateStatus.textContent = `File too large: ${compressedSizeMB}MB (max ${maxAllowedMB}MB). Please use a smaller PDF.`;
+                        updateStatus.classList.add("status--error");
+                        updateStatus.classList.remove("status--shake");
+                        void updateStatus.offsetWidth;
+                        updateStatus.classList.add("status--shake");
+                        return;
+                    }
+
+                    updateStatus.textContent = `Uploading ${compressedSizeMB}MB...`;
+
                     const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                     const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                     
                     // Extract file extension and rename file to TA number
-                    const fileExtension = file.name.substring(file.name.lastIndexOf('.'));
+                    const fileExtension = processedFile.name.substring(processedFile.name.lastIndexOf('.'));
                     const newFileName = `${taNumber}${fileExtension}`;
                     const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
 
                     const { error: uploadError } = await supabase
                         .storage
                         .from("ta-files")
-                        .upload(filePath, file, { upsert: false });
+                        .upload(filePath, processedFile, { upsert: false });
 
                     if (uploadError) {
                         throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
@@ -1634,5 +1729,16 @@
         loadEmployees();
         loadAdminEmployeesForFilter();
     </script>
+
+    <div id="footer-container"></div>
+    <script>
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading footer:', error));
+    </script>
+
 </body>
 </html>

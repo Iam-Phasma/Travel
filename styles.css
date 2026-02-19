@@ -26,7 +26,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 32px 18px;
+    padding: 32px 18px 0;
 }
 
 .header {
@@ -60,6 +60,7 @@ body {
     display: grid;
     gap: 28px;
     justify-items: center;
+    margin-bottom: 50px;
 }
 
 header {
@@ -106,6 +107,7 @@ h1 {
     backdrop-filter: blur(12px);
     display: grid;
     margin-top: 30px;
+    margin-bottom: 50px;
     gap: 14px;
     animation: fadeUp 500ms ease-out both;
     position: relative;
@@ -125,10 +127,21 @@ h1 {
     width: min(520px, 100%);
 }
 
-.auto-clear-container {
-    position: absolute;
-    bottom: 20px;
-    right: 24px;
+.auto-clear-top {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.upload-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#upload-btn {
+    width: 30%;
 }
 
 .checkbox-label {
@@ -174,6 +187,11 @@ label {
     font-weight: 600;
     display: block;
     margin-bottom: 8px;
+}
+
+label.checkbox-label {
+    display: inline-flex !important;
+    margin-bottom: 0;
 }
 
 .required {
@@ -273,8 +291,11 @@ button:hover {
 }
 
 .status {
+    display: block;
     font-size: 0.92rem;
     color: rgba(15, 26, 31, 0.75);
+    line-height: 1.5;
+    word-wrap: break-word;
 }
 
 #update-status {
