@@ -144,11 +144,10 @@
 
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+        import { supabaseConfig } from "../config.js";
 
         // Initialize Supabase
-        const supabaseUrl = "https://gptfbpktebajhvwvlfkd.supabase.co";
-        const supabaseKey = "sb_publishable_TVtTKkPIWDXOf1ywQTgp5w_azlcjhLb";
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
 
         // Periodically check if current user's access_enabled is still true
         const checkAccessEnabled = async () => {
