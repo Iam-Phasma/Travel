@@ -34,8 +34,9 @@
         </div>
     </header>
     <div class="page-content">
-        <div class="welcome-banner">
-            <p class="welcome-message">You are logged in as a regular user. You have access to view and download documents.<br>For not yet available Travel Authority, you may request from Ms. Emmalyn for an early copy.</p>
+        <div class="page-header-section">
+            <h2 class="page-title">Dashboard</h2>
+            <p class="page-description">You are logged in as a regular user. You have access to view and download documents.<br>For not yet available Travel Authority, you may request from Ms. Emmalyn for an early copy.</p>
         </div>
         <main class="shell">
         <section class="panel wide-panel" id="ta-panel">
@@ -214,7 +215,15 @@
         setTimeout(checkAccessEnabled, 3000); // First check after 3 seconds
 
         // Logout functionality
+        // Logout confirmation using native browser confirm
         document.getElementById("logout-btn").addEventListener("click", async () => {
+            // Show confirmation dialog
+            const confirmed = confirm('Are you sure you want to log out?');
+
+            if (!confirmed) {
+                return; // User cancelled
+            }
+
             try {
                 await supabase.auth.signOut();
                 window.location.href = "../index.html";

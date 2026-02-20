@@ -35,6 +35,10 @@
         </div>
     </header>
     <div class="page-content">
+        <div class="page-header-section">
+            <h2 class="page-title">Admin Panel</h2>
+            <p class="page-description">Manage travel authority records, employees, and system settings.</p>
+        </div>
         <div class="panel-switcher">
         <button class="switch-btn active" data-panel="upload-panel">Upload Files</button>
         <button class="switch-btn" data-panel="view-panel">View & Manage</button>
@@ -209,7 +213,7 @@
         </div>
     </section>
 
-        <section class="panel hidden" id="employees-panel">
+        <section class="panel employees-panel hidden" id="employees-panel">
         <h2>Manage Employees</h2>
         <div class="fields">
             <div>
@@ -223,7 +227,12 @@
         </div>
         
         <div class="employee-list-container">
-            <h3>Employee List</h3>
+            <div class="employee-list-header">
+                <h3>Employee List</h3>
+                <div class="employee-search-wrapper">
+                    <input type="text" id="employee-search" class="employee-search-input" placeholder="Search employees..." autocomplete="off">
+                </div>
+            </div>
             <div class="employee-list" id="employee-list">
                 <p class="loading-text">Loading employees...</p>
             </div>
@@ -235,7 +244,7 @@
         <p class="panel-description">Manage user accounts and roles. Only super users can modify user roles.</p>
         
         <div class="user-filter-bar">
-            <div style="display: flex; gap: 1rem; width: 100%;">
+            <div style="display: flex; gap: 1rem; width: 100%; align-items: flex-end;">
                 <div class="filter-field" style="flex: 1; min-width: 120px;">
                     <label for="users-role-filter">Role</label>
                     <select id="users-role-filter" class="filter-select" style="width: 100%;">
@@ -261,6 +270,9 @@
                         <option value="offline">Offline</option>
                     </select>
                 </div>
+                <button id="clear-filters-btn" class="filter-btn clear-btn" type="button" title="Clear all filters">
+                    Clear
+                </button>
             </div>
         </div>
         
@@ -693,6 +705,16 @@
 
         // Logout functionality
         document.getElementById("logout-btn").addEventListener("click", async () => {
+            // Show confirmation dialog
+            const confirmed = await showConfirmation(
+                'Confirm Logout',
+                'Are you sure you want to log out?'
+            );
+
+            if (!confirmed) {
+                return; // User cancelled
+            }
+
             try {
                 // Clear admin session token
                 localStorage.removeItem('admin_session_token');
@@ -2001,6 +2023,8 @@
         const addEmployeeBtn = document.getElementById("add-employee-btn");
         const employeeStatus = document.getElementById("employee-status");
         const employeeListContainer = document.getElementById("employee-list");
+        const employeeSearchInput = document.getElementById("employee-search");
+        let allEmployeesData = []; // Store all employees for filtering
         const deleteEmployeeModal = document.getElementById("delete-employee-modal");
         const cancelDeleteEmployeeBtn = document.getElementById("cancel-delete-employee");
         const confirmDeleteEmployeeBtn = document.getElementById("confirm-delete-employee");
@@ -2012,24 +2036,35 @@
         let deleteEmployeeData = null;
         let editEmployeeData = null;
 
-        const renderEmployeeList = async () => {
+        const renderEmployeeList = async (filteredData = null) => {
             try {
-                employeeListContainer.innerHTML = '<p class="loading-text">Loading employees...</p>';
-                
-                const { data, error } = await supabase
-                    .from("employee_list")
-                    .select("id, name, is_active")
-                    .order("is_active", { ascending: false })
-                    .order("name", { ascending: true });
+                if (filteredData === null) {
+                    employeeListContainer.innerHTML = '<p class="loading-text">Loading employees...</p>';
+                    
+                    const { data, error } = await supabase
+                        .from("employee_list")
+                        .select("id, name, is_active")
+                        .order("is_active", { ascending: false })
+                        .order("name", { ascending: true });
 
-                if (error) throw error;
+                    if (error) throw error;
+                    
+                    allEmployeesData = data || [];
+                    
+                    // Clear search input when loading fresh data
+                    if (employeeSearchInput) {
+                        employeeSearchInput.value = '';
+                    }
+                } else {
+                    allEmployeesData = filteredData;
+                }
 
-                if (!data || data.length === 0) {
-                    employeeListContainer.innerHTML = '<p class="no-employees">No employees yet. Add your first employee above.</p>';
+                if (!allEmployeesData || allEmployeesData.length === 0) {
+                    employeeListContainer.innerHTML = '<p class="no-employees">No employees found.</p>';
                     return;
                 }
 
-                employeeListContainer.innerHTML = data.map(emp => {
+                employeeListContainer.innerHTML = allEmployeesData.map(emp => {
                     const inactiveClass = emp.is_active === false ? ' employee-inactive' : '';
                     const inactiveLabel = emp.is_active === false ? ' <span class="inactive-badge">Inactive</span>' : '';
                     const toggleIcon = emp.is_active === false 
@@ -2111,22 +2146,42 @@
                 });
 
                 // Reload employee options in multiselects and filter
-                employeesList = data || [];
-                renderEmployeesOptions();
-                renderUpdateEmployeesOptions();
-                
-                // Update admin filter dropdown
-                adminEmployeesListForFilter = data ? data : [];
-                adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
-                    adminEmployeesListForFilter.map(emp => {
-                        const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
-                        return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
-                    }).join('');
+                if (filteredData === null) {
+                    employeesList = allEmployeesData || [];
+                    renderEmployeesOptions();
+                    renderUpdateEmployeesOptions();
+                    
+                    // Update admin filter dropdown
+                    adminEmployeesListForFilter = allEmployeesData ? allEmployeesData : [];
+                    adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                        adminEmployeesListForFilter.map(emp => {
+                            const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
+                            return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
+                        }).join('');
+                }
             } catch (error) {
                 console.error("Failed to load employees:", error);
                 employeeListContainer.innerHTML = '<p class="error-text">Failed to load employees.</p>';
             }
         };
+
+        // Employee search functionality
+        if (employeeSearchInput) {
+            employeeSearchInput.addEventListener('input', () => {
+                const searchTerm = employeeSearchInput.value.toLowerCase().trim();
+                
+                if (searchTerm === '') {
+                    // Show all employees
+                    renderEmployeeList(allEmployeesData);
+                } else {
+                    // Filter employees by name
+                    const filtered = allEmployeesData.filter(emp => 
+                        emp.name.toLowerCase().includes(searchTerm)
+                    );
+                    renderEmployeeList(filtered);
+                }
+            });
+        }
 
         addEmployeeBtn.addEventListener("click", async () => {
             const employeeName = employeeNameInput.value.trim();
@@ -2496,6 +2551,17 @@
                 usersAccessFilter.onchange = filterUsers;
                 usersStatusFilter.onchange = filterUsers;
             
+                // Clear all filters button
+                const clearFiltersBtn = document.getElementById('clear-filters-btn');
+                if (clearFiltersBtn) {
+                    clearFiltersBtn.addEventListener('click', () => {
+                        usersRoleFilter.value = '';
+                        usersAccessFilter.value = '';
+                        usersStatusFilter.value = '';
+                        filterUsers();
+                    });
+                }
+            
                 // Also filter on load if any filter is set
                 filterUsers();
             } catch (error) {
@@ -2528,6 +2594,11 @@
                 usersStatus.textContent = 'Changing user role...';
                 usersStatus.classList.remove('status--error');
 
+                // Get current logged-in user ID
+                const { data: sessionData } = await supabase.auth.getSession();
+                const currentUserId = sessionData?.session?.user?.id;
+                const isChangingOwnRole = userId === currentUserId;
+
                 // Call server-side RPC function that validates permissions
                 // CRITICAL: This RPC function MUST verify that the calling user is 'super'
                 const { data, error } = await supabase.rpc('change_user_role', {
@@ -2543,6 +2614,18 @@
                 selectElement.setAttribute('data-current-role', newRole);
                 usersStatus.textContent = 'Role updated successfully';
                 showToast(`Role changed to ${newRole}`);
+                
+                // If user changed their own role, logout after showing success message
+                if (isChangingOwnRole) {
+                    setTimeout(async () => {
+                        showToast('Your role has changed. Logging out...');
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        localStorage.removeItem('admin_session_token');
+                        await supabase.auth.signOut();
+                        window.location.href = '../index.html';
+                    }, 1000);
+                    return;
+                }
                 
                 // Reload users to refresh the display
                 await loadUsers();
