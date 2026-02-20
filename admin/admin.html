@@ -384,6 +384,7 @@
                 </div>
             </div>
             <div class="modal-actions">
+                <button class="modal-btn" id="view-edit-btn" style="background: var(--sea); color: white;">Edit</button>
                 <button class="modal-btn cancel" id="close-view">Close</button>
             </div>
         </div>
@@ -1589,7 +1590,43 @@
                     }
 
                     viewModal.classList.add("show");
+                    document.getElementById("view-edit-btn")._currentRecordId = recordId;
                 });
+            });
+
+            document.getElementById("view-edit-btn").addEventListener("click", () => {
+                const recordId = document.getElementById("view-edit-btn")._currentRecordId;
+                const record = recordCache.get(recordId);
+                if (!recordId || !record) return;
+
+                viewModal.classList.remove("show");
+
+                updateRecordData = {
+                    id: recordId,
+                    file_url: record.file_url || "",
+                    file_name: record.file_name || ""
+                };
+
+                updateTaInput.value = record.ta_number || "";
+                updatePurposeInput.value = record.purpose || "";
+                updateDestinationInput.value = record.destination || "";
+                updateTravelDateInput.value = record.travel_date || "";
+                updateTravelUntilInput.value = record.travel_until || "";
+                updateScanFileInput.value = "";
+
+                updateSelectedEmployees.length = 0;
+                if (record.employees) {
+                    const employeeNames = record.employees.split(",").map(name => name.trim()).filter(name => name);
+                    updateSelectedEmployees.push(...employeeNames);
+                }
+                updateEmployeesMultiSelect.updateDisplay();
+                updateEmployeesMultiSelect.renderOptions();
+
+                updateStatus.textContent = "";
+                updateStatus.classList.remove("status--error");
+                updateStatus.classList.add("hidden");
+
+                updateModal.classList.add("show");
             });
         };
 
