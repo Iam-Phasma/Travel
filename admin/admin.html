@@ -1003,11 +1003,17 @@
 
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("id, role")
                     .eq("id", user.id)
                     .maybeSingle();
 
-                if (profileError || profile?.role !== "admin") {
+                // DEBUG: surface session / user / profile so we can confirm auth.uid() mapping
+                console.log("[upload] sessionData:", sessionData);
+                console.log("[upload] user:", user);
+                console.log("[upload] profile (from profiles table):", profile, "profileError:", profileError);
+
+                // Allow both admin AND super users to upload
+                if (profileError || (profile?.role !== "admin" && profile?.role !== "super")) {
                     throw new Error("Not authorized to upload.");
                 }
 
@@ -1035,7 +1041,7 @@
 
                 const fileUrl = publicUrlData.publicUrl;
 
-                const { error: insertError } = await supabase
+                const { error: insertError, data: insertedRows } = await supabase
                     .from("travel_authorities")
                     .insert([
                         {
@@ -1051,11 +1057,32 @@
                     ]);
 
                 if (insertError) {
+                    // Attempt to cleanup the uploaded file to avoid orphaned storage objects
+                    try {
+                        const { error: removeError } = await supabase.storage.from("ta-files").remove([filePath]);
+                        if (removeError) console.warn("Cleanup: failed to remove uploaded file after DB error:", removeError);
+                    } catch (cleanupErr) {
+                        console.warn("Cleanup: unexpected error while removing uploaded file:", cleanupErr);
+                    }
+
                     // Check for duplicate TA number error
                     if (insertError.code === '23505' || insertError.message?.includes('duplicate key') || insertError.message?.includes('unique constraint')) {
                         throw new Error(`TA Number ${taNumber} already exists in the database.`);
                     }
+
+                    // Surface RLS / permission errors more clearly
+                    console.error("Database insert error (travel_authorities):", insertError);
                     throw new Error(`Database insert failed: ${insertError.message || "Unknown error"}`);
+                }
+
+                if (!insertedRows || insertedRows.length === 0) {
+                    // This is unexpected — treat as permission/insert failure and cleanup
+                    try {
+                        await supabase.storage.from("ta-files").remove([filePath]);
+                    } catch (cleanupErr) {
+                        console.warn("Cleanup after empty insert failed:", cleanupErr);
+                    }
+                    throw new Error("Upload failed: no rows were returned after insert (possible RLS/permission issue).");
                 }
 
                 uploadStatus.textContent = "Upload complete.";
@@ -2152,16 +2179,22 @@
                 editEmployeeStatus.textContent = "Updating employee...";
                 editEmployeeStatus.classList.remove("hidden", "status--error", "status--success");
 
-                const { error } = await supabase
+                const { data: updatedRows, error } = await supabase
                     .from("employee_list")
                     .update({ name: newName })
-                    .eq("id", editEmployeeData.id);
+                    .eq("id", editEmployeeData.id)
+                    .select();
 
                 if (error) {
                     if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
                         throw new Error("This employee name already exists.");
                     }
                     throw error;
+                }
+
+                // Ensure the update actually affected a row (useful to surface RLS/permission issues)
+                if (!updatedRows || updatedRows.length === 0) {
+                    throw new Error("Update failed — record not found or insufficient permissions.");
                 }
 
                 editEmployeeStatus.textContent = "Employee updated successfully!";

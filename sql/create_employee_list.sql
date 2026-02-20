@@ -20,7 +20,7 @@ TO authenticated
 USING (true);
 
 -- Create policy to allow admin users to insert/update/delete
-CREATE POLICY "Allow admin users to manage employee list"
+CREATE POLICY "Allow admin and super users to manage employee list"
 ON employee_list
 FOR ALL
 TO authenticated
@@ -28,13 +28,13 @@ USING (
     EXISTS (
         SELECT 1 FROM profiles
         WHERE profiles.id = auth.uid()
-        AND profiles.role = 'admin'
+        AND profiles.role IN ('admin','super')
     )
 )
 WITH CHECK (
     EXISTS (
         SELECT 1 FROM profiles
         WHERE profiles.id = auth.uid()
-        AND profiles.role = 'admin'
+        AND profiles.role IN ('admin','super')
     )
 );
