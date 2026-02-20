@@ -2,10 +2,13 @@
     <div class="sticky-header-content">
         <div class="sticky-header-left">
             <img src="HEADER_ASSETS_PATH/CHED-Logo.png" alt="CHED Logo" class="sticky-header-logo">
-            <h1 class="sticky-header-title">
-                <span class="title-full">CHEDRO IV TRAVEL AUTHORITY ARCHIVE</span>
-                <span class="title-abbr">CTAA</span>
-            </h1>
+            <div class="sticky-header-title-wrapper">
+                <h1 class="sticky-header-title">
+                    <span class="title-full">CHEDRO IV TRAVEL AUTHORITY ARCHIVE</span>
+                    <span class="title-abbr">CTAA</span>
+                </h1>
+                <p class="header-date" id="header-date"></p>
+            </div>
         </div>
         <div class="sticky-header-actions">
             <button id="settings-btn" type="button" class="header-icon-btn" title="Settings">
@@ -21,3 +24,16 @@
         </div>
     </div>
 </header>
+
+<script>
+    // Display current date in header
+    (function() {
+        const dateElement = document.getElementById('header-date');
+        if (dateElement) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('en-US', options);
+            dateElement.textContent = `Today is ${formattedDate}`;
+        }
+    })();
+</script>
