@@ -22,6 +22,15 @@
                 document.getElementById('header-container').innerHTML = headerHTML;
                 window.headerLoaded = true;
                 
+                // Initialize date display in header
+                const dateElement = document.getElementById('header-date');
+                if (dateElement) {
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    const today = new Date();
+                    const formattedDate = today.toLocaleDateString('en-US', options);
+                    dateElement.textContent = `Today is ${formattedDate}`;
+                }
+                
                 // If initHeaderButtons is already defined, call it
                 if (window.initHeaderButtons) {
                     window.initHeaderButtons();
