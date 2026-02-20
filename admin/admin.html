@@ -1245,6 +1245,9 @@
             btn.addEventListener("click", () => {
                 const targetPanel = btn.getAttribute("data-panel");
                 
+                // Persist active panel
+                localStorage.setItem("adminActivePanel", targetPanel);
+
                 // Update active button
                 switchButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
@@ -2801,6 +2804,10 @@
                 const usersPanelBtn = document.getElementById('users-panel-btn');
                 if (usersPanelBtn) {
                     usersPanelBtn.classList.remove('hidden');
+                    // Restore users-panel if it was the last active panel
+                    if (localStorage.getItem('adminActivePanel') === 'users-panel') {
+                        usersPanelBtn.click();
+                    }
                 }
                 // Load users for the User Management panel
                 await loadUsers();
@@ -2849,6 +2856,15 @@
         
         loadEmployees();
         loadAdminEmployeesForFilter();
+
+        // Restore last active panel
+        (() => {
+            const savedPanel = localStorage.getItem("adminActivePanel");
+            if (!savedPanel || savedPanel === "upload-panel" || savedPanel === "users-panel") return;
+            const targetBtn = document.querySelector(`.switch-btn[data-panel="${savedPanel}"]`);
+            if (!targetBtn || targetBtn.classList.contains("hidden")) return;
+            targetBtn.click();
+        })();
 
         // Prevent browser back/forward navigation
         // This prevents users from accidentally navigating back to login or other pages
