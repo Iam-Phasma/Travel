@@ -1582,8 +1582,7 @@ button:hover {
 
 /* Employee Management Styles */
 .employees-panel {
-    width: 100%;
-    max-width: min(1100px, calc(100vw - 36px));
+    width: min(700px, calc(100vw - 36px));
     overflow: hidden;
 }
 
