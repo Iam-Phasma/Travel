@@ -44,6 +44,10 @@
                         <input id="password" type="password" autocomplete="current-password" placeholder="password">
                     </div>
                 </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="show-password">
+                    <span>Show password</span>
+                </label>
             </div>
             <div class="login-actions">
                 <button id="login-btn" type="button">Sign in</button>
@@ -63,6 +67,10 @@
         const emailInput = document.getElementById("email");
         const passwordInput = document.getElementById("password");
         const loginBtn = document.getElementById("login-btn");
+
+        document.getElementById("show-password").addEventListener("change", (e) => {
+            passwordInput.type = e.target.checked ? "text" : "password";
+        });
 
         // Database function to check if user is locked out
         const checkLockoutStatus = async (email) => {
