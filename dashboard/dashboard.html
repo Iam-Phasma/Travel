@@ -211,13 +211,55 @@
         setTimeout(checkAccessEnabled, 3000); // First check after 3 seconds
 
         // Define header button initialization function
+        // Show confirmation modal and return a Promise
+        const showConfirmation = (title, message) => {
+            return new Promise((resolve) => {
+                confirmModalTitle.textContent = title;
+                confirmModalMessage.textContent = message;
+                confirmModal.classList.add("show");
+
+                const handleConfirm = () => {
+                    confirmModal.classList.remove("show");
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    confirmModal.classList.remove("show");
+                    cleanup();
+                    resolve(false);
+                };
+
+                const handleClickOutside = (e) => {
+                    if (e.target === confirmModal) {
+                        confirmModal.classList.remove("show");
+                        cleanup();
+                        resolve(false);
+                    }
+                };
+
+                const cleanup = () => {
+                    confirmConfirmBtn.removeEventListener('click', handleConfirm);
+                    cancelConfirmBtn.removeEventListener('click', handleCancel);
+                    confirmModal.removeEventListener('click', handleClickOutside);
+                };
+
+                confirmConfirmBtn.addEventListener('click', handleConfirm);
+                cancelConfirmBtn.addEventListener('click', handleCancel);
+                confirmModal.addEventListener('click', handleClickOutside);
+            });
+        };
+
         window.initHeaderButtons = () => {
             // Logout functionality
             const logoutBtn = document.getElementById("logout-btn");
             if (logoutBtn) {
                 logoutBtn.addEventListener("click", async () => {
                     // Show confirmation dialog
-                    const confirmed = confirm('Are you sure you want to log out?');
+                    const confirmed = await showConfirmation(
+                        'Confirm Logout',
+                        'Are you sure you want to log out?'
+                    );
 
                     if (!confirmed) {
                         return; // User cancelled
@@ -324,6 +366,11 @@
         };
         const viewModal = document.getElementById("view-modal");
         const closeViewBtn = document.getElementById("close-view");
+        const confirmModal = document.getElementById("confirm-modal");
+        const confirmModalTitle = document.getElementById("confirm-modal-title");
+        const confirmModalMessage = document.getElementById("confirm-modal-message");
+        const cancelConfirmBtn = document.getElementById("cancel-confirm");
+        const confirmConfirmBtn = document.getElementById("confirm-confirm");
         const viewTaNumber = document.getElementById("view-ta-number");
         const viewPurpose = document.getElementById("view-purpose");
         const viewDestination = document.getElementById("view-destination");
@@ -678,6 +725,17 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="confirm-modal-title">Confirm Action</h3>
+            <p id="confirm-modal-message">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancel-confirm">Cancel</button>
+                <button class="modal-btn confirm" id="confirm-confirm">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <div id="settings-modal" class="modal">
