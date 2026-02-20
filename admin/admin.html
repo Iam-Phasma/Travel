@@ -2795,9 +2795,9 @@
                 }
             };
             
-            // Update immediately and then every 10 seconds
+            // Update immediately and then every 15 seconds
             updateHeartbeat();
-            setInterval(updateHeartbeat, 10000);
+            setInterval(updateHeartbeat, 15000);
             
             // Show User Management panel only for super users
             if (userRole === 'super') {
