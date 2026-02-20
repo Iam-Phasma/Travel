@@ -2023,6 +2023,18 @@ button:hover {
         padding: 16px;
     }
 
+    .employee-list-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .employee-search-wrapper {
+        flex: 0 0 auto;
+        width: 100%;
+        min-width: 0;
+    }
+
     .user-filter-bar > div {
         flex-direction: column !important;
         gap: 12px !important;
