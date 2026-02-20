@@ -1424,7 +1424,7 @@ button:hover {
 
 /* Employee Management Styles */
 .employees-panel {
-    width: min(796px, calc(100vw - 36px));
+    width: min(700px, calc(100vw - 36px));
     overflow: visible;
 }
 
@@ -1483,7 +1483,7 @@ button:hover {
     border-radius: 16px;
     border: 1px solid rgba(15, 26, 31, 0.12);
     padding: 16px;
-    max-height: 500px;
+    max-height: 400px;
     overflow-y: auto;
     scroll-behavior: smooth;
 }
