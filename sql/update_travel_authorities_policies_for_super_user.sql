@@ -54,11 +54,18 @@ WITH CHECK (
   )
 );
 
--- Keep SELECT restricted to authenticated users (same as before)
+-- Allow only admin OR super users to SELECT (so RETURNING works for those roles).
+-- NOTE: SELECT policies use `USING` only — do NOT include `WITH CHECK` for SELECT.
 CREATE POLICY "Select" ON public.travel_authorities
 FOR SELECT
 TO public
-USING (auth.role() = 'authenticated'::text);
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+      AND profiles.role IN ('admin', 'super')
+  )
+);
 
 -- Verification helpers (run in Supabase SQL editor):
 -- SELECT * FROM pg_policies WHERE tablename = 'travel_authorities';
