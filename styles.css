@@ -31,7 +31,132 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================
+   STICKY HEADER STYLES
+   ============================================ */
+
+.sticky-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #d0d0d0;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sticky-header-content {
+    width: 100%;
+    height: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sticky-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sticky-header-logo {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
+
+.sticky-header-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.title-abbr {
+    display: none;
+}
+
+.sticky-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.header-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 2px solid var(--sea);
+    background: white;
+    color: var(--sea);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 250ms ease;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(47, 111, 179, 0.1);
+}
+
+.header-icon-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--sea);
+    transition: fill 250ms ease;
+}
+
+.header-icon-btn:hover {
+    background: var(--sea);
+    border-color: #174a7c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.25);
+}
+
+.header-icon-btn:hover svg {
+    fill: white;
+}
+
+.header-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(47, 111, 179, 0.2);
+}
+
+.page-content {
+    width: 100%;
+    margin-top: 60px;
     padding: 32px 18px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.welcome-banner {
+    width: 100%;
+    max-width: min(1100px, calc(100vw - 36px));
+    margin-bottom: 20px;
+}
+
+.welcome-message {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(47, 111, 179, 0.15);
+    color: rgba(11, 28, 59, 0.85);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(47, 111, 179, 0.08);
 }
 
 .header {
@@ -929,6 +1054,51 @@ button:hover {
         padding: 8px 16px;
         font-size: 0.9rem;
     }
+
+    .sticky-header-title {
+        font-size: 0.9rem;
+    }
+
+    .sticky-header-content {
+        padding: 0 16px;
+    }
+
+    .sticky-header-left {
+        gap: 10px;
+    }
+
+    .sticky-header-logo {
+        height: 40px;
+    }
+
+    .header-icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .header-icon-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .welcome-message {
+        font-size: 0.9rem;
+        padding: 14px 16px;
+    }
+
+    .page-content {
+        padding: 24px 18px 0;
+    }
+}
+
+@media (max-width: 650px) {
+    .title-full {
+        display: none;
+    }
+
+    .title-abbr {
+        display: inline;
+    }
 }
 
 @media (max-width: 480px) {
@@ -984,6 +1154,52 @@ button:hover {
         flex: 1 1 auto;
         min-width: 0;
         white-space: nowrap;
+    }
+
+    .sticky-header {
+        height: 50px;
+    }
+
+    .sticky-header-title {
+        font-size: 0.7rem;
+        letter-spacing: 0.3px;
+    }
+
+    .sticky-header-content {
+        padding: 0 12px;
+    }
+
+    .sticky-header-left {
+        gap: 8px;
+    }
+
+    .sticky-header-logo {
+        height: 35px;
+    }
+
+    .header-icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+    }
+
+    .header-icon-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .sticky-header-actions {
+        gap: 6px;
+    }
+
+    .welcome-message {
+        font-size: 0.85rem;
+        padding: 12px 14px;
+    }
+
+    .page-content {
+        margin-top: 50px;
+        padding: 20px 18px 0;
     }
 }
 
