@@ -6,18 +6,12 @@
     <title>CHEDRO IV TRAVEL AUTHORITY ARCHIVE</title>
     <link rel="icon" type="image/png" href="assets/CHED-Logo.png">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="header/header.css">
     <link rel="stylesheet" href="footer/footer.css">
 </head>
 <body class="login-page">
     <main class="shell">
-        <header>
-            <div class="logo-row" aria-label="Government logos">
-                <img src="assets/CHED-Logo.png" alt="CHED logo">
-                <img src="assets/Bagong_Pilipinas_logo.png" alt="Bagong Pilipinas logo">
-            </div>
-            <h1>CHEDRO IV TRAVEL AUTHORITY ARCHIVE</h1>
-            <p class="tagline">This portal stores scanned copies of travel authority documents filed by CHEDRO IV employees. Use the given email and password to view and download files.</p>
-        </header>
+        <div id="header-container"></div>
 
         <section class="panel" id="login-panel">
             <h2>Login</h2>
@@ -336,6 +330,16 @@
                 window.location.reload();
             }
         });
+    </script>
+
+    <div id="header-container"></div>
+    <script>
+        fetch('header/login-header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+            })
+            .catch(error => console.error('Error loading header:', error));
     </script>
 
     <div id="footer-container"></div>

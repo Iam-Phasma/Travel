@@ -1,0 +1,187 @@
+/* ============================================
+   STICKY HEADER STYLES
+   ============================================ */
+
+.sticky-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 60px;
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #d0d0d0;
+    z-index: 999;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sticky-header-content {
+    width: 100%;
+    height: 100%;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sticky-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sticky-header-logo {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
+
+.sticky-header-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.title-abbr {
+    display: none;
+}
+
+.sticky-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.header-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 2px solid var(--sea);
+    background: white;
+    color: var(--sea);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 250ms ease;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(47, 111, 179, 0.1);
+}
+
+.header-icon-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--sea);
+    transition: fill 250ms ease;
+}
+
+.header-icon-btn:hover {
+    background: var(--sea);
+    border-color: #174a7c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.25);
+}
+
+.header-icon-btn:hover svg {
+    fill: white;
+}
+
+.header-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(47, 111, 179, 0.2);
+}
+
+/* ============================================
+   LOGIN PAGE HEADER STYLES
+   ============================================ */
+
+header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    align-items: center;
+}
+
+.logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.logo-row img {
+    height: 75px;
+    width: auto;
+    object-fit: contain;
+}
+
+.tagline {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 1.1rem;
+    max-width: 60ch;
+}
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 720px) {
+    .sticky-header-title {
+        font-size: 0.9rem;
+    }
+
+    .sticky-header-content {
+        padding: 0 16px;
+    }
+
+    .sticky-header-left {
+        gap: 10px;
+    }
+
+    .sticky-header-logo {
+        height: 40px;
+    }
+
+    .header-icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .header-icon-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .tagline {
+        font-size: 1rem;
+    }
+
+    .logo-row img {
+        height: 55px;
+    }
+}
+
+@media (max-width: 650px) {
+    .title-full {
+        display: none;
+    }
+
+    .title-abbr {
+        display: inline;
+    }
+}
+
+@media (max-width: 480px) {
+    .tagline {
+        font-size: 0.95rem;
+    }
+
+    .logo-row img {
+        height: 45px;
+    }
+}

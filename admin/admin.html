@@ -7,33 +7,29 @@
     <link rel="icon" type="image/png" href="../assets/CHED-Logo.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../header/header.css">
     <link rel="stylesheet" href="../footer/footer.css">
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 </head>
 <body>
-    <header class="sticky-header">
-        <div class="sticky-header-content">
-            <div class="sticky-header-left">
-                <img src="../assets/CHED-Logo.png" alt="CHED Logo" class="sticky-header-logo">
-                <h1 class="sticky-header-title">
-                    <span class="title-full">CHEDRO IV TRAVEL AUTHORITY ARCHIVE</span>
-                    <span class="title-abbr">CTAA</span>
-                </h1>
-            </div>
-            <div class="sticky-header-actions">
-                <button id="settings-btn" type="button" class="header-icon-btn" title="Settings">
-                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                    </svg>
-                </button>
-                <button id="logout-btn" type="button" class="header-icon-btn" title="Log Out">
-                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div id="header-container"></div>
+    <script>
+        // Load header HTML
+        window.headerLoaded = false;
+        fetch('../header/header.html')
+            .then(response => response.text())
+            .then(data => {
+                const headerHTML = data.replace(/HEADER_ASSETS_PATH/g, '../assets');
+                document.getElementById('header-container').innerHTML = headerHTML;
+                window.headerLoaded = true;
+                
+                // If initHeaderButtons is already defined, call it
+                if (window.initHeaderButtons) {
+                    window.initHeaderButtons();
+                }
+            })
+            .catch(error => console.error('Error loading header:', error));
+    </script>
     <div class="page-content">
         <div class="page-header-section">
             <h2 class="page-title">Admin Panel</h2>
@@ -716,29 +712,43 @@
         // Check session validity every 30 seconds
         setInterval(validateAdminSession, 30000);
 
-        // Logout functionality
-        document.getElementById("logout-btn").addEventListener("click", async () => {
-            // Show confirmation dialog
-            const confirmed = await showConfirmation(
-                'Confirm Logout',
-                'Are you sure you want to log out?'
-            );
+        // Define header button initialization function
+        window.initHeaderButtons = () => {
+            // Logout functionality
+            const logoutBtn = document.getElementById("logout-btn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", async () => {
+                    // Show confirmation dialog
+                    const confirmed = await showConfirmation(
+                        'Confirm Logout',
+                        'Are you sure you want to log out?'
+                    );
 
-            if (!confirmed) {
-                return; // User cancelled
+                    if (!confirmed) {
+                        return; // User cancelled
+                    }
+
+                    try {
+                        // Clear admin session token
+                        localStorage.removeItem('admin_session_token');
+                        await supabase.auth.signOut();
+                        window.location.href = "../index.html";
+                    } catch (error) {
+                        console.error("Logout error:", error);
+                        localStorage.removeItem('admin_session_token');
+                        window.location.href = "../index.html";
+                    }
+                });
             }
 
-            try {
-                // Clear admin session token
-                localStorage.removeItem('admin_session_token');
-                await supabase.auth.signOut();
-                window.location.href = "../index.html";
-            } catch (error) {
-                console.error("Logout error:", error);
-                localStorage.removeItem('admin_session_token');
-                window.location.href = "../index.html";
+            // Settings button click handler
+            const settingsBtn = document.getElementById('settings-btn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => {
+                    document.getElementById('settings-modal').classList.add('show');
+                });
             }
-        });
+        };
 
         const uploadStatus = document.getElementById("upload-status");
         const taNumberInput = document.getElementById("ta-number");
@@ -2880,10 +2890,10 @@
             }
         });
 
-        // Settings button click handler
-        document.getElementById('settings-btn').addEventListener('click', () => {
-            document.getElementById('settings-modal').classList.add('show');
-        });
+        // Initialize header buttons after everything is defined
+        if (window.headerLoaded) {
+            window.initHeaderButtons();
+        }
 
         document.getElementById('close-settings').addEventListener('click', () => {
             document.getElementById('settings-modal').classList.remove('show');
