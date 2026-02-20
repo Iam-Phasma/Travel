@@ -686,7 +686,7 @@ button:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 5px 10px;
+    padding: 10px 10px;
     border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: var(--sea);
@@ -764,7 +764,7 @@ button:hover {
 }
 
 .view-btn {
-    padding: 10px 15px;
+    padding: 8px 15px;
     border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: var(--sea);
@@ -880,16 +880,16 @@ button:hover {
 
 .file-link {
     display: inline-block;
-    color: #2f6fb3;
-    font-weight: 600;
-    padding: 10px 16px;
+    padding: 8px 15px;
     border-radius: 8px;
+    background: rgba(47, 111, 179, 0.15);
+    color: var(--sea);
+    font-weight: 600;
     text-decoration: none;
-    transition: background 0.2s;
+    transition: background 200ms ease;
 }
 .file-link:hover {
-    background: #cfe4ff;
-    color: #174a7c;
+    background: rgba(47, 111, 179, 0.25);
 }
 
 .detail-row {
