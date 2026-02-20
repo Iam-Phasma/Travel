@@ -2074,6 +2074,7 @@
         const employeeListContainer = document.getElementById("employee-list");
         const employeeSearchInput = document.getElementById("employee-search");
         let allEmployeesData = []; // Store all employees for filtering
+        let allEmployeesCache = []; // Always holds the full unfiltered list
         const deleteEmployeeModal = document.getElementById("delete-employee-modal");
         const cancelDeleteEmployeeBtn = document.getElementById("cancel-delete-employee");
         const confirmDeleteEmployeeBtn = document.getElementById("confirm-delete-employee");
@@ -2099,6 +2100,7 @@
                     if (error) throw error;
                     
                     allEmployeesData = data || [];
+                    allEmployeesCache = allEmployeesData.slice(); // keep a full copy
                     
                     // Clear search input when loading fresh data
                     if (employeeSearchInput) {
@@ -2221,10 +2223,10 @@
                 
                 if (searchTerm === '') {
                     // Show all employees
-                    renderEmployeeList(allEmployeesData);
+                    renderEmployeeList(allEmployeesCache);
                 } else {
                     // Filter employees by name
-                    const filtered = allEmployeesData.filter(emp => 
+                    const filtered = allEmployeesCache.filter(emp => 
                         emp.name.toLowerCase().includes(searchTerm)
                     );
                     renderEmployeeList(filtered);
