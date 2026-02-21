@@ -128,7 +128,8 @@
             </div>
             <div>
                 <label for="scan-file">Upload Scanned <span class="required">*</span></label>
-                <input id="scan-file" type="file" accept="application/pdf,.pdf" required>
+                <input id="scan-file" type="file" accept="application/pdf,.pdf,image/jpeg,image/jpg,image/png" multiple required>
+                <p class="disclaimer">Accept PDFs and/or images (max 10 files, 10MB total). Multiple files will be combined into one PDF.</p>
             </div>
             <div class="auto-clear-bottom">
                 <label class="checkbox-label">
@@ -405,8 +406,8 @@
                 </div>
                 <div>
                     <label for="update-scan-file">Upload Scanned</label>
-                    <input id="update-scan-file" type="file" accept="application/pdf,.pdf">
-                    <p class="disclaimer">Leave empty to keep the current file.</p>
+                    <input id="update-scan-file" type="file" accept="application/pdf,.pdf,image/jpeg,image/jpg,image/png" multiple>
+                    <p class="disclaimer">Leave empty to keep current file. Accept PDFs and/or images (max 10 files, 10MB total). Multiple files will be combined into one PDF.</p>
                 </div>
             </div>
             <span class="status hidden" id="update-status"></span>
@@ -810,6 +811,127 @@
             }
         };
 
+        // Convert images and PDFs to a single combined PDF
+        const combineFilesToPDF = async (files, taNumber) => {
+            const { PDFDocument } = window.PDFLib;
+            const finalPdf = await PDFDocument.create();
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                if (file.type === 'application/pdf') {
+                    // Handle PDF - copy all pages
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await finalPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    copiedPages.forEach((page) => finalPdf.addPage(page));
+                } else if (file.type.startsWith('image/')) {
+                    // Handle image - add as new page
+                    const imgData = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+
+                    // Get image dimensions
+                    const img = await new Promise((resolve) => {
+                        const image = new Image();
+                        image.onload = () => resolve(image);
+                        image.src = imgData;
+                    });
+
+                    // Create a new page in A4 size
+                    const pageWidth = 595.28; // A4 width in points
+                    const pageHeight = 841.89; // A4 height in points
+                    const page = finalPdf.addPage([pageWidth, pageHeight]);
+
+                    // Embed image
+                    let embeddedImage;
+                    const imageBytes = await fetch(imgData).then(res => res.arrayBuffer());
+                    
+                    if (file.type === 'image/png') {
+                        embeddedImage = await finalPdf.embedPng(imageBytes);
+                    } else {
+                        embeddedImage = await finalPdf.embedJpg(imageBytes);
+                    }
+
+                    // Calculate scaling to fit image on page while maintaining aspect ratio
+                    const margin = 28.35; // 10mm margin in points
+                    const maxWidth = pageWidth - (margin * 2);
+                    const maxHeight = pageHeight - (margin * 2);
+
+                    let imgWidth = embeddedImage.width;
+                    let imgHeight = embeddedImage.height;
+                    const aspectRatio = imgWidth / imgHeight;
+
+                    if (imgWidth > imgHeight) {
+                        imgWidth = maxWidth;
+                        imgHeight = imgWidth / aspectRatio;
+                    } else {
+                        imgHeight = maxHeight;
+                        imgWidth = imgHeight * aspectRatio;
+                    }
+
+                    // Further scale down if still too large
+                    if (imgWidth > maxWidth) {
+                        imgWidth = maxWidth;
+                        imgHeight = imgWidth / aspectRatio;
+                    }
+                    if (imgHeight > maxHeight) {
+                        imgHeight = maxHeight;
+                        imgWidth = imgHeight * aspectRatio;
+                    }
+
+                    // Center image on page
+                    const x = (pageWidth - imgWidth) / 2;
+                    const y = (pageHeight - imgHeight) / 2;
+
+                    page.drawImage(embeddedImage, {
+                        x: x,
+                        y: y,
+                        width: imgWidth,
+                        height: imgHeight,
+                    });
+                }
+            }
+
+            // Save the combined PDF
+            const pdfBytes = await finalPdf.save({
+                useObjectStreams: true,
+                addDefaultPage: false
+            });
+
+            return new File([pdfBytes], `${taNumber}.pdf`, {
+                type: 'application/pdf',
+                lastModified: Date.now()
+            });
+        };
+
+        // Validate and process files (PDF and/or images combined)
+        const validateAndProcessFiles = async (fileInput, taNumber) => {
+            const files = Array.from(fileInput.files);
+            
+            if (files.length === 0) {
+                throw new Error('No file selected');
+            }
+
+            // Validate: max 10 total files (PDFs + images combined)
+            if (files.length > 10) {
+                throw new Error('Maximum 10 files allowed (PDFs and images combined)');
+            }
+
+            // Check file types
+            const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+            const invalidFiles = files.filter(f => !validTypes.includes(f.type));
+            
+            if (invalidFiles.length > 0) {
+                throw new Error('Only PDF, JPEG, and PNG files are supported');
+            }
+
+            // Combine all files (PDFs and images) into one PDF
+            return await combineFilesToPDF(files, taNumber);
+        };
+
         // Multi-select employees functionality
         let employeesList = [];
         window.adminEmployeesList = employeesList;
@@ -975,7 +1097,26 @@
 
         scanFileInput.addEventListener("change", () => {
             if (scanFileInput.files.length > 0) {
-                uploadStatus.textContent = `Selected: ${scanFileInput.files[0].name}`;
+                const fileCount = scanFileInput.files.length;
+                const hasPdf = Array.from(scanFileInput.files).some(f => f.type === 'application/pdf');
+                const hasImages = Array.from(scanFileInput.files).some(f => f.type.startsWith('image/'));
+                
+                if (fileCount === 1) {
+                    uploadStatus.textContent = `Selected: ${scanFileInput.files[0].name}`;
+                } else {
+                    const fileTypes = [];
+                    if (hasPdf) fileTypes.push('PDF');
+                    if (hasImages) fileTypes.push('images');
+                    uploadStatus.textContent = `Selected: ${fileCount} files (${fileTypes.join(' + ')}) - will be combined into one PDF`;
+                }
+                
+                // Show warning if too many files
+                if (fileCount > 10) {
+                    uploadStatus.textContent = "⚠️ Maximum 10 files allowed";
+                    uploadStatus.classList.add("status--error");
+                } else {
+                    uploadStatus.classList.remove("status--error");
+                }
             } else {
                 uploadStatus.textContent = "Complete the required fields.";
             }
@@ -989,9 +1130,7 @@
             let travelUntil = travelUntilInput.value;
             const employees = selectedEmployees.join(", ");
 
-            const file = scanFileInput.files[0];
-
-            if (!taNumber || !purpose || !destination || !travelDate || !file || selectedEmployees.length === 0) {
+            if (!taNumber || !purpose || !destination || !travelDate || scanFileInput.files.length === 0 || selectedEmployees.length === 0) {
                 uploadStatus.textContent = "Please fill in all required fields.";
                 uploadStatus.classList.add("status--error");
                 uploadStatus.classList.remove("status--shake");
@@ -1037,19 +1176,17 @@
             }
 
             try {
-                // Show initial file size
-                const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                uploadStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
+                // Validate and process files (PDF or images)
+                uploadStatus.textContent = 'Processing files...';
                 uploadStatus.classList.remove("status--error");
 
-                // Compress PDF before uploading
-                const processedFile = await compressPDF(file);
-                const compressedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
+                const processedFile = await validateAndProcessFiles(scanFileInput, taNumber);
+                const processedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
                 
-                // Check if compressed file is still too large (adjust maxAllowedMB based on your storage bucket limit)
-                const maxAllowedMB = 5;
+                // Check if file is still too large
+                const maxAllowedMB = 10;
                 if (processedFile.size > maxAllowedMB * 1024 * 1024) {
-                    uploadStatus.textContent = `File too large: ${compressedSizeMB}MB (max ${maxAllowedMB}MB). Please use a smaller PDF or compress it externally.`;
+                    uploadStatus.textContent = `File too large: ${processedSizeMB}MB (max ${maxAllowedMB}MB). Please use smaller files.`;
                     uploadStatus.classList.add("status--error");
                     uploadStatus.classList.remove("status--shake");
                     void uploadStatus.offsetWidth;
@@ -1057,7 +1194,7 @@
                     return;
                 }
 
-                uploadStatus.textContent = `Uploading ${compressedSizeMB}MB...`;
+                uploadStatus.textContent = `Uploading ${processedSizeMB}MB...`;
 
                 // Verify user is authenticated
                 const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -1084,9 +1221,10 @@
                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                 
-                // Extract file extension and rename file to TA number
+                // Extract file extension and rename file to TA number with timestamp
                 const fileExtension = processedFile.name.substring(processedFile.name.lastIndexOf('.'));
-                const newFileName = `${taNumber}${fileExtension}`;
+                const timestamp = Date.now();
+                const newFileName = `${taNumber}_${timestamp}${fileExtension}`;
                 const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
 
                 const { error: uploadError } = await supabase
@@ -2127,7 +2265,6 @@
             const travelDate = updateTravelDateInput.value;
             let travelUntil = updateTravelUntilInput.value;
             const employees = updateSelectedEmployees.join(", ");
-            const file = updateScanFileInput.files[0];
 
             if (!taNumber || !purpose || !destination || !travelDate || updateSelectedEmployees.length === 0) {
                 updateStatus.textContent = "Please fill in all required fields.";
@@ -2213,19 +2350,17 @@
                 // Ensure both values are formatted consistently before comparing
                 const taNumberChanged = formatTaNumber(taNumber) !== formatTaNumber(updateRecordData.ta_number);
 
-                if (file) {
-                    // Show initial file size
-                    const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-                    updateStatus.textContent = `File: ${originalSizeMB}MB - Compressing...`;
+                if (updateScanFileInput.files.length > 0) {
+                    // Validate and process files (PDF or images)
+                    updateStatus.textContent = 'Processing files...';
                     
-                    // Compress PDF before uploading
-                    const processedFile = await compressPDF(file);
-                    const compressedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
+                    const processedFile = await validateAndProcessFiles(updateScanFileInput, taNumber);
+                    const processedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
                     
-                    // Check if compressed file is still too large
-                    const maxAllowedMB = 5;
+                    // Check if file is still too large
+                    const maxAllowedMB = 10;
                     if (processedFile.size > maxAllowedMB * 1024 * 1024) {
-                        updateStatus.textContent = `File too large: ${compressedSizeMB}MB (max ${maxAllowedMB}MB). Please use a smaller PDF.`;
+                        updateStatus.textContent = `File too large: ${processedSizeMB}MB (max ${maxAllowedMB}MB). Please use smaller files.`;
                         updateStatus.classList.add("status--error");
                         updateStatus.classList.remove("status--shake");
                         void updateStatus.offsetWidth;
@@ -2233,15 +2368,30 @@
                         return;
                     }
 
-                    updateStatus.textContent = `Uploading ${compressedSizeMB}MB...`;
+                    updateStatus.textContent = `Uploading ${processedSizeMB}MB...`;
 
                     const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                     const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                     
-                    // Extract file extension and rename file to TA number
+                    // Extract file extension and rename file to TA number with timestamp
                     const fileExtension = processedFile.name.substring(processedFile.name.lastIndexOf('.'));
-                    const newFileName = `${taNumber}${fileExtension}`;
+                    const timestamp = Date.now();
+                    const newFileName = `${taNumber}_${timestamp}${fileExtension}`;
                     const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
+
+                    // Delete old file if it exists
+                    if (updateRecordData.file_url) {
+                        try {
+                            const url = new URL(updateRecordData.file_url);
+                            const pathParts = url.pathname.split('/ta-files/');
+                            if (pathParts.length > 1) {
+                                const oldFilePath = decodeURIComponent(pathParts[1]);
+                                await supabase.storage.from("ta-files").remove([oldFilePath]);
+                            }
+                        } catch (e) {
+                            // Ignore deletion errors - file might not exist
+                        }
+                    }
 
                     const { error: uploadError } = await supabase
                         .storage
@@ -2278,11 +2428,12 @@
                             if (downloadError) {
                                 console.warn("Could not download old file for renaming:", downloadError);
                             } else {
-                                // Upload with new TA number name
+                                // Upload with new TA number name and timestamp
                                 const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
                                 const safeDate = travelDate.replace(/[^0-9-]/g, "-");
                                 const fileExtension = updateRecordData.file_name.substring(updateRecordData.file_name.lastIndexOf('.'));
-                                const newFileName = `${taNumber}${fileExtension}`;
+                                const timestamp = Date.now();
+                                const newFileName = `${taNumber}_${timestamp}${fileExtension}`;
                                 const newFilePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
                                 
                                 const { error: uploadError } = await supabase
@@ -2320,7 +2471,7 @@
                     }
                 }
 
-                const { error: updateError } = await supabase
+                const { data: updateData, error: updateError } = await supabase
                     .from("travel_authorities")
                     .update({
                         ta_number: taNumber,
@@ -2332,7 +2483,8 @@
                         file_name: fileName,
                         file_url: fileUrl
                     })
-                    .eq("id", updateRecordData.id);
+                    .eq("id", updateRecordData.id)
+                    .select();
 
                 if (updateError) {
                     // Check for duplicate TA number error
@@ -2340,27 +2492,6 @@
                         throw new Error(`TA Number ${taNumber} already exists in the database.`);
                     }
                     throw new Error(`Database update failed: ${updateError.message || "Unknown error"}`);
-                }
-
-                if (file && updateRecordData.file_url) {
-                    try {
-                        const url = new URL(updateRecordData.file_url);
-                        const pathParts = url.pathname.split('/ta-files/');
-                        if (pathParts.length > 1) {
-                            const oldFilePath = decodeURIComponent(pathParts[1]);
-
-                            const { error: storageError } = await supabase
-                                .storage
-                                .from("ta-files")
-                                .remove([oldFilePath]);
-
-                            if (storageError) {
-                                console.warn("Storage delete warning:", storageError);
-                            }
-                        }
-                    } catch (urlError) {
-                        console.warn("File path extraction error:", urlError);
-                    }
                 }
 
                 updateModal.classList.remove("show");
