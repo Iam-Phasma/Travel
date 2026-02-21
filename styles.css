@@ -1277,14 +1277,14 @@ button:hover {
 }
 
 .apply-btn {
-    background: var(--sea);
+    background: var(--ink);
     color: white;
 }
 
 .apply-btn:hover {
-    background: #2561a3;
+    background: #081430;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.3);
+    box-shadow: 0 4px 12px rgba(11, 28, 59, 0.3);
 }
 
 .clear-btn {
