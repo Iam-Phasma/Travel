@@ -380,14 +380,12 @@
         const taBody = document.getElementById("ta-body");
         const taStatus = document.getElementById("ta-status");
         const taMoreBtn = document.getElementById("ta-more");
-        const pageSize = 20;
-        let taOffset = 0;
         let taRows = [];
-        let taHasMore = true;
+        const currentYear = new Date().getFullYear().toString();
         let activeFilters = {
             taNumber: "",
             employee: "",
-            year: "",
+            year: currentYear,
             travelDate: "",
             matchAll: false
         };
@@ -545,62 +543,41 @@
                 taStatus.textContent = "No records yet.";
             } else if (hasActiveFilters) {
                 taStatus.textContent = `Showing ${filteredCount} of ${taRows.length} record${taRows.length === 1 ? "" : "s"} (filtered).`;
-            } else if (!taHasMore) {
-                taStatus.textContent = "End of records.";
             } else {
                 taStatus.textContent = `Loaded ${taRows.length} record${taRows.length === 1 ? "" : "s"}.`;
-            }
-
-            if (taMoreBtn) {
-                taMoreBtn.hidden = !taHasMore;
             }
         };
 
         const loadTravelAuthorities = async (reset = false) => {
             if (reset) {
-                taOffset = 0;
                 taRows = [];
-                taHasMore = true;
                 taBody.innerHTML = "<tr><td colspan=\"7\">Loading records...</td></tr>";
-            }
-
-            if (!taHasMore) {
-                updateTaFooter();
-                return;
             }
 
             taStatus.textContent = "Fetching travel authorities.";
             try {
-                const from = taOffset;
-                const to = taOffset + pageSize - 1;
                 const { data, error } = await supabase
                     .from("travel_authorities")
                     .select("ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at")
-                    .order("created_at", { ascending: false })
-                    .range(from, to);
+                    .order("created_at", { ascending: false });
 
                 if (error) {
                     throw error;
                 }
 
-                const nextRows = data || [];
-                taRows = taRows.concat(nextRows);
-                taOffset += nextRows.length;
-                taHasMore = nextRows.length === pageSize;
-
+                taRows = data || [];
                 renderRows(taRows);
                 updateTaFooter();
-                populateYearFilter();
+                await populateYearFilter();
             } catch (error) {
                 console.error("Dashboard load error:", error);
                 taBody.innerHTML = "<tr><td colspan=\"7\">Unable to load records.</td></tr>";
                 taStatus.textContent = "Failed to load travel authorities.";
             }
         };
+        // Hide load more button since we load all records now
         if (taMoreBtn) {
-            taMoreBtn.addEventListener("click", () => {
-                loadTravelAuthorities(false);
-            });
+            taMoreBtn.style.display = 'none';
         }
 
         closeViewBtn.addEventListener("click", () => {
@@ -657,20 +634,31 @@
         };
 
         // Populate year filter from available data
-        const populateYearFilter = () => {
-            const years = new Set();
-            taRows.forEach(row => {
-                if (row.travel_date) {
-                    const year = row.travel_date.substring(0, 4);
-                    if (year && year.length === 4) {
-                        years.add(year);
+        const populateYearFilter = async () => {
+            try {
+                // Get all unique years from database
+                const { data, error } = await supabase
+                    .from('travel_authorities')
+                    .select('travel_date');
+                    
+                if (error) throw error;
+                
+                const years = new Set();
+                data.forEach(row => {
+                    if (row.travel_date) {
+                        const year = row.travel_date.substring(0, 4);
+                        if (year && year.length === 4) {
+                            years.add(year);
+                        }
                     }
-                }
-            });
-            
-            const sortedYears = Array.from(years).sort((a, b) => b - a);
-            filterYearSelect.innerHTML = '<option value="">All Years</option>' +
-                sortedYears.map(year => `<option value="${year}">${year}</option>`).join('');
+                });
+                
+                const sortedYears = Array.from(years).sort((a, b) => b - a);
+                filterYearSelect.innerHTML = '<option value="">All Years</option>' +
+                    sortedYears.map(year => `<option value="${year}"${year === currentYear ? ' selected' : ''}>${year}</option>`).join('');
+            } catch (error) {
+                console.error('Error populating year filter:', error);
+            }
         };
 
         // Auto-dash formatting for TA Number filter
