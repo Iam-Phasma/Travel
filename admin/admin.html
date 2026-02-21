@@ -2210,7 +2210,8 @@
 
                 let fileUrl = updateRecordData.file_url || "";
                 let fileName = updateRecordData.file_name || "";
-                const taNumberChanged = taNumber !== updateRecordData.ta_number;
+                // Ensure both values are formatted consistently before comparing
+                const taNumberChanged = formatTaNumber(taNumber) !== formatTaNumber(updateRecordData.ta_number);
 
                 if (file) {
                     // Show initial file size
