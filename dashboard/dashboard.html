@@ -260,10 +260,32 @@
         };
 
         window.initHeaderButtons = () => {
-            // Logout functionality
-            const logoutBtn = document.getElementById("logout-btn");
-            if (logoutBtn) {
-                logoutBtn.addEventListener("click", async () => {
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const headerPopup = document.getElementById('header-popup-panel');
+            const settingsOption = document.getElementById('header-settings-option');
+            const logoutOption = document.getElementById('header-logout-option');
+
+            // Toggle popup when user menu button is clicked
+            if (userMenuBtn && headerPopup) {
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    headerPopup.classList.toggle('show');
+                });
+            }
+
+            // Handle settings option click
+            if (settingsOption && headerPopup) {
+                settingsOption.addEventListener('click', () => {
+                    headerPopup.classList.remove('show');
+                    document.getElementById('settings-modal').classList.add('show');
+                });
+            }
+
+            // Handle logout option click
+            if (logoutOption && headerPopup) {
+                logoutOption.addEventListener('click', async () => {
+                    headerPopup.classList.remove('show');
+                    
                     // Show confirmation dialog
                     const confirmed = await showConfirmation(
                         'Confirm Logout',
@@ -284,13 +306,13 @@
                 });
             }
 
-            // Settings button click handler
-            const settingsBtn = document.getElementById('settings-btn');
-            if (settingsBtn) {
-                settingsBtn.addEventListener('click', () => {
-                    document.getElementById('settings-modal').classList.add('show');
-                });
-            }
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (headerPopup && !headerPopup.contains(e.target) && 
+                    e.target !== userMenuBtn && !userMenuBtn?.contains(e.target)) {
+                    headerPopup.classList.remove('show');
+                }
+            });
         };
 
         const getUserRole = async (userId) => {

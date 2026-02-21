@@ -71,42 +71,117 @@
 }
 
 .header-icon-btn {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 8px;
-    border: 2px solid var(--sea);
+    border: 1px solid rgba(15, 26, 31, 0.25);
     background: white;
-    color: var(--sea);
+    color: rgba(15, 26, 31, 0.7);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 250ms ease;
     padding: 0;
-    box-shadow: 0 2px 4px rgba(47, 111, 179, 0.1);
+    box-shadow: 0 2px 4px rgba(15, 26, 31, 0.08);
 }
 
 .header-icon-btn svg {
-    width: 22px;
-    height: 22px;
-    fill: var(--sea);
+    width: 20px;
+    height: 20px;
+    fill: rgba(15, 26, 31, 0.65);
     transition: fill 250ms ease;
 }
 
 .header-icon-btn:hover {
-    background: var(--sea);
-    border-color: #174a7c;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.25);
+    background: rgba(15, 26, 31, 0.05);
+    border-color: rgba(15, 26, 31, 0.35);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(15, 26, 31, 0.15);
 }
 
 .header-icon-btn:hover svg {
-    fill: white;
+    fill: rgba(15, 26, 31, 0.85);
 }
 
 .header-icon-btn:active {
     transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(47, 111, 179, 0.2);
+    box-shadow: 0 2px 4px rgba(15, 26, 31, 0.12);
+}
+
+/* ============================================
+   HEADER POPUP PANEL STYLES
+   ============================================ */
+
+.sticky-header-actions {
+    position: relative;
+}
+
+.header-popup-panel {
+    position: absolute;
+    top: 54px;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 10px 40px rgba(15, 26, 31, 0.25);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(15, 26, 31, 0.12);
+    z-index: 100;
+    min-width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 250ms ease;
+}
+
+.header-popup-panel.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.header-popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-popup-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 200ms ease;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    text-align: left;
+    width: 100%;
+}
+
+.header-popup-option svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--sea);
+    flex-shrink: 0;
+    transition: fill 200ms ease;
+}
+
+.header-popup-option:hover {
+    background: rgba(47, 111, 179, 0.1);
+}
+
+.header-popup-option:hover svg {
+    fill: #174a7c;
+}
+
+.header-popup-option:active {
+    background: rgba(47, 111, 179, 0.15);
 }
 
 /* ============================================
@@ -163,13 +238,13 @@ header {
     }
 
     .header-icon-btn {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
     }
 
     .header-icon-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
     }
 
     .tagline {
