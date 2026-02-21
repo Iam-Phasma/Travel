@@ -3,6 +3,7 @@
 window.initEmployeeManagement = (supabase) => {
     // Get references to required functions and variables from parent scope
     const showToast = window.adminShowToast || function(msg) { console.log('Toast:', msg); };
+    const showConfirmation = window.adminShowConfirmation || function(title, msg) { return Promise.resolve(confirm(msg)); };
     const getEmployeesList = () => window.adminEmployeesList || [];
     const setEmployeesList = (list) => { window.adminEmployeesList = list; };
     const renderEmployeesOptions = window.adminRenderEmployeesOptions || function() {};
@@ -98,6 +99,19 @@ window.initEmployeeManagement = (supabase) => {
                     const isActive = btn.getAttribute('data-active') === 'true';
                     const newStatus = !isActive;
                     
+                    // Determine action and meaningful message
+                    const action = newStatus ? 'unhide' : 'hide';
+                    const title = newStatus ? 'Unhide Employee' : 'Hide Employee';
+                    const message = newStatus 
+                        ? `Unhide "${employeeName}"?\n\nThis employee will be visible and selectable in travel authority forms.`
+                        : `Hide "${employeeName}"?\n\nThis employee will no longer appear in travel authority forms but existing records remain unchanged.`;
+                    
+                    // Show confirmation dialog
+                    const confirmed = await showConfirmation(title, message);
+                    if (!confirmed) {
+                        return; // User cancelled
+                    }
+                    
                     try {
                         const { error } = await supabase
                             .from("employee_list")
@@ -106,7 +120,7 @@ window.initEmployeeManagement = (supabase) => {
 
                         if (error) throw error;
 
-                        const statusText = newStatus ? 'activated' : 'deactivated';
+                        const statusText = newStatus ? 'unhidden' : 'hidden';
                         showToast(`Employee "${employeeName}" ${statusText} successfully!`);
                         await renderEmployeeList();
                     } catch (error) {
