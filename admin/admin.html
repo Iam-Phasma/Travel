@@ -457,6 +457,7 @@
                     // Immediate logout
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
+                    localStorage.removeItem('adminActivePanel');
                     window.location.href = '../index.html';
                 }
             } catch (err) {
@@ -525,6 +526,7 @@
                     
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
+                    localStorage.removeItem('adminActivePanel');
                     window.location.href = '../index.html';
                 }
             } catch (err) {
@@ -603,6 +605,7 @@
                 console.warn("Session token mismatch. Another device logged in.");
                 await supabase.auth.signOut();
                 localStorage.removeItem('admin_session_token');
+                localStorage.removeItem('adminActivePanel');
                 window.location.href = "../index.html";
                 return;
             }
@@ -635,6 +638,7 @@
             if (role !== "admin" && role !== "super") {
                 console.warn("User is no longer an admin or super. Redirecting.");
                 await supabase.auth.signOut();
+                localStorage.removeItem('adminActivePanel');
                 window.location.href = "../index.html";
             }
         };
@@ -681,13 +685,15 @@
                     }
 
                     try {
-                        // Clear admin session token
+                        // Clear admin session token and panel memory
                         localStorage.removeItem('admin_session_token');
+                        localStorage.removeItem('adminActivePanel');
                         await supabase.auth.signOut();
                         window.location.href = "../index.html";
                     } catch (error) {
                         console.error("Logout error:", error);
                         localStorage.removeItem('admin_session_token');
+                        localStorage.removeItem('adminActivePanel');
                         window.location.href = "../index.html";
                     }
                 });
@@ -2360,6 +2366,7 @@
                         showToast('Your role has changed. Logging out...');
                         await new Promise(resolve => setTimeout(resolve, 1500));
                         localStorage.removeItem('admin_session_token');
+                        localStorage.removeItem('adminActivePanel');
                         await supabase.auth.signOut();
                         window.location.href = '../index.html';
                     }, 1000);
