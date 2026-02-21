@@ -1268,7 +1268,7 @@ button:hover {
 
 .filter-btn {
     padding: 9px 16px;
-    border-radius: 8px;
+    border-radius: 999px;
     font-size: 0.9rem;
     font-weight: 600;
     border: none;
