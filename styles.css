@@ -979,6 +979,16 @@ button:hover {
     background: #081430;
 }
 
+/* Employee edit save button - dark blue styling */
+#confirm-edit-employee {
+    background: var(--ink);
+    color: white;
+}
+
+#confirm-edit-employee:hover {
+    background: #081430;
+}
+
 @media (max-width: 720px) {
     .panel {
         padding: 22px;
