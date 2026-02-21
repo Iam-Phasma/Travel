@@ -679,7 +679,21 @@
         // Initialize flatpickr for date filter
         window.flatpickr(filterTravelDateInput, {
             dateFormat: "Y-m-d",
-            allowInput: true
+            allowInput: true,
+            onChange: function(selectedDates, dateStr) {
+                // Auto-sync year filter when date is selected
+                if (dateStr && dateStr.length >= 4) {
+                    const selectedYear = dateStr.substring(0, 4);
+                    // Check if this year exists in the dropdown
+                    const yearOption = Array.from(filterYearSelect.options).find(opt => opt.value === selectedYear);
+                    if (yearOption) {
+                        filterYearSelect.value = selectedYear;
+                    } else {
+                        // Year not available in records, set to "No selection"
+                        filterYearSelect.value = "";
+                    }
+                }
+            }
         });
 
         filterToggleBtn.addEventListener("click", () => {
