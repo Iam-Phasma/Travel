@@ -199,11 +199,12 @@
 }
 
 .header-popup-option:hover {
-    background: rgba(15, 26, 31, 0.08);
+    background: rgba(47, 111, 179, 0.08);
+    box-shadow: none;
 }
 
 .header-popup-option:hover svg {
-    fill: rgba(15, 26, 31, 0.75);
+    fill: var(--sea);
 }
 
 .header-popup-option:active {
