@@ -226,64 +226,7 @@
 
         <div id="employees-panel-container"></div>
 
-        <section class="panel users-panel hidden" id="users-panel">
-        <h2>Manage Users</h2>
-        <p class="panel-description">Manage user accounts and roles. Only super users can modify user roles.</p>
-        
-        <div class="user-filter-bar">
-            <div style="display: flex; gap: 1rem; width: 100%; align-items: flex-end;">
-                <div class="filter-field" style="flex: 1; min-width: 120px;">
-                    <label for="users-role-filter">Role</label>
-                    <select id="users-role-filter" class="filter-select" style="width: 100%;">
-                        <option value="">All Roles</option>
-                        <option value="super">Super</option>
-                        <option value="admin">Admin</option>
-                        <option value="user">User</option>
-                    </select>
-                </div>
-                <div class="filter-field" style="flex: 1; min-width: 120px;">
-                    <label for="users-access-filter">Access</label>
-                    <select id="users-access-filter" class="filter-select" style="width: 100%;">
-                        <option value="">All Access</option>
-                        <option value="enabled">Enabled</option>
-                        <option value="disabled">Disabled</option>
-                    </select>
-                </div>
-                <div class="filter-field" style="flex: 1; min-width: 120px;">
-                    <label for="users-status-filter">Status</label>
-                    <select id="users-status-filter" class="filter-select" style="width: 100%;">
-                        <option value="">All Status</option>
-                        <option value="online">Online</option>
-                        <option value="offline">Offline</option>
-                    </select>
-                </div>
-                <button id="clear-filters-btn" class="filter-btn clear-btn" type="button" title="Clear all filters">
-                    Clear
-                </button>
-            </div>
-        </div>
-        
-        <div class="table-wrap users-table-wrap">
-            <table class="data-table users-table">
-                <thead>
-                    <tr>
-                        <th scope="col" class="text-left">Email</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Access</th>
-                        <th scope="col">Change Role</th>
-                    </tr>
-                </thead>
-                <tbody id="users-body">
-                    <tr>
-                        <td colspan="5">Loading users...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="table-footer">
-            <span class="status" id="users-status">Manage user roles and permissions.</span>
-        </div>
-    </section>
+        <div id="users-panel-container"></div>
 
     </div>
     <!-- End of page-content -->
@@ -473,6 +416,18 @@
             console.error('Error loading employee components:', error);
             return false;
         });
+
+        // Load users panel
+        const usersPanelLoaded = fetch('users/users-panel.html')
+            .then(r => r.text())
+            .then(panelHTML => {
+                document.getElementById('users-panel-container').innerHTML = panelHTML;
+                return true;
+            })
+            .catch(error => {
+                console.error('Error loading users panel:', error);
+                return false;
+            });
 
         // Periodically check if current admin's access_enabled is still true
         const checkAccessEnabled = async () => {
@@ -1248,7 +1203,6 @@
         const switchButtons = document.querySelectorAll(".switch-btn");
         const uploadPanel = document.getElementById("upload-panel");
         const viewPanel = document.getElementById("view-panel");
-        const usersPanel = document.getElementById("users-panel");
 
         switchButtons.forEach(btn => {
             btn.addEventListener("click", () => {
@@ -1261,8 +1215,9 @@
                 switchButtons.forEach(b => b.classList.remove("active"));
                 btn.classList.add("active");
 
-                // Get employee panel dynamically (it's loaded asynchronously)
+                // Get dynamically loaded panels (they're loaded asynchronously)
                 const employeesPanel = document.getElementById("employees-panel");
+                const usersPanel = document.getElementById("users-panel");
 
                 // Show/hide panels
                 uploadPanel.classList.add("hidden");
@@ -1283,9 +1238,12 @@
                             window.employeeRenderList();
                         }
                     }
-                } else if (targetPanel === "users-panel" && usersPanel) {
-                    usersPanel.classList.remove("hidden");
-                    loadUsers();
+                } else if (targetPanel === "users-panel") {
+                    if (usersPanel) {
+                        usersPanel.classList.remove("hidden");
+                        // Wait for panel to load before calling loadUsers
+                        usersPanelLoaded.then(() => loadUsers());
+                    }
                 }
             });
         });
@@ -2127,9 +2085,8 @@
         // USER MANAGEMENT (SUPER USER ONLY)
         // ============================================
         
-        const usersBody = document.getElementById('users-body');
-        const usersStatus = document.getElementById('users-status');
-        const usersRoleFilter = document.getElementById('users-role-filter');
+        // Note: User panel elements are loaded asynchronously from users/users-panel.html
+        // They are queried dynamically in the functions below
         
         let allUsersData = []; // Store all users for filtering
 
@@ -2153,6 +2110,14 @@
         };
 
         const renderUsersTable = (users) => {
+            const usersBody = document.getElementById('users-body');
+            const usersStatus = document.getElementById('users-status');
+            
+            if (!usersBody || !usersStatus) {
+                console.warn('Users panel elements not found in DOM yet');
+                return;
+            }
+            
             if (!users || users.length === 0) {
                 usersBody.innerHTML = '<tr><td colspan="5">No users found.</td></tr>';
                 usersStatus.textContent = 'No users available.';
@@ -2241,6 +2206,8 @@
                 });
             });
 
+            // Query filter element to check if we're in filtered mode
+            const usersRoleFilter = document.getElementById('users-role-filter');
             const filterValue = usersRoleFilter?.value || '';
             const displayCount = filterValue ? users.length : allUsersData.length;
             const filterText = filterValue ? ` (filtered by ${filterValue})` : '';
@@ -2248,6 +2215,14 @@
         };
 
         const loadUsers = async () => {
+            const usersBody = document.getElementById('users-body');
+            const usersStatus = document.getElementById('users-status');
+            
+            if (!usersBody || !usersStatus) {
+                console.error('Users panel elements not found in DOM');
+                return;
+            }
+            
             try {
                 usersStatus.textContent = 'Loading users...';
                 usersStatus.classList.remove('status--error');
@@ -2333,33 +2308,26 @@
                 filterUsers();
             } catch (error) {
                 console.error('Failed to load users:', error);
-                usersBody.innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
-                usersStatus.textContent = 'Failed to load users.';
+                const usersBody = document.getElementById('users-body');
+                const usersStatus = document.getElementById('users-status');
+                if (usersBody) {
+                    usersBody.innerHTML = '<tr><td colspan="5">Error loading users.</td></tr>';
+                }
+                if (usersStatus) {
+                    usersStatus.textContent = 'Failed to load users.';
+                }
             }
         };
 
-        // Filter users by role
-        if (usersRoleFilter) {
-            usersRoleFilter.addEventListener('change', () => {
-                const filterValue = usersRoleFilter.value;
-                
-                if (!filterValue) {
-                    // Show all users
-                    renderUsersTable(allUsersData);
-                } else {
-                    // Filter by selected role
-                    const filteredUsers = allUsersData.filter(user => user.role === filterValue);
-                    renderUsersTable(filteredUsers);
-                }
-            });
-        }
-
         const changeUserRole = async (userId, newRole, selectElement) => {
             const originalRole = selectElement.getAttribute('data-current-role');
+            const usersStatus = document.getElementById('users-status');
             
             try {
-                usersStatus.textContent = 'Changing user role...';
-                usersStatus.classList.remove('status--error');
+                if (usersStatus) {
+                    usersStatus.textContent = 'Changing user role...';
+                    usersStatus.classList.remove('status--error');
+                }
 
                 // Get current logged-in user ID
                 const { data: sessionData } = await supabase.auth.getSession();
@@ -2379,7 +2347,9 @@
 
                 // Update success
                 selectElement.setAttribute('data-current-role', newRole);
-                usersStatus.textContent = 'Role updated successfully';
+                if (usersStatus) {
+                    usersStatus.textContent = 'Role updated successfully';
+                }
                 showToast(`Role changed to ${newRole}`);
                 
                 // If user changed their own role, logout after showing success message
@@ -2422,18 +2392,24 @@
                     }
                 }
                 
-                usersStatus.textContent = errorMessage;
-                usersStatus.classList.add('status--error');
+                const usersStatus = document.getElementById('users-status');
+                if (usersStatus) {
+                    usersStatus.textContent = errorMessage;
+                    usersStatus.classList.add('status--error');
+                }
                 showToast(errorMessage);
             }
         };
 
         const toggleUserAccess = async (userId, newAccessEnabled, selectElement) => {
             const originalAccess = selectElement.getAttribute('data-current-access') === 'true';
+            const usersStatus = document.getElementById('users-status');
             
             try {
-                usersStatus.textContent = `${newAccessEnabled ? 'Enabling' : 'Disabling'} user access...`;
-                usersStatus.classList.remove('status--error');
+                if (usersStatus) {
+                    usersStatus.textContent = `${newAccessEnabled ? 'Enabling' : 'Disabling'} user access...`;
+                    usersStatus.classList.remove('status--error');
+                }
 
                 // Call server-side RPC function that validates permissions
                 // CRITICAL: This RPC function MUST verify that the calling user is 'super'
@@ -2448,7 +2424,9 @@
 
                 // Update success
                 const action = newAccessEnabled ? 'enabled' : 'disabled';
-                usersStatus.textContent = 'Access updated successfully';
+                if (usersStatus) {
+                    usersStatus.textContent = 'Access updated successfully';
+                }
                 showToast(`Access ${action}`);
                 
                 // Reload users to refresh the display
@@ -2479,8 +2457,11 @@
                     }
                 }
                 
-                usersStatus.textContent = errorMessage;
-                usersStatus.classList.add('status--error');
+                const usersStatus = document.getElementById('users-status');
+                if (usersStatus) {
+                    usersStatus.textContent = errorMessage;
+                    usersStatus.classList.add('status--error');
+                }
                 showToast(errorMessage);
             }
         };
@@ -2514,64 +2495,69 @@
             
             // Show User Management panel only for super users
             if (userRole === 'super') {
-                const usersPanelBtn = document.getElementById('users-panel-btn');
-                if (usersPanelBtn) {
-                    usersPanelBtn.classList.remove('hidden');
-                    // Restore users-panel if it was the last active panel
-                    if (localStorage.getItem('adminActivePanel') === 'users-panel') {
-                        usersPanelBtn.click();
+                // Wait for users panel to load before setting up
+                usersPanelLoaded.then(async () => {
+                    const usersPanelBtn = document.getElementById('users-panel-btn');
+                    if (usersPanelBtn) {
+                        usersPanelBtn.classList.remove('hidden');
+                        // Restore users-panel if it was the last active panel
+                        if (localStorage.getItem('adminActivePanel') === 'users-panel') {
+                            usersPanelBtn.click();
+                        }
                     }
-                }
-                // Load users for the User Management panel
-                await loadUsers();
-                
-                // Start auto-refresh for user management panel (every 10 seconds)
-                let userRefreshInterval = null;
-                
-                // Set up interval to refresh users table when panel is visible
-                const startUserRefresh = () => {
-                    if (userRefreshInterval) return; // Already running
+                    // Load users for the User Management panel
+                    await loadUsers();
                     
-                    userRefreshInterval = setInterval(async () => {
-                        // Only refresh if users panel is visible
-                        if (usersPanel && !usersPanel.classList.contains('hidden')) {
-                            await loadUsers();
+                    // Start auto-refresh for user management panel (every 10 seconds)
+                    let userRefreshInterval = null;
+                    
+                    // Set up interval to refresh users table when panel is visible
+                    const startUserRefresh = () => {
+                        if (userRefreshInterval) return; // Already running
+                        
+                        userRefreshInterval = setInterval(async () => {
+                            // Only refresh if users panel is visible
+                            const usersPanel = document.getElementById('users-panel');
+                            if (usersPanel && !usersPanel.classList.contains('hidden')) {
+                                await loadUsers();
+                            }
+                        }, 10000); // 10 seconds
+                    };
+                    
+                    const stopUserRefresh = () => {
+                        if (userRefreshInterval) {
+                            clearInterval(userRefreshInterval);
+                            userRefreshInterval = null;
                         }
-                    }, 10000); // 10 seconds
-                };
-                
-                const stopUserRefresh = () => {
-                    if (userRefreshInterval) {
-                        clearInterval(userRefreshInterval);
-                        userRefreshInterval = null;
-                    }
-                };
-                
-                // Monitor panel visibility
-                const panelSwitchers = document.querySelectorAll('.switch-btn');
-                panelSwitchers.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const targetPanel = btn.getAttribute('data-panel');
-                        if (targetPanel === 'users-panel') {
-                            startUserRefresh();
-                        } else {
-                            stopUserRefresh();
-                        }
+                    };
+                    
+                    // Monitor panel visibility
+                    const panelSwitchers = document.querySelectorAll('.switch-btn');
+                    panelSwitchers.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const targetPanel = btn.getAttribute('data-panel');
+                            if (targetPanel === 'users-panel') {
+                                startUserRefresh();
+                            } else {
+                                stopUserRefresh();
+                            }
+                        });
                     });
+                    
+                    // Start if users panel is initially visible
+                    const usersPanel = document.getElementById('users-panel');
+                    if (usersPanel && !usersPanel.classList.contains('hidden')) {
+                        startUserRefresh();
+                    }
                 });
-                
-                // Start if users panel is initially visible
-                if (usersPanel && !usersPanel.classList.contains('hidden')) {
-                    startUserRefresh();
-                }
             }
         })();
         
         loadEmployees();
         loadAdminEmployeesForFilter();
 
-        // Restore last active panel (wait for employee panel to load first)
-        employeePanelLoaded.then(() => {
+        // Restore last active panel (wait for panels to load first)
+        Promise.all([employeePanelLoaded, usersPanelLoaded]).then(() => {
             const savedPanel = localStorage.getItem("adminActivePanel");
             if (!savedPanel || savedPanel === "upload-panel" || savedPanel === "users-panel") return;
             const targetBtn = document.querySelector(`.switch-btn[data-panel="${savedPanel}"]`);

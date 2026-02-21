@@ -1,0 +1,58 @@
+<section class="panel users-panel hidden" id="users-panel">
+    <h2>Manage Users</h2>
+    <p class="panel-description">Manage user accounts and roles. Only super users can modify user roles.</p>
+    
+    <div class="user-filter-bar">
+        <div style="display: flex; gap: 1rem; width: 100%; align-items: flex-end;">
+            <div class="filter-field" style="flex: 1; min-width: 120px;">
+                <label for="users-role-filter">Role</label>
+                <select id="users-role-filter" class="filter-select" style="width: 100%;">
+                    <option value="">All Roles</option>
+                    <option value="super">Super</option>
+                    <option value="admin">Admin</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="filter-field" style="flex: 1; min-width: 120px;">
+                <label for="users-access-filter">Access</label>
+                <select id="users-access-filter" class="filter-select" style="width: 100%;">
+                    <option value="">All Access</option>
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <div class="filter-field" style="flex: 1; min-width: 120px;">
+                <label for="users-status-filter">Status</label>
+                <select id="users-status-filter" class="filter-select" style="width: 100%;">
+                    <option value="">All Status</option>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
+            </div>
+            <button id="clear-filters-btn" class="filter-btn clear-btn" type="button" title="Clear all filters">
+                Clear
+            </button>
+        </div>
+    </div>
+    
+    <div class="table-wrap users-table-wrap">
+        <table class="data-table users-table">
+            <thead>
+                <tr>
+                    <th scope="col" class="text-left">Email</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Access</th>
+                    <th scope="col">Change Role</th>
+                </tr>
+            </thead>
+            <tbody id="users-body">
+                <tr>
+                    <td colspan="5">Loading users...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span class="status" id="users-status">Manage user roles and permissions.</span>
+    </div>
+</section>
