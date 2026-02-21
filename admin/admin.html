@@ -492,7 +492,7 @@
                     .maybeSingle();
 
                 if (error) {
-                    console.error("Error fetching session token:", error);
+                    // Session token fetch failed, skip validation
                     return;
                 }
 
@@ -509,7 +509,7 @@
                         .eq("id", user.id);
                     
                     if (updateError) {
-                        console.error("Failed to update session token:", updateError);
+                        // Session token update failed, continue without logging
                     }
                 } else if (data.session_token !== localToken) {
                     // Session token mismatch - another device logged in
@@ -1033,11 +1033,6 @@
                     .eq("id", user.id)
                     .maybeSingle();
 
-                // DEBUG: surface session / user / profile so we can confirm auth.uid() mapping
-                console.log("[upload] sessionData:", sessionData);
-                console.log("[upload] user:", user);
-                console.log("[upload] profile (from profiles table):", profile, "profileError:", profileError);
-
                 // Allow both admin AND super users to upload
                 if (profileError || (profile?.role !== "admin" && profile?.role !== "super")) {
                     throw new Error("Not authorized to upload.");
@@ -1118,7 +1113,6 @@
 
                         // UX fallback: treat as success because INSERT likely succeeded even though RETURNING is blocked.
                         uploadStatus.textContent = "Upload complete (RETURNING blocked by RLS).";
-                        console.log("File URL:", fileUrl);
 
                         if (typeof loadTravelAuthorities === "function") {
                             await loadTravelAuthorities(true);
@@ -1163,7 +1157,6 @@
                 // The row can still be present in the DB even if RETURNING is blocked by RLS/permissions.
 
                 uploadStatus.textContent = "Upload complete.";
-                console.log("File URL:", fileUrl);
                 
                 // Clear fields if auto-clear is enabled
                 const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
@@ -1319,6 +1312,45 @@
                         if (data) {
                             // TA number already exists
                             showToast(`TA ${taNumber} already exists in the database.`);
+                        }
+                    } catch (err) {
+                        console.error("Error checking TA number:", err);
+                    }
+                }, 500);
+            }
+        });
+
+        // Real-time TA number validation for update modal
+        let updateTaCheckTimer = null;
+        updateTaInput.addEventListener("input", async () => {
+            const taNumber = updateTaInput.value.trim();
+            
+            // Clear existing timer
+            if (updateTaCheckTimer) {
+                clearTimeout(updateTaCheckTimer);
+            }
+            
+            // Only check if TA number is valid (matches pattern)
+            if (isValidTaNumber(taNumber)) {
+                // Debounce the database check by 500ms
+                updateTaCheckTimer = setTimeout(async () => {
+                    try {
+                        // Check if TA exists in a different record (not the current one being updated)
+                        const { data, error } = await supabase
+                            .from("travel_authorities")
+                            .select("id, ta_number")
+                            .eq("ta_number", taNumber)
+                            .maybeSingle();
+                        
+                        if (error && error.code !== 'PGRST116') {
+                            // PGRST116 is "no rows returned" - that's expected if TA doesn't exist
+                            console.error("Error checking TA number:", error);
+                            return;
+                        }
+                        
+                        // Only warn if TA exists AND it's a different record than the one being updated
+                        if (data && updateRecordData && data.id !== updateRecordData.id) {
+                            showToast(`TA ${taNumber} already exists in another record.`);
                         }
                     } catch (err) {
                         console.error("Error checking TA number:", err);
@@ -1911,6 +1943,38 @@
                 return;
             }
 
+            // Check if TA number already exists in another record
+            try {
+                const { data: existingRecord, error: checkError } = await supabase
+                    .from("travel_authorities")
+                    .select("id, ta_number")
+                    .eq("ta_number", taNumber)
+                    .maybeSingle();
+                
+                if (checkError && checkError.code !== 'PGRST116') {
+                    console.error("Error checking TA number:", checkError);
+                    throw new Error("Failed to verify TA number. Please try again.");
+                }
+                
+                // If TA exists and it's NOT the current record being updated, block the update
+                if (existingRecord && existingRecord.id !== updateRecordData.id) {
+                    updateStatus.textContent = `TA Number ${taNumber} already exists in another record.`;
+                    updateStatus.classList.add("status--error");
+                    updateStatus.classList.remove("status--shake", "hidden");
+                    void updateStatus.offsetWidth;
+                    updateStatus.classList.add("status--shake");
+                    return;
+                }
+            } catch (error) {
+                console.error("TA validation error:", error);
+                updateStatus.textContent = error.message || "Failed to validate TA number.";
+                updateStatus.classList.add("status--error");
+                updateStatus.classList.remove("status--shake", "hidden");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
             if (!travelUntil) {
                 travelUntil = travelDate;
                 updateTravelUntilInput.value = travelDate;
@@ -1942,6 +2006,7 @@
 
                 let fileUrl = updateRecordData.file_url || "";
                 let fileName = updateRecordData.file_name || "";
+                const taNumberChanged = taNumber !== updateRecordData.ta_number;
 
                 if (file) {
                     // Show initial file size
@@ -1989,6 +2054,65 @@
 
                     fileUrl = publicUrlData.publicUrl;
                     fileName = newFileName;
+                } else if (taNumberChanged && updateRecordData.file_url) {
+                    // TA number changed but no new file uploaded - rename existing file
+                    updateStatus.textContent = "Renaming file to match new TA number...";
+                    
+                    try {
+                        const url = new URL(updateRecordData.file_url);
+                        const pathParts = url.pathname.split('/ta-files/');
+                        if (pathParts.length > 1) {
+                            const oldFilePath = decodeURIComponent(pathParts[1]);
+                            
+                            // Download the old file
+                            const { data: fileData, error: downloadError } = await supabase
+                                .storage
+                                .from("ta-files")
+                                .download(oldFilePath);
+                            
+                            if (downloadError) {
+                                console.warn("Could not download old file for renaming:", downloadError);
+                            } else {
+                                // Upload with new TA number name
+                                const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
+                                const safeDate = travelDate.replace(/[^0-9-]/g, "-");
+                                const fileExtension = updateRecordData.file_name.substring(updateRecordData.file_name.lastIndexOf('.'));
+                                const newFileName = `${taNumber}${fileExtension}`;
+                                const newFilePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
+                                
+                                const { error: uploadError } = await supabase
+                                    .storage
+                                    .from("ta-files")
+                                    .upload(newFilePath, fileData, { upsert: false });
+                                
+                                if (uploadError) {
+                                    console.warn("Could not upload renamed file:", uploadError);
+                                } else {
+                                    // Get new public URL
+                                    const { data: publicUrlData } = supabase
+                                        .storage
+                                        .from("ta-files")
+                                        .getPublicUrl(newFilePath);
+                                    
+                                    fileUrl = publicUrlData.publicUrl;
+                                    fileName = newFileName;
+                                    
+                                    // Delete old file
+                                    const { error: deleteError } = await supabase
+                                        .storage
+                                        .from("ta-files")
+                                        .remove([oldFilePath]);
+                                    
+                                    if (deleteError) {
+                                        console.warn("Could not delete old file after rename:", deleteError);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (renameError) {
+                        console.warn("Error renaming file:", renameError);
+                        // Continue with update even if rename fails
+                    }
                 }
 
                 const { error: updateError } = await supabase

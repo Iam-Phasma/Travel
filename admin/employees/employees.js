@@ -61,17 +61,19 @@ window.initEmployeeManagement = (supabase) => {
             }
 
             employeeListContainer.innerHTML = allEmployeesData.map(emp => {
-                const inactiveClass = emp.is_active === false ? ' employee-inactive' : '';
-                const inactiveLabel = emp.is_active === false ? ' <span class="inactive-badge">Inactive</span>' : '';
-                const toggleIcon = emp.is_active === false 
+                // Ensure is_active is properly boolean (handle null/undefined)
+                const isActive = emp.is_active !== false; // Default to true if null/undefined
+                const inactiveClass = !isActive ? ' employee-inactive' : '';
+                const inactiveLabel = !isActive ? ' <span class="inactive-badge">Inactive</span>' : '';
+                const toggleIcon = !isActive 
                     ? '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>' 
                     : '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
-                const toggleLabel = emp.is_active === false ? 'Unhide employee' : 'Hide employee';
+                const toggleLabel = !isActive ? 'Unhide employee' : 'Hide employee';
                 return `
                 <div class="employee-item${inactiveClass}">
                     <span class="employee-name">${emp.name}${inactiveLabel}</span>
                     <div class="employee-item-actions">
-                        <button class="toggle-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" data-active="${emp.is_active}" aria-label="${toggleLabel}" title="${toggleLabel}">
+                        <button class="toggle-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" data-active="${isActive}" aria-label="${toggleLabel}" title="${toggleLabel}">
                             <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
                                 ${toggleIcon}
                             </svg>
@@ -96,7 +98,9 @@ window.initEmployeeManagement = (supabase) => {
                 btn.addEventListener('click', async () => {
                     const employeeId = btn.getAttribute('data-id');
                     const employeeName = btn.getAttribute('data-name');
-                    const isActive = btn.getAttribute('data-active') === 'true';
+                    const activeAttr = btn.getAttribute('data-active');
+                    // Handle boolean conversion: true, 'true', or anything else is false
+                    const isActive = activeAttr === 'true' || activeAttr === true;
                     const newStatus = !isActive;
                     
                     // Determine action and meaningful message
@@ -219,7 +223,7 @@ window.initEmployeeManagement = (supabase) => {
 
             const { error } = await supabase
                 .from("employee_list")
-                .insert([{ name: employeeName }]);
+                .insert([{ name: employeeName, is_active: true }]);
 
             if (error) {
                 console.error("Database insert error:", error);

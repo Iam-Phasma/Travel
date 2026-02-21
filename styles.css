@@ -1820,8 +1820,7 @@ button:hover {
 
 /* Users Table Specific Styles */
 .users-panel {
-    width: 100%;
-    max-width: min(1100px, calc(100vw - 36px));
+    width: min(700px, calc(100vw - 36px));
 }
 
 .users-table-wrap {
@@ -1838,29 +1837,32 @@ button:hover {
 
 .users-table th,
 .users-table td {
-    width: 25%;
     white-space: nowrap;
     padding: 12px 16px;
 }
 
 .users-table th:first-child,
 .users-table td:first-child {
+    width: 40%;
     position: static;
     white-space: nowrap;
 }
 
 .users-table th:nth-child(2),
 .users-table td:nth-child(2) {
+    width: 20%;
     text-align: center;
 }
 
 .users-table th:nth-child(3),
 .users-table td:nth-child(3) {
+    width: 20%;
     text-align: center;
 }
 
 .users-table th:nth-child(4),
 .users-table td:nth-child(4) {
+    width: 20%;
     text-align: center;
 }
 
