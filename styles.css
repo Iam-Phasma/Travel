@@ -1481,10 +1481,42 @@ button:hover {
     background: rgba(255, 255, 255, 0.75);
     border-radius: 16px;
     border: 1px solid rgba(15, 26, 31, 0.12);
-    padding: 16px;
+    padding: 0;
+    margin-top: 12px;
     max-height: 400px;
     overflow-y: auto;
     scroll-behavior: smooth;
+}
+
+.employee-table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid rgba(15, 26, 31, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.employee-header-name {
+    font-size: 0.9rem;
+    color: rgba(15, 26, 31, 0.7);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+
+.employee-header-action {
+    font-size: 0.9rem;
+    color: rgba(15, 26, 31, 0.7);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    min-width: 148px;
 }
 
 .employee-item {

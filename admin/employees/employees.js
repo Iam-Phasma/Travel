@@ -34,7 +34,13 @@ window.initEmployeeManagement = (supabase) => {
     const renderEmployeeList = async (filteredData = null) => {
         try {
             if (filteredData === null) {
-                employeeListContainer.innerHTML = '<p class="loading-text">Loading employees...</p>';
+                employeeListContainer.innerHTML = `
+                    <div class="employee-table-header">
+                        <span class="employee-header-name">Name</span>
+                        <span class="employee-header-action">Action</span>
+                    </div>
+                    <p class="loading-text">Loading employees...</p>
+                `;
                 
                 const { data, error } = await supabase
                     .from("employee_list")
@@ -56,11 +62,24 @@ window.initEmployeeManagement = (supabase) => {
             }
 
             if (!allEmployeesData || allEmployeesData.length === 0) {
-                employeeListContainer.innerHTML = '<p class="no-employees">No employees found.</p>';
+                employeeListContainer.innerHTML = `
+                    <div class="employee-table-header">
+                        <span class="employee-header-name">Name</span>
+                        <span class="employee-header-action">Action</span>
+                    </div>
+                    <p class="no-employees">No employees found.</p>
+                `;
                 return;
             }
 
-            employeeListContainer.innerHTML = allEmployeesData.map(emp => {
+            const tableHeader = `
+                <div class="employee-table-header">
+                    <span class="employee-header-name">Name</span>
+                    <span class="employee-header-action">Action</span>
+                </div>
+            `;
+
+            employeeListContainer.innerHTML = tableHeader + allEmployeesData.map(emp => {
                 // Ensure is_active is properly boolean (handle null/undefined)
                 const isActive = emp.is_active !== false; // Default to true if null/undefined
                 const inactiveClass = !isActive ? ' employee-inactive' : '';
@@ -177,7 +196,13 @@ window.initEmployeeManagement = (supabase) => {
             }
         } catch (error) {
             console.error("Failed to load employees:", error);
-            employeeListContainer.innerHTML = '<p class="error-text">Failed to load employees.</p>';
+            employeeListContainer.innerHTML = `
+                <div class="employee-table-header">
+                    <span class="employee-header-name">Name</span>
+                    <span class="employee-header-action">Action</span>
+                </div>
+                <p class="error-text">Failed to load employees.</p>
+            `;
         }
     };
 
