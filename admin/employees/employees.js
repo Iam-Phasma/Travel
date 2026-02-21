@@ -330,15 +330,19 @@ window.initEmployeeManagement = (supabase) => {
         const newName = editEmployeeNameInput.value.trim();
         if (!newName) {
             editEmployeeStatus.textContent = "Please enter an employee name.";
-            editEmployeeStatus.classList.remove("hidden", "status--success");
-            editEmployeeStatus.classList.add("status--error", "status--shake");
+            editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
+            editEmployeeStatus.classList.add("status--error");
+            void editEmployeeStatus.offsetWidth; // Force reflow to restart animation
+            editEmployeeStatus.classList.add("status--shake");
             return;
         }
 
         if (newName === editEmployeeData.name) {
             editEmployeeStatus.textContent = "No changes made.";
-            editEmployeeStatus.classList.remove("hidden", "status--error");
+            editEmployeeStatus.classList.remove("hidden", "status--error", "status--shake");
             editEmployeeStatus.classList.add("status--success");
+            void editEmployeeStatus.offsetWidth; // Force reflow to restart animation
+            editEmployeeStatus.classList.add("status--shake");
             return;
         }
 

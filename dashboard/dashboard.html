@@ -232,6 +232,12 @@
                 confirmModalTitle.textContent = title;
                 confirmModalMessage.textContent = message;
                 confirmModal.classList.add("show");
+                
+                // Apply red styling for logout confirmation
+                const isLogout = title === 'Confirm Logout';
+                if (isLogout) {
+                    confirmConfirmBtn.style.background = '#a1251b';
+                }
 
                 const handleConfirm = () => {
                     confirmModal.classList.remove("show");
@@ -257,6 +263,10 @@
                     confirmConfirmBtn.removeEventListener('click', handleConfirm);
                     cancelConfirmBtn.removeEventListener('click', handleCancel);
                     confirmModal.removeEventListener('click', handleClickOutside);
+                    // Reset button styling
+                    if (isLogout) {
+                        confirmConfirmBtn.style.background = '';
+                    }
                 };
 
                 confirmConfirmBtn.addEventListener('click', handleConfirm);
