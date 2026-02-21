@@ -959,6 +959,16 @@ button:hover {
     background: #8a1f17;
 }
 
+/* Export button in modal - green styling */
+#confirm-export {
+    background: #4c994c;
+    color: white;
+}
+
+#confirm-export:hover {
+    background: #3d7a3d;
+}
+
 @media (max-width: 720px) {
     .panel {
         padding: 22px;
