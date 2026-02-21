@@ -681,6 +681,20 @@
             const headerPopup = document.getElementById('header-popup-panel');
             const settingsOption = document.getElementById('header-settings-option');
             const logoutOption = document.getElementById('header-logout-option');
+            const userEmailElement = document.getElementById('header-user-email');
+
+            // Fetch and display user email
+            if (userEmailElement) {
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (session?.user?.email) {
+                        userEmailElement.textContent = session.user.email;
+                    } else {
+                        userEmailElement.textContent = 'Not available';
+                    }
+                }).catch(() => {
+                    userEmailElement.textContent = 'Not available';
+                });
+            }
 
             // Toggle popup when user menu button is clicked
             if (userMenuBtn && headerPopup) {
