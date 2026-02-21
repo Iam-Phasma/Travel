@@ -186,6 +186,12 @@
                         </select>
                     </div>
                     <div class="filter-field">
+                        <label for="admin-filter-year">Year</label>
+                        <select id="admin-filter-year" class="filter-select">
+                            <option value="">All Years</option>
+                        </select>
+                    </div>
+                    <div class="filter-field">
                         <label for="admin-filter-travel-date">Travel Date</label>
                         <input type="text" id="admin-filter-travel-date" placeholder="Select date">
                     </div>
@@ -1377,6 +1383,7 @@
         let adminActiveFilters = {
             taNumber: "",
             employee: "",
+            year: "",
             travelDate: "",
             matchAll: false
         };
@@ -1447,7 +1454,7 @@
 
         const applyAdminClientFilters = (rows) => {
             // If no filters are active, return all rows
-            if (!adminActiveFilters.taNumber && !adminActiveFilters.employee && !adminActiveFilters.travelDate) {
+            if (!adminActiveFilters.taNumber && !adminActiveFilters.employee && !adminActiveFilters.year && !adminActiveFilters.travelDate) {
                 return rows;
             }
 
@@ -1464,6 +1471,12 @@
                 if (adminActiveFilters.employee) {
                     const matchesEmployee = row.employees && row.employees.toLowerCase().includes(adminActiveFilters.employee.toLowerCase());
                     checks.push(matchesEmployee);
+                }
+
+                // Check Year filter
+                if (adminActiveFilters.year) {
+                    const matchesYear = row.travel_date && row.travel_date.startsWith(adminActiveFilters.year);
+                    checks.push(matchesYear);
                 }
 
                 // Check Travel Date filter
@@ -1669,7 +1682,7 @@
 
         const updateViewFooter = () => {
             const filteredCount = applyAdminClientFilters(viewRows).length;
-            const hasActiveFilters = adminActiveFilters.taNumber || adminActiveFilters.employee || adminActiveFilters.travelDate;
+            const hasActiveFilters = adminActiveFilters.taNumber || adminActiveFilters.employee || adminActiveFilters.year || adminActiveFilters.travelDate;
             
             if (!viewRows.length) {
                 viewStatus.textContent = "No records yet.";
@@ -1720,6 +1733,7 @@
 
                 renderViewRows(viewRows);
                 updateViewFooter();
+                populateAdminYearFilter();
             } catch (error) {
                 console.error("View load error:", error);
                 viewBody.innerHTML = "<tr><td colspan=\"9\">Unable to load records.</td></tr>";
@@ -1755,6 +1769,7 @@
         const adminClearFilterBtn = document.getElementById("admin-clear-filter-btn");
         const adminFilterTaNumberInput = document.getElementById("admin-filter-ta-number");
         const adminFilterEmployeeSelect = document.getElementById("admin-filter-employee");
+        const adminFilterYearSelect = document.getElementById("admin-filter-year");
         const adminFilterTravelDateInput = document.getElementById("admin-filter-travel-date");
         const adminFilterMatchAllCheckbox = document.getElementById("admin-filter-match-all");
 
@@ -1780,6 +1795,23 @@
                 console.error("Failed to load employees for admin filter:", error);
                 adminEmployeesListForFilter = [];
             }
+        };
+
+        // Populate year filter from available data
+        const populateAdminYearFilter = () => {
+            const years = new Set();
+            viewRows.forEach(row => {
+                if (row.travel_date) {
+                    const year = row.travel_date.substring(0, 4);
+                    if (year && year.length === 4) {
+                        years.add(year);
+                    }
+                }
+            });
+            
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            adminFilterYearSelect.innerHTML = '<option value="">All Years</option>' +
+                sortedYears.map(year => `<option value="${year}">${year}</option>`).join('');
         };
 
         // Auto-dash formatting for TA Number filter
@@ -1810,6 +1842,7 @@
         adminApplyFilterBtn.addEventListener("click", () => {
             adminActiveFilters.taNumber = adminFilterTaNumberInput.value.trim();
             adminActiveFilters.employee = adminFilterEmployeeSelect.value;
+            adminActiveFilters.year = adminFilterYearSelect.value;
             adminActiveFilters.travelDate = adminFilterTravelDateInput.value;
             adminActiveFilters.matchAll = adminFilterMatchAllCheckbox.checked;
             renderViewRows(viewRows);
@@ -1820,10 +1853,12 @@
         adminClearFilterBtn.addEventListener("click", () => {
             adminActiveFilters.taNumber = "";
             adminActiveFilters.employee = "";
+            adminActiveFilters.year = "";
             adminActiveFilters.travelDate = "";
             adminActiveFilters.matchAll = false;
             adminFilterTaNumberInput.value = "";
             adminFilterEmployeeSelect.value = "";
+            adminFilterYearSelect.value = "";
             adminFilterTravelDateInput.value = "";
             adminFilterMatchAllCheckbox.checked = false;
             renderViewRows(viewRows);

@@ -83,6 +83,12 @@
                             </select>
                         </div>
                         <div class="filter-field">
+                            <label for="filter-year">Year</label>
+                            <select id="filter-year" class="filter-select">
+                                <option value="">All Years</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
                             <label for="filter-travel-date">Travel Date</label>
                             <input type="text" id="filter-travel-date" placeholder="Select date">
                         </div>
@@ -381,6 +387,7 @@
         let activeFilters = {
             taNumber: "",
             employee: "",
+            year: "",
             travelDate: "",
             matchAll: false
         };
@@ -412,7 +419,7 @@
 
         const applyClientFilters = (rows) => {
             // If no filters are active, return all rows
-            if (!activeFilters.taNumber && !activeFilters.employee && !activeFilters.travelDate) {
+            if (!activeFilters.taNumber && !activeFilters.employee && !activeFilters.year && !activeFilters.travelDate) {
                 return rows;
             }
 
@@ -429,6 +436,12 @@
                 if (activeFilters.employee) {
                     const matchesEmployee = row.employees && row.employees.toLowerCase().includes(activeFilters.employee.toLowerCase());
                     checks.push(matchesEmployee);
+                }
+
+                // Check Year filter
+                if (activeFilters.year) {
+                    const matchesYear = row.travel_date && row.travel_date.startsWith(activeFilters.year);
+                    checks.push(matchesYear);
                 }
 
                 // Check Travel Date filter
@@ -526,7 +539,7 @@
 
         const updateTaFooter = () => {
             const filteredCount = applyClientFilters(taRows).length;
-            const hasActiveFilters = activeFilters.taNumber || activeFilters.employee || activeFilters.travelDate;
+            const hasActiveFilters = activeFilters.taNumber || activeFilters.employee || activeFilters.year || activeFilters.travelDate;
             
             if (!taRows.length) {
                 taStatus.textContent = "No records yet.";
@@ -577,6 +590,7 @@
 
                 renderRows(taRows);
                 updateTaFooter();
+                populateYearFilter();
             } catch (error) {
                 console.error("Dashboard load error:", error);
                 taBody.innerHTML = "<tr><td colspan=\"7\">Unable to load records.</td></tr>";
@@ -607,6 +621,7 @@
         const clearFilterBtn = document.getElementById("clear-filter-btn");
         const filterTaNumberInput = document.getElementById("filter-ta-number");
         const filterEmployeeSelect = document.getElementById("filter-employee");
+        const filterYearSelect = document.getElementById("filter-year");
         const filterTravelDateInput = document.getElementById("filter-travel-date");
         const filterMatchAllCheckbox = document.getElementById("filter-match-all");
 
@@ -641,6 +656,23 @@
             }
         };
 
+        // Populate year filter from available data
+        const populateYearFilter = () => {
+            const years = new Set();
+            taRows.forEach(row => {
+                if (row.travel_date) {
+                    const year = row.travel_date.substring(0, 4);
+                    if (year && year.length === 4) {
+                        years.add(year);
+                    }
+                }
+            });
+            
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            filterYearSelect.innerHTML = '<option value="">All Years</option>' +
+                sortedYears.map(year => `<option value="${year}">${year}</option>`).join('');
+        };
+
         // Auto-dash formatting for TA Number filter
         const formatTaNumber = (value) => {
             const digits = value.replace(/\D/g, "").slice(0, 10);
@@ -669,6 +701,7 @@
         applyFilterBtn.addEventListener("click", () => {
             activeFilters.taNumber = filterTaNumberInput.value.trim();
             activeFilters.employee = filterEmployeeSelect.value;
+            activeFilters.year = filterYearSelect.value;
             activeFilters.travelDate = filterTravelDateInput.value;
             activeFilters.matchAll = filterMatchAllCheckbox.checked;
             renderRows(taRows);
@@ -679,10 +712,12 @@
         clearFilterBtn.addEventListener("click", () => {
             activeFilters.taNumber = "";
             activeFilters.employee = "";
+            activeFilters.year = "";
             activeFilters.travelDate = "";
             activeFilters.matchAll = false;
             filterTaNumberInput.value = "";
             filterEmployeeSelect.value = "";
+            filterYearSelect.value = "";
             filterTravelDateInput.value = "";
             filterMatchAllCheckbox.checked = false;
             renderRows(taRows);
