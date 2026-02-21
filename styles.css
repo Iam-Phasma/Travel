@@ -969,6 +969,16 @@ button:hover {
     background: #3d7a3d;
 }
 
+/* Update button in modal - dark blue styling */
+#confirm-update {
+    background: var(--ink);
+    color: white;
+}
+
+#confirm-update:hover {
+    background: #081430;
+}
+
 @media (max-width: 720px) {
     .panel {
         padding: 22px;
