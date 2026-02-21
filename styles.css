@@ -989,6 +989,16 @@ button:hover {
     background: #081430;
 }
 
+/* Generic confirm button - dark blue styling for hide/unhide, access, and role change actions */
+#confirm-confirm {
+    background: var(--ink);
+    color: white;
+}
+
+#confirm-confirm:hover {
+    background: #081430;
+}
+
 @media (max-width: 720px) {
     .panel {
         padding: 22px;
