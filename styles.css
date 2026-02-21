@@ -1820,7 +1820,7 @@ button:hover {
 
 /* Users Table Specific Styles */
 .users-panel {
-    width: min(700px, calc(100vw - 36px));
+    width: min(1000px, calc(100vw - 36px));
 }
 
 .users-table-wrap {
