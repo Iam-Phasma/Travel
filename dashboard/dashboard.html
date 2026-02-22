@@ -407,6 +407,7 @@
         const taStatus = document.getElementById("ta-status");
         const taMoreBtn = document.getElementById("ta-more");
         let taRows = [];
+        let latestKnownTimestamp = null;
         const currentYear = new Date().getFullYear().toString();
         let activeFilters = {
             taNumber: "",
@@ -416,6 +417,17 @@
             matchAll: false
         };
         let employeesListForFilter = [];
+
+        const toast = document.getElementById("toast");
+        let toastTimer = null;
+        const showToast = (message, type = 'info', duration = 3500) => {
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.remove('toast--success', 'toast--info', 'toast--warning', 'toast--error');
+            toast.classList.add(`toast--${type}`, 'show');
+            if (toastTimer) clearTimeout(toastTimer);
+            if (duration > 0) toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+        };
 
         const formatFileLabel = (value) => {
             const base = String(value || "Download");
@@ -592,6 +604,7 @@
                 }
 
                 taRows = data || [];
+                latestKnownTimestamp = taRows[0]?.created_at || latestKnownTimestamp;
                 renderRows(taRows);
                 updateTaFooter();
                 await populateYearFilter();
@@ -631,6 +644,9 @@
         // Refresh table manually
         if (refreshTableBtn) {
             refreshTableBtn.addEventListener("click", () => {
+                refreshTableBtn.classList.remove("has-new-data");
+                if (toastTimer) clearTimeout(toastTimer);
+                toast.classList.remove('show');
                 loadTravelAuthorities(true);
             });
         }
@@ -792,6 +808,24 @@
 
         init();
 
+        // Poll for new records every 30 seconds
+        const pollForNewData = async () => {
+            if (!latestKnownTimestamp) return;
+            try {
+                const { data } = await supabase
+                    .from("travel_authorities")
+                    .select("created_at")
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .single();
+                if (data && data.created_at > latestKnownTimestamp) {
+                    if (refreshTableBtn) refreshTableBtn.classList.add("has-new-data");
+                    showToast("New records available — click Refresh", "info", 30000);
+                }
+            } catch (e) {}
+        };
+        setInterval(pollForNewData, 30000);
+
         // Prevent browser back/forward navigation
         // This prevents users from accidentally navigating back to login or other pages
         history.pushState(null, null, location.href);
@@ -824,6 +858,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 
     </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <div id="confirm-modal" class="modal">
         <div class="modal-content">

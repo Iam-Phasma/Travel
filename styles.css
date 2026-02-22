@@ -1491,6 +1491,19 @@ button:hover {
     fill: currentColor;
 }
 
+/* New-data pulse on refresh button */
+@keyframes new-data-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.filter-icon-btn.has-new-data {
+    animation: new-data-pulse 1.4s ease-out infinite;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.15);
+}
+
 .filter-panel {
     position: absolute;
     top: 70px;

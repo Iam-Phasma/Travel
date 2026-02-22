@@ -714,6 +714,7 @@
         
         // Wait for view panel to load before initializing
         viewPanelLoaded.then(() => {
+        let latestKnownTimestamp = null;
         // Table view functionality
         const viewBody = document.getElementById("view-body");
                 const viewStatus = document.getElementById("view-status");
@@ -805,7 +806,7 @@
         let adminEmployeesListForFilter = [];
         window.adminEmployeesListForFilter = adminEmployeesListForFilter;
 
-        const showToast = (message, type = 'success') => {
+        const showToast = (message, type = 'success', duration = 2600) => {
             if (!toast) return;
             toast.textContent = message;
             // Remove any existing type classes
@@ -816,9 +817,9 @@
             if (toastTimer) {
                 clearTimeout(toastTimer);
             }
-            toastTimer = setTimeout(() => {
+            if (duration > 0) toastTimer = setTimeout(() => {
                 toast.classList.remove("show");
-            }, 2600);
+            }, duration);
         };
         // Expose for upload.js
         window.showToast = showToast;
@@ -1163,6 +1164,7 @@
                 }
 
                 viewRows = data || [];
+                latestKnownTimestamp = viewRows[0]?.created_at || latestKnownTimestamp;
                 renderViewRows(viewRows);
                 updateViewFooter();
                 await populateAdminYearFilter();
@@ -1183,6 +1185,25 @@
             }
         };
 
+        // Poll for new records every 30 seconds
+        const pollForNewData = async () => {
+            if (!latestKnownTimestamp) return;
+            try {
+                const { data } = await supabase
+                    .from("travel_authorities")
+                    .select("created_at")
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .single();
+                const adminRefreshBtnEl = document.getElementById("admin-refresh-btn");
+                if (data && data.created_at > latestKnownTimestamp) {
+                    if (adminRefreshBtnEl) adminRefreshBtnEl.classList.add("has-new-data");
+                    showToast("New records available — click Refresh", "info", 30000);
+                }
+            } catch (e) {}
+        };
+        setInterval(pollForNewData, 30000);
+
         // Delete modal handlers
         cancelDeleteBtn.addEventListener("click", () => {
             deleteModal.classList.remove("show");
@@ -1202,6 +1223,17 @@
         closeViewBtn.addEventListener("click", () => {
             viewModal.classList.remove("show");
         });
+
+        // Refresh button
+        const adminRefreshBtn = document.getElementById("admin-refresh-btn");
+        if (adminRefreshBtn) {
+            adminRefreshBtn.addEventListener("click", () => {
+                adminRefreshBtn.classList.remove("has-new-data");
+                if (toastTimer) clearTimeout(toastTimer);
+                if (toast) toast.classList.remove('show');
+                loadTravelAuthorities(true);
+            });
+        }
 
         // Admin filter panel functionality
         const adminFilterToggleBtn = document.getElementById("admin-filter-toggle-btn");
