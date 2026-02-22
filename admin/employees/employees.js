@@ -163,11 +163,12 @@ window.initEmployeeManagement = (supabase) => {
                         if (error) throw error;
 
                         const statusText = newStatus ? 'unhidden' : 'hidden';
-                        showToast(`Employee "${employeeName}" ${statusText} successfully!`);
+                        const toastType = newStatus ? 'success' : 'warning';
+                        showToast(`Employee "${employeeName}" ${statusText} successfully!`, toastType);
                         await renderEmployeeList();
                     } catch (error) {
                         console.error("Toggle employee status error:", error);
-                        showToast(`Failed to update employee status: ${error.message}`);
+                        showToast(`Failed to update employee status: ${error.message}`, "error");
                     }
                 });
             });
@@ -315,7 +316,7 @@ window.initEmployeeManagement = (supabase) => {
             employeeStatus.textContent = "Employee added successfully!";
             employeeNameInput.value = "";
             await renderEmployeeList();
-            showToast("Employee added successfully!");
+            showToast("Employee added successfully!", "success");
         } catch (error) {
             console.error("Add employee error:", error);
             const message = error && error.message ? error.message : "Failed to add employee.";
@@ -346,10 +347,10 @@ window.initEmployeeManagement = (supabase) => {
             deleteEmployeeModal.classList.remove("show");
             deleteEmployeeData = null;
             await renderEmployeeList();
-            showToast("Employee removed successfully!");
+            showToast("Employee removed successfully!", "success");
         } catch (error) {
             console.error("Delete employee error:", error);
-            showToast("Failed to remove employee.");
+            showToast("Failed to remove employee.", "error");
         }
     });
 
@@ -444,7 +445,7 @@ window.initEmployeeManagement = (supabase) => {
             }, 1000);
             
             await renderEmployeeList();
-            showToast("Employee updated successfully!");
+            showToast("Employee updated successfully!", "success");
         } catch (error) {
             console.error("Edit employee error:", error);
             const message = error && error.message ? error.message : "Failed to update employee.";

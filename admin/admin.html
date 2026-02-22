@@ -32,10 +32,13 @@
                     dateElement.textContent = `Today is ${formattedDate}`;
                 }
                 
-                // If initHeaderButtons is already defined, call it
-                if (window.initHeaderButtons) {
-                    window.initHeaderButtons();
-                }
+                // Call initHeaderButtons now that header is loaded
+                // It will be defined by the time this async callback runs
+                setTimeout(() => {
+                    if (window.initHeaderButtons) {
+                        window.initHeaderButtons();
+                    }
+                }, 0);
             })
             .catch(error => console.error('Error loading header:', error));
     </script>
@@ -50,102 +53,7 @@
         <button class="switch-btn" data-panel="employees-panel">Manage Employees</button>
         <button class="switch-btn hidden" id="users-panel-btn" data-panel="users-panel">Manage User</button>
     </div>
-        <section class="panel" id="upload-panel">
-        <h2>Upload Travel Authority</h2>
-        <div class="fields">
-            <div>
-                <label for="ta-number">TA Number <span class="required">*</span></label>
-                <div class="input-wrap">
-                    <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                            <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
-                        </svg>
-                    </span>
-                    <input id="ta-number" type="text" placeholder="0000-00-0000" pattern="\d{4}-\d{2}-\d{4}" maxlength="12" inputmode="numeric" required>
-                </div>
-            </div>
-            <div>
-                <label for="purpose">Purpose <span class="required">*</span></label>
-                <div class="input-wrap">
-                    <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                            <path d="M4 5h16a1 1 0 0 1 1 1v10a3 3 0 0 1-3 3H8a5 5 0 0 1-5-5V6a1 1 0 0 1 1-1Zm1 2v7a3 3 0 0 0 3 3h10a1 1 0 0 0 1-1V7H5Zm3 1h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
-                        </svg>
-                    </span>
-                    <input id="purpose" type="text" placeholder="Enter travel purpose" maxlength="300" required>
-                </div>
-            </div>
-            <div>
-                <label for="destination">Destination <span class="required">*</span></label>
-                <div class="input-wrap">
-                    <span class="icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                            <path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
-                        </svg>
-                    </span>
-                    <input id="destination" type="text" placeholder="Enter destination" maxlength="300" required>
-                </div>
-            </div>
-            <div>
-                <label for="employees">Employees <span class="required">*</span></label>
-                <div class="multiselect-wrapper">
-                    <div class="multiselect-display" id="employees-display">
-                        <span class="multiselect-placeholder">Select employees...</span>
-                    </div>
-                    <div class="multiselect-dropdown" id="employees-dropdown">
-                        <div class="multiselect-search-wrapper">
-                            <input type="text" class="multiselect-search" id="employees-search" placeholder="Search Employees...">
-                        </div>
-                        <div class="multiselect-options" id="employees-options">
-                            <!-- Options loaded dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <div>
-                    <label for="travel-date">Travel Date <span class="required">*</span></label>
-                    <div class="input-wrap">
-                        <span class="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
-                            </svg>
-                        </span>
-                        <input id="travel-date" type="text" placeholder="Select travel date" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="travel-until">Travel End</label>
-                    <div class="input-wrap">
-                        <span class="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
-                            </svg>
-                        </span>
-                        <input id="travel-until" type="text" placeholder="Select end date">
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label for="scan-file">Upload Scanned <span class="required">*</span></label>
-                <input id="scan-file" type="file" accept="application/pdf,.pdf,image/jpeg,image/jpg,image/png" multiple required>
-                <p class="disclaimer">Accept PDFs and/or images (max 10 files, 10MB total). Multiple files will be combined into one PDF.</p>
-            </div>
-            <div class="auto-clear-bottom">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="auto-clear-checkbox">
-                    <span>Clear fields after successful upload</span>
-                </label>
-            </div>
-        </div>
-        <div class="upload-controls">
-            <span class="status" id="upload-status">Complete the required fields.</span>
-            <div class="upload-buttons">
-                <button id="clear-upload-btn" type="button" class="secondary-btn">Clear</button>
-                <button id="upload-btn" type="button">Upload</button>
-            </div>
-        </div>
-    </section>
+        <div id="upload-panel-container"></div>
 
         <section class="panel wide-panel hidden" id="view-panel">
         <div class="panel-head">
@@ -434,6 +342,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="employees/employees.js"></script>
+    <script src="upload/upload.js"></script>
     <script type="module">
         // Import Supabase
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -441,6 +350,18 @@
 
         // Initialize Supabase
         const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+
+        // Load upload panel
+        const uploadPanelLoaded = fetch('upload/upload-panel.html')
+            .then(r => r.text())
+            .then(panelHTML => {
+                document.getElementById('upload-panel-container').innerHTML = panelHTML;
+                return true;
+            })
+            .catch(error => {
+                console.error('Error loading upload panel:', error);
+                return false;
+            });
 
         // Load employee panel and modals
         const employeePanelLoaded = Promise.all([
@@ -492,11 +413,7 @@
 
                 if (data && data.access_enabled === false) {
                     // Show toast notification
-                    const toastEl = document.getElementById("toast");
-                    if (toastEl) {
-                        toastEl.textContent = "Access disabled: You have been logged out.";
-                        toastEl.classList.add("show", "toast--error");
-                    }
+                    showToast("Access disabled: You have been logged out.", "error");
                     // Immediate logout
                     await supabase.auth.signOut();
                     localStorage.removeItem('admin_session_token');
@@ -558,11 +475,7 @@
                     // Session token mismatch - another device logged in
                     
                     // Show toast notification
-                    const toastEl = document.getElementById("toast");
-                    if (toastEl) {
-                        toastEl.textContent = "Logged out: Another device logged into this account.";
-                        toastEl.classList.add("show", "toast--warning");
-                    }
+                    showToast("Logged out: Another device logged into this account.", "warning");
                     
                     // Wait 2 seconds for user to see the toast
                     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -690,12 +603,23 @@
         setInterval(validateAdminSession, 30000);
 
         // Define header button initialization function
+        let headerButtonsInitialized = false;
         window.initHeaderButtons = () => {
+            // Prevent duplicate initialization
+            if (headerButtonsInitialized) return;
+            
             const userMenuBtn = document.getElementById('user-menu-btn');
             const headerPopup = document.getElementById('header-popup-panel');
             const settingsOption = document.getElementById('header-settings-option');
             const logoutOption = document.getElementById('header-logout-option');
             const userEmailElement = document.getElementById('header-user-email');
+            
+            // Only mark as initialized if all required elements exist
+            if (!userMenuBtn || !headerPopup || !logoutOption) {
+                return; // Header not fully loaded yet
+            }
+            
+            headerButtonsInitialized = true;
 
             // Fetch and display user email
             if (userEmailElement) {
@@ -711,15 +635,13 @@
             }
 
             // Toggle popup when user menu button is clicked
-            if (userMenuBtn && headerPopup) {
-                userMenuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    headerPopup.classList.toggle('show');
-                });
-            }
+            userMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                headerPopup.classList.toggle('show');
+            });
 
             // Handle settings option click
-            if (settingsOption && headerPopup) {
+            if (settingsOption) {
                 settingsOption.addEventListener('click', () => {
                     headerPopup.classList.remove('show');
                     document.getElementById('settings-modal').classList.add('show');
@@ -727,34 +649,38 @@
             }
 
             // Handle logout option click
-            if (logoutOption && headerPopup) {
-                logoutOption.addEventListener('click', async () => {
-                    headerPopup.classList.remove('show');
-                    
-                    // Show confirmation dialog
-                    const confirmed = await showConfirmation(
-                        'Confirm Logout',
-                        'Are you sure you want to log out?'
-                    );
+            logoutOption.addEventListener('click', async () => {
+                headerPopup.classList.remove('show');
+                
+                // Check if showConfirmation is available
+                if (!window.adminShowConfirmation) {
+                    console.error('showConfirmation not available');
+                    return;
+                }
+                
+                // Show confirmation dialog
+                const confirmed = await window.adminShowConfirmation(
+                    'Confirm Logout',
+                    'Are you sure you want to log out?'
+                );
 
-                    if (!confirmed) {
-                        return; // User cancelled
-                    }
+                if (!confirmed) {
+                    return; // User cancelled
+                }
 
-                    try {
-                        // Clear admin session token and panel memory
-                        localStorage.removeItem('admin_session_token');
-                        localStorage.removeItem('adminActivePanel');
-                        await supabase.auth.signOut();
-                        window.location.href = "../index.html";
-                    } catch (error) {
-                        console.error("Logout error:", error);
-                        localStorage.removeItem('admin_session_token');
-                        localStorage.removeItem('adminActivePanel');
-                        window.location.href = "../index.html";
-                    }
-                });
-            }
+                try {
+                    // Clear admin session token and panel memory
+                    localStorage.removeItem('admin_session_token');
+                    localStorage.removeItem('adminActivePanel');
+                    await supabase.auth.signOut();
+                    window.location.href = "../index.html";
+                } catch (error) {
+                    console.error("Logout error:", error);
+                    localStorage.removeItem('admin_session_token');
+                    localStorage.removeItem('adminActivePanel');
+                    window.location.href = "../index.html";
+                }
+            });
 
             // Close popup when clicking outside
             document.addEventListener('click', (e) => {
@@ -763,186 +689,6 @@
                     headerPopup.classList.remove('show');
                 }
             });
-        };
-
-        const uploadStatus = document.getElementById("upload-status");
-        const taNumberInput = document.getElementById("ta-number");
-        const purposeInput = document.getElementById("purpose");
-        const destinationInput = document.getElementById("destination");
-        const travelDateInput = document.getElementById("travel-date");
-        const travelUntilInput = document.getElementById("travel-until");
-        const scanFileInput = document.getElementById("scan-file");
-
-        // PDF compression function with multiple strategies
-        const compressPDF = async (file, maxSizeMB = 5) => {
-            // Only process PDFs
-            if (file.type !== 'application/pdf') {
-                return file;
-            }
-
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const { PDFDocument } = window.PDFLib;
-                const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-                // Try multiple compression strategies
-                let compressedPdfBytes;
-                
-                // Strategy 1: Maximum compression with object streams
-                try {
-                    compressedPdfBytes = await pdfDoc.save({
-                        useObjectStreams: true,
-                        addDefaultPage: false,
-                        objectsPerTick: 50
-                    });
-                } catch (e) {
-                    // Strategy 2: Fallback without object streams
-                    compressedPdfBytes = await pdfDoc.save({
-                        useObjectStreams: false,
-                        addDefaultPage: false
-                    });
-                }
-
-                const compressedSize = compressedPdfBytes.length;
-
-                // Create a new File object from the compressed bytes
-                const compressedFile = new File([compressedPdfBytes], file.name, {
-                    type: 'application/pdf',
-                    lastModified: Date.now()
-                });
-
-                // Warn if still too large
-                if (compressedSize > maxSizeMB * 1024 * 1024) {
-                    console.warn(`PDF still exceeds ${maxSizeMB}MB after compression. Current size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB`);
-                }
-
-                return compressedFile;
-            } catch (error) {
-                console.error('PDF compression error:', error);
-                // Return original file if compression fails
-                return file;
-            }
-        };
-
-        // Convert images and PDFs to a single combined PDF
-        const combineFilesToPDF = async (files, taNumber) => {
-            const { PDFDocument } = window.PDFLib;
-            const finalPdf = await PDFDocument.create();
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                if (file.type === 'application/pdf') {
-                    // Handle PDF - copy all pages
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await PDFDocument.load(arrayBuffer);
-                    const copiedPages = await finalPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
-                    copiedPages.forEach((page) => finalPdf.addPage(page));
-                } else if (file.type.startsWith('image/')) {
-                    // Handle image - add as new page
-                    const imgData = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.readAsDataURL(file);
-                    });
-
-                    // Get image dimensions
-                    const img = await new Promise((resolve) => {
-                        const image = new Image();
-                        image.onload = () => resolve(image);
-                        image.src = imgData;
-                    });
-
-                    // Create a new page in A4 size
-                    const pageWidth = 595.28; // A4 width in points
-                    const pageHeight = 841.89; // A4 height in points
-                    const page = finalPdf.addPage([pageWidth, pageHeight]);
-
-                    // Embed image
-                    let embeddedImage;
-                    const imageBytes = await fetch(imgData).then(res => res.arrayBuffer());
-                    
-                    if (file.type === 'image/png') {
-                        embeddedImage = await finalPdf.embedPng(imageBytes);
-                    } else {
-                        embeddedImage = await finalPdf.embedJpg(imageBytes);
-                    }
-
-                    // Calculate scaling to fit image on page while maintaining aspect ratio
-                    const margin = 28.35; // 10mm margin in points
-                    const maxWidth = pageWidth - (margin * 2);
-                    const maxHeight = pageHeight - (margin * 2);
-
-                    let imgWidth = embeddedImage.width;
-                    let imgHeight = embeddedImage.height;
-                    const aspectRatio = imgWidth / imgHeight;
-
-                    if (imgWidth > imgHeight) {
-                        imgWidth = maxWidth;
-                        imgHeight = imgWidth / aspectRatio;
-                    } else {
-                        imgHeight = maxHeight;
-                        imgWidth = imgHeight * aspectRatio;
-                    }
-
-                    // Further scale down if still too large
-                    if (imgWidth > maxWidth) {
-                        imgWidth = maxWidth;
-                        imgHeight = imgWidth / aspectRatio;
-                    }
-                    if (imgHeight > maxHeight) {
-                        imgHeight = maxHeight;
-                        imgWidth = imgHeight * aspectRatio;
-                    }
-
-                    // Center image on page
-                    const x = (pageWidth - imgWidth) / 2;
-                    const y = (pageHeight - imgHeight) / 2;
-
-                    page.drawImage(embeddedImage, {
-                        x: x,
-                        y: y,
-                        width: imgWidth,
-                        height: imgHeight,
-                    });
-                }
-            }
-
-            // Save the combined PDF
-            const pdfBytes = await finalPdf.save({
-                useObjectStreams: true,
-                addDefaultPage: false
-            });
-
-            return new File([pdfBytes], `${taNumber}.pdf`, {
-                type: 'application/pdf',
-                lastModified: Date.now()
-            });
-        };
-
-        // Validate and process files (PDF and/or images combined)
-        const validateAndProcessFiles = async (fileInput, taNumber) => {
-            const files = Array.from(fileInput.files);
-            
-            if (files.length === 0) {
-                throw new Error('No file selected');
-            }
-
-            // Validate: max 10 total files (PDFs + images combined)
-            if (files.length > 10) {
-                throw new Error('Maximum 10 files allowed (PDFs and images combined)');
-            }
-
-            // Check file types
-            const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-            const invalidFiles = files.filter(f => !validTypes.includes(f.type));
-            
-            if (invalidFiles.length > 0) {
-                throw new Error('Only PDF, JPEG, and PNG files are supported');
-            }
-
-            // Combine all files (PDFs and images) into one PDF
-            return await combineFilesToPDF(files, taNumber);
         };
 
         // Multi-select employees functionality
@@ -961,8 +707,13 @@
 
                 if (error) throw error;
                 employeesList = data || [];
-                renderEmployeesOptions();
-                renderUpdateEmployeesOptions();
+                // Don't call render functions here - they'll be called after multi-selects are created
+                if (window.adminRenderEmployeesOptions) {
+                    window.adminRenderEmployeesOptions();
+                }
+                if (window.adminRenderUpdateEmployeesOptions) {
+                    window.adminRenderUpdateEmployeesOptions();
+                }
             } catch (error) {
                 console.error("Failed to load employees:", error);
                 employeesList = [];
@@ -1031,6 +782,7 @@
                 e.stopPropagation();
                 dropdown.classList.toggle('show');
                 if (dropdown.classList.contains('show')) {
+                    renderOptions(); // Render options when dropdown opens
                     search.focus();
                 }
             });
@@ -1045,13 +797,27 @@
             return { updateDisplay, renderOptions };
         };
 
-        const employeesMultiSelect = createMultiSelect(
-            'employees-display',
-            'employees-dropdown',
-            'employees-search',
-            'employees-options',
-            selectedEmployees
-        );
+        // Wait for upload panel to load before initializing multi-selects
+        uploadPanelLoaded.then(async () => {
+            // Load employees first
+            await loadEmployees();
+            
+            const employeesMultiSelect = createMultiSelect(
+                'employees-display',
+                'employees-dropdown',
+                'employees-search',
+                'employees-options',
+                selectedEmployees
+            );
+            
+            // Store reference globally for renderEmployeesOptions
+            window.uploadEmployeesMultiSelect = employeesMultiSelect;
+
+            // Initialize upload panel with required dependencies
+            if (window.initUploadPanel) {
+                window.initUploadPanel(supabase, selectedEmployees, employeesMultiSelect);
+            }
+        });
 
         const updateEmployeesMultiSelect = createMultiSelect(
             'update-employees-display',
@@ -1062,43 +828,18 @@
         );
 
         const renderEmployeesOptions = () => {
-            employeesMultiSelect.renderOptions();
+            if (window.uploadEmployeesMultiSelect) {
+                window.uploadEmployeesMultiSelect.renderOptions();
+            }
         };
         window.adminRenderEmployeesOptions = renderEmployeesOptions;
 
         const renderUpdateEmployeesOptions = () => {
-            updateEmployeesMultiSelect.renderOptions();
+            if (updateEmployeesMultiSelect) {
+                updateEmployeesMultiSelect.renderOptions();
+            }
         };
         window.adminRenderUpdateEmployeesOptions = renderUpdateEmployeesOptions;
-
-        window.flatpickr(travelDateInput, {
-            dateFormat: "Y-m-d",
-            allowInput: true,
-            disableMobile: true,
-            static: false,
-            monthSelectorType: 'static',
-            position: 'auto center'
-        });
-
-        window.flatpickr(travelUntilInput, {
-            dateFormat: "Y-m-d",
-            allowInput: true,
-            disableMobile: true,
-            static: false,
-            monthSelectorType: 'static',
-            position: 'auto center'
-        });
-
-        const isValidTaNumber = (value) => /^\d{4}-\d{2}-\d{4}$/.test(value);
-        const formatTaNumber = (value) => {
-            const digits = value.replace(/\D/g, "").slice(0, 10);
-            const part1 = digits.slice(0, 4);
-            const part2 = digits.slice(4, 6);
-            const part3 = digits.slice(6, 10);
-            if (digits.length <= 4) return part1;
-            if (digits.length <= 6) return `${part1}-${part2}`;
-            return `${part1}-${part2}-${part3}`;
-        };
 
         const formatFileLabel = (value) => {
             const base = String(value || "Download");
@@ -1110,299 +851,29 @@
             return `${compact.slice(0, 12)}...${ext}`;
         };
 
+        const isValidTaNumber = (value) => /^\d{4}-\d{2}-\d{4}$/.test(value);
+        window.isValidTaNumber = isValidTaNumber; // Expose for upload.js
+        
+        const formatTaNumber = (value) => {
+            const digits = value.replace(/\D/g, "").slice(0, 10);
+            const part1 = digits.slice(0, 4);
+            const part2 = digits.slice(4, 6);
+            const part3 = digits.slice(6, 10);
+            if (digits.length <= 4) return part1;
+            if (digits.length <= 6) return `${part1}-${part2}`;
+            return `${part1}-${part2}-${part3}`;
+        };
+
         const bindTaFormatter = (input) => {
+            if (!input) return; // Guard against null elements
             input.addEventListener("input", () => {
                 input.value = formatTaNumber(input.value);
             });
         };
-
-        scanFileInput.addEventListener("change", () => {
-            if (scanFileInput.files.length > 0) {
-                const fileCount = scanFileInput.files.length;
-                const hasPdf = Array.from(scanFileInput.files).some(f => f.type === 'application/pdf');
-                const hasImages = Array.from(scanFileInput.files).some(f => f.type.startsWith('image/'));
-                
-                if (fileCount === 1) {
-                    uploadStatus.textContent = `Selected: ${scanFileInput.files[0].name}`;
-                } else {
-                    const fileTypes = [];
-                    if (hasPdf) fileTypes.push('PDF');
-                    if (hasImages) fileTypes.push('images');
-                    uploadStatus.textContent = `Selected: ${fileCount} files (${fileTypes.join(' + ')}) - will be combined into one PDF`;
-                }
-                
-                // Show warning if too many files
-                if (fileCount > 10) {
-                    uploadStatus.textContent = "⚠️ Maximum 10 files allowed";
-                    uploadStatus.classList.add("status--error");
-                } else {
-                    uploadStatus.classList.remove("status--error");
-                }
-            } else {
-                uploadStatus.textContent = "Complete the required fields.";
-            }
-        });
-
-        document.getElementById("upload-btn").addEventListener("click", async () => {
-            const taNumber = taNumberInput.value.trim();
-            const purpose = purposeInput.value.trim();
-            const destination = destinationInput.value.trim();
-            const travelDate = travelDateInput.value;
-            let travelUntil = travelUntilInput.value;
-            const employees = selectedEmployees.join(", ");
-
-            if (!taNumber || !purpose || !destination || !travelDate || scanFileInput.files.length === 0 || selectedEmployees.length === 0) {
-                uploadStatus.textContent = "Please fill in all required fields.";
-                uploadStatus.classList.add("status--error");
-                uploadStatus.classList.remove("status--shake");
-                void uploadStatus.offsetWidth;
-                uploadStatus.classList.add("status--shake");
-                return;
-            }
-
-            if (!isValidTaNumber(taNumber)) {
-                uploadStatus.textContent = "TA Number must be in the format 0000-00-0000.";
-                uploadStatus.classList.add("status--error");
-                uploadStatus.classList.remove("status--shake");
-                void uploadStatus.offsetWidth;
-                uploadStatus.classList.add("status--shake");
-                return;
-            }
-
-            if (!travelUntil) {
-                travelUntil = travelDate;
-                travelUntilInput.value = travelDate;
-            }
-
-            if (travelUntil) {
-                const start = new Date(`${travelDate}T00:00:00`);
-                const end = new Date(`${travelUntil}T00:00:00`);
-                if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-                    uploadStatus.textContent = "Please enter valid dates.";
-                    uploadStatus.classList.add("status--error");
-                    uploadStatus.classList.remove("status--shake");
-                    void uploadStatus.offsetWidth;
-                    uploadStatus.classList.add("status--shake");
-                    return;
-                }
-
-                if (start > end) {
-                    uploadStatus.textContent = "Travel date cannot be after travel end.";
-                    uploadStatus.classList.add("status--error");
-                    uploadStatus.classList.remove("status--shake");
-                    void uploadStatus.offsetWidth;
-                    uploadStatus.classList.add("status--shake");
-                    return;
-                }
-            }
-
-            try {
-                // Validate and process files (PDF or images)
-                uploadStatus.textContent = 'Processing files...';
-                uploadStatus.classList.remove("status--error");
-
-                const processedFile = await validateAndProcessFiles(scanFileInput, taNumber);
-                const processedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
-                
-                // Check if file is still too large
-                const maxAllowedMB = 10;
-                if (processedFile.size > maxAllowedMB * 1024 * 1024) {
-                    uploadStatus.textContent = `File too large: ${processedSizeMB}MB (max ${maxAllowedMB}MB). Please use smaller files.`;
-                    uploadStatus.classList.add("status--error");
-                    uploadStatus.classList.remove("status--shake");
-                    void uploadStatus.offsetWidth;
-                    uploadStatus.classList.add("status--shake");
-                    return;
-                }
-
-                uploadStatus.textContent = `Uploading ${processedSizeMB}MB...`;
-
-                // Verify user is authenticated
-                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                if (sessionError || !sessionData?.session) {
-                    throw new Error("No active session. Please log in again.");
-                }
-
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError || !user) {
-                    throw new Error("Not authenticated");
-                }
-
-                const { data: profile, error: profileError } = await supabase
-                    .from("profiles")
-                    .select("id, role")
-                    .eq("id", user.id)
-                    .maybeSingle();
-
-                // Allow both admin AND super users to upload
-                if (profileError || (profile?.role !== "admin" && profile?.role !== "super")) {
-                    throw new Error("Not authorized to upload.");
-                }
-
-                const safeTa = taNumber.replace(/[^a-z0-9-_]/gi, "_");
-                const safeDate = travelDate.replace(/[^0-9-]/g, "-");
-                
-                // Extract file extension and rename file to TA number with timestamp
-                const fileExtension = processedFile.name.substring(processedFile.name.lastIndexOf('.'));
-                const timestamp = Date.now();
-                const newFileName = `${taNumber}_${timestamp}${fileExtension}`;
-                const filePath = `travel-authorities/${safeTa}/${safeDate}/${newFileName}`;
-
-                const { error: uploadError } = await supabase
-                    .storage
-                    .from("ta-files")
-                    .upload(filePath, processedFile, { upsert: false });
-
-                if (uploadError) {
-                    throw new Error(`Storage upload failed: ${uploadError.message || "Unknown error"}`);
-                }
-
-                const { data: publicUrlData } = supabase
-                    .storage
-                    .from("ta-files")
-                    .getPublicUrl(filePath);
-
-                const fileUrl = publicUrlData.publicUrl;
-
-                // Use minimal returning: some RLS setups allow INSERT but prevent RETURNING rows.
-                // Requesting `returning: 'minimal'` avoids a false-positive "no rows returned" error
-                const { error: insertError } = await supabase
-                    .from("travel_authorities")
-                    .insert(
-                        [
-                            {
-                                ta_number: taNumber,
-                                purpose: purpose,
-                                destination: destination,
-                                employees: employees,
-                                travel_date: travelDate,
-                                travel_until: travelUntil,
-                                file_name: newFileName,
-                                file_url: fileUrl
-                            }
-                        ],
-                        { returning: "minimal" }
-                    );
-
-                if (insertError) {
-                    console.debug("[upload] insertError:", insertError);
-
-                    const errMsg = insertError.message || "";
-
-                    // If RETURNING is blocked by RLS Postgres may surface the "no rows were returned after insert" message.
-                    // Treat this specific case as a *likely* success for UX, but log details so it's easy to diagnose.
-                    if (errMsg.includes("no rows were returned after insert")) {
-                        console.warn("[upload] INSERT returned no rows — likely RETURNING blocked by RLS. Attempting verification (best-effort).");
-                        try {
-                            const { data: verifyData, error: verifyError } = await supabase
-                                .from("travel_authorities")
-                                .select("ta_number")
-                                .eq("ta_number", taNumber)
-                                .maybeSingle();
-
-                            console.debug("[upload] verification result:", { verifyData, verifyError });
-
-                            if (verifyError) {
-                                console.warn("[upload] verification SELECT failed (probably SELECT policy prevents reading):", verifyError);
-                            } else if (verifyData) {
-                                console.info("[upload] verification SELECT found the inserted row.");
-                            } else {
-                                console.warn("[upload] verification SELECT returned no row — this may be due to a restrictive SELECT policy.");
-                            }
-                        } catch (verifyErr) {
-                            console.error("[upload] verification query threw:", verifyErr);
-                        }
-
-                        // UX fallback: treat as success because INSERT likely succeeded even though RETURNING is blocked.
-                        uploadStatus.textContent = "Upload complete (RETURNING blocked by RLS).";
-
-                        if (typeof loadTravelAuthorities === "function") {
-                            await loadTravelAuthorities(true);
-                        }
-
-                        const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
-                        if (autoClearCheckbox && autoClearCheckbox.checked) {
-                            taNumberInput.value = "";
-                            purposeInput.value = "";
-                            destinationInput.value = "";
-                            travelDateInput.value = "";
-                            travelUntilInput.value = "";
-                            scanFileInput.value = "";
-                            selectedEmployees.length = 0;
-                            employeesMultiSelect.updateDisplay();
-                            employeesMultiSelect.renderOptions();
-                            uploadStatus.textContent = "Upload complete. Fields cleared.";
-                        }
-
-                        // Log an actionable reminder for diagnostics
-                        console.warn("[upload] NOTE: update the SELECT RLS policy for `travel_authorities` if you need INSERT ... RETURNING to return rows to the client.");
-                        return;
-                    }
-
-                    // Non-RETURNING-related failures: cleanup and surface the error as before.
-                    try {
-                        const { error: removeError } = await supabase.storage.from("ta-files").remove([filePath]);
-                        if (removeError) console.warn("Cleanup: failed to remove uploaded file after DB error:", removeError);
-                    } catch (cleanupErr) {
-                        console.warn("Cleanup: unexpected error while removing uploaded file:", cleanupErr);
-                    }
-
-                    if (insertError.code === '23505' || insertError.message?.includes('duplicate key') || insertError.message?.includes('unique constraint')) {
-                        throw new Error(`TA Number ${taNumber} already exists in the database.`);
-                    }
-
-                    console.error("Database insert error (travel_authorities):", insertError);
-                    throw new Error(`Database insert failed: ${insertError.message || "Unknown error"}`);
-                }
-
-                // NOTE: don't treat an empty `data` return from insert as a failure when using `returning: 'minimal'`.
-                // The row can still be present in the DB even if RETURNING is blocked by RLS/permissions.
-
-                uploadStatus.textContent = "Upload complete.";
-                
-                // Clear fields if auto-clear is enabled
-                const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
-                if (autoClearCheckbox && autoClearCheckbox.checked) {
-                    taNumberInput.value = "";
-                    purposeInput.value = "";
-                    destinationInput.value = "";
-                    travelDateInput.value = "";
-                    travelUntilInput.value = "";
-                    scanFileInput.value = "";
-                    selectedEmployees.length = 0;
-                    employeesMultiSelect.updateDisplay();
-                    employeesMultiSelect.renderOptions();
-                    uploadStatus.textContent = "Upload complete. Fields cleared.";
-                }
-            } catch (error) {
-                console.error("Upload error:", error);
-                const message = error && error.message ? error.message : "Please try again.";
-                uploadStatus.textContent = `Upload failed: ${message}`;
-                uploadStatus.classList.add("status--error");
-                uploadStatus.classList.remove("status--shake");
-                void uploadStatus.offsetWidth;
-                uploadStatus.classList.add("status--shake");
-            }
-        });
-
-        // Clear upload fields button
-        document.getElementById("clear-upload-btn").addEventListener("click", () => {
-            taNumberInput.value = "";
-            purposeInput.value = "";
-            destinationInput.value = "";
-            travelDateInput.value = "";
-            travelUntilInput.value = "";
-            scanFileInput.value = "";
-            selectedEmployees.length = 0;
-            employeesMultiSelect.updateDisplay();
-            employeesMultiSelect.renderOptions();
-            uploadStatus.textContent = "Fields cleared.";
-            uploadStatus.classList.remove("status--error");
-        });
+        window.bindTaFormatter = bindTaFormatter; // Expose for upload.js
 
         // Panel switching logic
         const switchButtons = document.querySelectorAll(".switch-btn");
-        const uploadPanel = document.getElementById("upload-panel");
         const viewPanel = document.getElementById("view-panel");
 
         switchButtons.forEach(btn => {
@@ -1417,20 +888,26 @@
                 btn.classList.add("active");
 
                 // Get dynamically loaded panels (they're loaded asynchronously)
+                const uploadPanel = document.getElementById("upload-panel");
                 const employeesPanel = document.getElementById("employees-panel");
                 const usersPanel = document.getElementById("users-panel");
 
                 // Show/hide panels
-                uploadPanel.classList.add("hidden");
+                if (uploadPanel) uploadPanel.classList.add("hidden");
                 viewPanel.classList.add("hidden");
                 if (employeesPanel) employeesPanel.classList.add("hidden");
                 if (usersPanel) usersPanel.classList.add("hidden");
                 
                 if (targetPanel === "upload-panel") {
-                    uploadPanel.classList.remove("hidden");
+                    if (uploadPanel) {
+                        uploadPanel.classList.remove("hidden");
+                    }
                 } else if (targetPanel === "view-panel") {
                     viewPanel.classList.remove("hidden");
-                    loadTravelAuthorities(true);
+                    // Only reload if data hasn't been loaded yet
+                    if (viewRows.length === 0) {
+                        loadTravelAuthorities(true);
+                    }
                 } else if (targetPanel === "employees-panel") {
                     if (employeesPanel) {
                         employeesPanel.classList.remove("hidden");
@@ -1481,47 +958,10 @@
         const updateScanFileInput = document.getElementById("update-scan-file");
         const updateStatus = document.getElementById("update-status");
         const toast = document.getElementById("toast");
-        bindTaFormatter(taNumberInput);
         bindTaFormatter(updateTaInput);
         
-        // Real-time TA number validation for upload modal
-        let taCheckTimer = null;
-        taNumberInput.addEventListener("input", async () => {
-            const taNumber = taNumberInput.value.trim();
-            
-            // Clear existing timer
-            if (taCheckTimer) {
-                clearTimeout(taCheckTimer);
-            }
-            
-            // Only check if TA number is valid (matches pattern)
-            if (isValidTaNumber(taNumber)) {
-                // Debounce the database check by 500ms
-                taCheckTimer = setTimeout(async () => {
-                    try {
-                        const { data, error } = await supabase
-                            .from("travel_authorities")
-                            .select("ta_number")
-                            .eq("ta_number", taNumber)
-                            .maybeSingle();
-                        
-                        if (error && error.code !== 'PGRST116') {
-                            // PGRST116 is "no rows returned" - that's expected if TA doesn't exist
-                            console.error("Error checking TA number:", error);
-                            return;
-                        }
-                        
-                        if (data) {
-                            // TA number already exists
-                            showToast(`TA ${taNumber} already exists in the database.`);
-                        }
-                    } catch (err) {
-                        console.error("Error checking TA number:", err);
-                    }
-                }, 500);
-            }
-        });
-
+        // Upload panel TA validation will be handled in upload.js after panel loads
+        
         // Real-time TA number validation for update modal
         let updateTaCheckTimer = null;
         updateTaInput.addEventListener("input", async () => {
@@ -1552,7 +992,7 @@
                         
                         // Only warn if TA exists AND it's a different record than the one being updated
                         if (data && updateRecordData && data.id !== updateRecordData.id) {
-                            showToast(`TA ${taNumber} already exists in another record.`);
+                            showToast(`TA ${taNumber} already exists in another record.`, "warning");
                         }
                     } catch (err) {
                         console.error("Error checking TA number:", err);
@@ -1577,9 +1017,13 @@
         let adminEmployeesListForFilter = [];
         window.adminEmployeesListForFilter = adminEmployeesListForFilter;
 
-        const showToast = (message) => {
+        const showToast = (message, type = 'success') => {
             if (!toast) return;
             toast.textContent = message;
+            // Remove any existing type classes
+            toast.classList.remove('toast--success', 'toast--info', 'toast--warning', 'toast--error');
+            // Add the new type class
+            toast.classList.add(`toast--${type}`);
             toast.classList.add("show");
             if (toastTimer) {
                 clearTimeout(toastTimer);
@@ -1588,6 +1032,8 @@
                 toast.classList.remove("show");
             }, 2600);
         };
+        // Expose for upload.js
+        window.showToast = showToast;
         window.adminShowToast = showToast;
 
         // Show confirmation modal and return a Promise
@@ -1792,7 +1238,12 @@
                         id: recordId,
                         file_url: record.file_url || "",
                         file_name: record.file_name || "",
-                        ta_number: record.ta_number || ""
+                        ta_number: record.ta_number || "",
+                        purpose: record.purpose || "",
+                        destination: record.destination || "",
+                        employees: record.employees || "",
+                        travel_date: record.travel_date || "",
+                        travel_until: record.travel_until || ""
                     };
 
                     updateTaInput.value = record.ta_number || "";
@@ -1862,7 +1313,12 @@
                     id: recordId,
                     file_url: record.file_url || "",
                     file_name: record.file_name || "",
-                    ta_number: record.ta_number || ""
+                    ta_number: record.ta_number || "",
+                    purpose: record.purpose || "",
+                    destination: record.destination || "",
+                    employees: record.employees || "",
+                    travel_date: record.travel_date || "",
+                    travel_until: record.travel_until || ""
                 };
 
                 updateTaInput.value = record.ta_number || "";
@@ -1928,6 +1384,9 @@
                 viewStatus.textContent = "Failed to load travel authorities.";
             }
         };
+
+        // Expose loadTravelAuthorities for use in upload.js
+        window.loadTravelAuthorities = loadTravelAuthorities;
 
         // Delete modal handlers
         cancelDeleteBtn.addEventListener("click", () => {
@@ -2384,6 +1843,27 @@
                 return;
             }
 
+            // Check if anything has actually changed
+            const hasFileChange = updateScanFileInput.files.length > 0;
+            const hasTaNumberChange = taNumber !== updateRecordData.ta_number;
+            const hasPurposeChange = purpose !== updateRecordData.purpose;
+            const hasDestinationChange = destination !== updateRecordData.destination;
+            const hasEmployeesChange = employees !== updateRecordData.employees;
+            const hasTravelDateChange = travelDate !== updateRecordData.travel_date;
+            const hasTravelUntilChange = travelUntil !== updateRecordData.travel_until;
+            
+            const hasAnyChange = hasFileChange || hasTaNumberChange || hasPurposeChange || 
+                                 hasDestinationChange || hasEmployeesChange || hasTravelDateChange || hasTravelUntilChange;
+            
+            if (!hasAnyChange) {
+                updateStatus.textContent = "No changes made.";
+                updateStatus.classList.remove("status--error", "status--shake", "hidden");
+                updateStatus.classList.add("status--success");
+                void updateStatus.offsetWidth;
+                updateStatus.classList.add("status--shake");
+                return;
+            }
+
             try {
                 updateStatus.textContent = "Updating record...";
                 updateStatus.classList.remove("status--error", "hidden");
@@ -2540,7 +2020,7 @@
                 updateModal.classList.remove("show");
                 updateRecordData = null;
                 viewStatus.textContent = "Record updated successfully.";
-                showToast("Update saved.");
+                showToast("Update saved.", "success");
                 await loadTravelAuthorities(true);
             } catch (error) {
                 console.error("Update error:", error);
@@ -2862,12 +2342,12 @@
                 if (usersStatus) {
                     usersStatus.textContent = 'Role updated successfully';
                 }
-                showToast(`Role changed to ${newRole}`);
+                showToast(`Role changed to ${newRole}`, "success");
                 
                 // If user changed their own role, logout after showing success message
                 if (isChangingOwnRole) {
                     setTimeout(async () => {
-                        showToast('Your role has changed. Logging out...');
+                        showToast('Your role has changed. Logging out...', "warning");
                         await new Promise(resolve => setTimeout(resolve, 1500));
                         localStorage.removeItem('admin_session_token');
                         localStorage.removeItem('adminActivePanel');
@@ -2910,7 +2390,7 @@
                     usersStatus.textContent = errorMessage;
                     usersStatus.classList.add('status--error');
                 }
-                showToast(errorMessage);
+                showToast(errorMessage, "error");
             }
         };
 
@@ -2940,7 +2420,7 @@
                 if (usersStatus) {
                     usersStatus.textContent = 'Access updated successfully';
                 }
-                showToast(`Access ${action}`);
+                showToast(`Access ${action}`, "success");
                 
                 // Reload users to refresh the display
                 await loadUsers();
@@ -2975,7 +2455,7 @@
                     usersStatus.textContent = errorMessage;
                     usersStatus.classList.add('status--error');
                 }
-                showToast(errorMessage);
+                showToast(errorMessage, "error");
             }
         };
 
@@ -3066,11 +2546,21 @@
             }
         })();
         
-        loadEmployees();
+        // loadEmployees() is now called in uploadPanelLoaded.then() to ensure proper initialization
         loadAdminEmployeesForFilter();
 
+        // Preload travel authorities data in the background for faster first load
+        Promise.all([employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
+            // Preload data if not already loaded
+            if (viewRows.length === 0) {
+                loadTravelAuthorities(true).catch(err => {
+                    console.log("Background preload of travel authorities failed:", err);
+                });
+            }
+        });
+
         // Restore last active panel (wait for panels to load first)
-        Promise.all([employeePanelLoaded, usersPanelLoaded]).then(() => {
+        Promise.all([employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
             const savedPanel = localStorage.getItem("adminActivePanel");
             if (!savedPanel || savedPanel === "upload-panel" || savedPanel === "users-panel") return;
             const targetBtn = document.querySelector(`.switch-btn[data-panel="${savedPanel}"]`);
@@ -3093,9 +2583,12 @@
         });
 
         // Initialize header buttons after everything is defined
+        // This will be called either from here or from the header loader,
+        // whichever happens last (after both script and HTML are ready)
         if (window.headerLoaded) {
             window.initHeaderButtons();
         }
+        // If header hasn't loaded yet, the header loader will call it
 
         document.getElementById('close-settings').addEventListener('click', () => {
             document.getElementById('settings-modal').classList.remove('show');

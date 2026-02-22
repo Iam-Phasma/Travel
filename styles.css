@@ -1120,8 +1120,21 @@ button:hover {
     transform: translateY(0);
 }
 
+/* Toast color variants */
+.toast.toast--success {
+    background: rgba(18, 115, 74, 0.95); /* Green */
+}
+
+.toast.toast--info {
+    background: rgba(37, 99, 235, 0.95); /* Blue */
+}
+
 .toast.toast--warning {
-    background: rgba(255, 67, 67, 0.95);
+    background: rgba(234, 88, 12, 0.95); /* Orange */
+}
+
+.toast.toast--error {
+    background: rgba(220, 38, 38, 0.95); /* Red */
 }
 
 .modal-content {
