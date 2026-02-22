@@ -33,12 +33,21 @@
                 }
                 
                 // Call initHeaderButtons now that header is loaded
-                // It will be defined by the time this async callback runs
-                setTimeout(() => {
-                    if (window.initHeaderButtons) {
-                        window.initHeaderButtons();
-                    }
-                }, 0);
+                // Module may not have executed yet, so retry with a delay
+                if (window.initHeaderButtons) {
+                    window.initHeaderButtons();
+                } else {
+                    // Module hasn't loaded yet; it will call initHeaderButtons itself
+                    // But also retry in case of timing edge case
+                    const retryInterval = setInterval(() => {
+                        if (window.initHeaderButtons) {
+                            window.initHeaderButtons();
+                            clearInterval(retryInterval);
+                        }
+                    }, 100);
+                    // Stop retrying after 5 seconds
+                    setTimeout(() => clearInterval(retryInterval), 5000);
+                }
             })
             .catch(error => console.error('Error loading header:', error));
     </script>
@@ -605,7 +614,6 @@
         // Define header button initialization function
         let headerButtonsInitialized = false;
         window.initHeaderButtons = () => {
-            // Prevent duplicate initialization
             if (headerButtonsInitialized) return;
             
             const userMenuBtn = document.getElementById('user-menu-btn');
@@ -613,10 +621,9 @@
             const settingsOption = document.getElementById('header-settings-option');
             const logoutOption = document.getElementById('header-logout-option');
             const userEmailElement = document.getElementById('header-user-email');
-            
-            // Only mark as initialized if all required elements exist
-            if (!userMenuBtn || !headerPopup || !logoutOption) {
-                return; // Header not fully loaded yet
+
+            if (!userMenuBtn || !headerPopup) {
+                return; // Header not loaded yet, allow retry
             }
             
             headerButtonsInitialized = true;
@@ -649,43 +656,45 @@
             }
 
             // Handle logout option click
-            logoutOption.addEventListener('click', async () => {
-                headerPopup.classList.remove('show');
-                
-                // Check if showConfirmation is available
-                if (!window.adminShowConfirmation) {
-                    console.error('showConfirmation not available');
-                    return;
-                }
-                
-                // Show confirmation dialog
-                const confirmed = await window.adminShowConfirmation(
-                    'Confirm Logout',
-                    'Are you sure you want to log out?'
-                );
+            if (logoutOption) {
+                logoutOption.addEventListener('click', async () => {
+                    headerPopup.classList.remove('show');
+                    
+                    // Check if showConfirmation is available
+                    if (!window.adminShowConfirmation) {
+                        console.error('showConfirmation not available');
+                        return;
+                    }
+                    
+                    // Show confirmation dialog
+                    const confirmed = await window.adminShowConfirmation(
+                        'Confirm Logout',
+                        'Are you sure you want to log out?'
+                    );
 
-                if (!confirmed) {
-                    return; // User cancelled
-                }
+                    if (!confirmed) {
+                        return; // User cancelled
+                    }
 
-                try {
-                    // Clear admin session token and panel memory
-                    localStorage.removeItem('admin_session_token');
-                    localStorage.removeItem('adminActivePanel');
-                    await supabase.auth.signOut();
-                    window.location.href = "../index.html";
-                } catch (error) {
-                    console.error("Logout error:", error);
-                    localStorage.removeItem('admin_session_token');
-                    localStorage.removeItem('adminActivePanel');
-                    window.location.href = "../index.html";
-                }
-            });
+                    try {
+                        // Clear admin session token and panel memory
+                        localStorage.removeItem('admin_session_token');
+                        localStorage.removeItem('adminActivePanel');
+                        await supabase.auth.signOut();
+                        window.location.href = "../index.html";
+                    } catch (error) {
+                        console.error("Logout error:", error);
+                        localStorage.removeItem('admin_session_token');
+                        localStorage.removeItem('adminActivePanel');
+                        window.location.href = "../index.html";
+                    }
+                });
+            }
 
             // Close popup when clicking outside
             document.addEventListener('click', (e) => {
-                if (headerPopup && !headerPopup.contains(e.target) && 
-                    e.target !== userMenuBtn && !userMenuBtn?.contains(e.target)) {
+                if (!headerPopup.contains(e.target) && 
+                    e.target !== userMenuBtn && !userMenuBtn.contains(e.target)) {
                     headerPopup.classList.remove('show');
                 }
             });
@@ -790,7 +799,13 @@
             search.addEventListener('input', renderOptions);
             search.addEventListener('click', (e) => e.stopPropagation());
 
-            document.addEventListener('click', () => {
+            document.addEventListener('click', (e) => {
+                // Don't close dropdown if clicking on header popup elements
+                const headerPopup = document.getElementById('header-popup-panel');
+                const userMenuBtn = document.getElementById('user-menu-btn');
+                if (headerPopup && (headerPopup.contains(e.target) || e.target === userMenuBtn || userMenuBtn?.contains(e.target))) {
+                    return;
+                }
                 dropdown.classList.remove('show');
             });
 
@@ -2590,15 +2605,6 @@
         }
         // If header hasn't loaded yet, the header loader will call it
 
-        document.getElementById('close-settings').addEventListener('click', () => {
-            document.getElementById('settings-modal').classList.remove('show');
-        });
-
-        document.getElementById('settings-modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('settings-modal')) {
-                document.getElementById('settings-modal').classList.remove('show');
-            }
-        });
     </script>
 
     <div id="settings-modal" class="modal">
@@ -2610,6 +2616,18 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('close-settings').addEventListener('click', () => {
+            document.getElementById('settings-modal').classList.remove('show');
+        });
+
+        document.getElementById('settings-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('settings-modal')) {
+                document.getElementById('settings-modal').classList.remove('show');
+            }
+        });
+    </script>
 
     <div id="footer-container"></div>
     <script>
