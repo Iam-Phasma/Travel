@@ -660,6 +660,7 @@ button:hover {
     border: 1px solid rgba(15, 26, 31, 0.12);
     border-radius: 16px;
     box-shadow: var(--shadow);
+    background: white;
 }
 
 .flatpickr-months .flatpickr-month,
@@ -667,8 +668,27 @@ button:hover {
     background: rgba(207, 228, 255, 0.35);
 }
 
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    fill: var(--sea);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+    fill: var(--ink);
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    appearance: none;
+    background: transparent;
+    border: none;
+    font-weight: 600;
+    color: var(--ink);
+}
+
 .flatpickr-day {
     border-radius: 10px;
+    color: var(--ink);
 }
 
 .flatpickr-day.selected,
@@ -680,6 +700,153 @@ button:hover {
 
 .flatpickr-day.today {
     border-color: var(--clay);
+}
+
+.flatpickr-day:hover {
+    background: rgba(207, 228, 255, 0.5);
+    border-color: var(--clay);
+}
+
+/* Improved mobile/tablet support for date picker */
+@media (max-width: 1024px) {
+    /* Increase touch targets for tablet */
+    .flatpickr-calendar {
+        font-size: 16px;
+    }
+
+    .flatpickr-day {
+        height: 42px;
+        line-height: 42px;
+        max-width: 42px;
+        border-radius: 8px;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 40px;
+    }
+
+    .flatpickr-current-month {
+        padding: 8px 0;
+        font-size: 1.1rem;
+    }
+
+    .flatpickr-weekday {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Optimize for mobile phones and small tablets */
+    .flatpickr-calendar {
+        width: 100% !important;
+        max-width: 340px;
+        font-size: 16px;
+        box-shadow: 0 8px 24px rgba(12, 21, 24, 0.25);
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+    
+    /* Override flatpickr's positioning for better mobile centering */
+    .flatpickr-calendar.arrowTop,
+    .flatpickr-calendar.arrowBottom {
+        left: 50% !important;
+        transform: translateX(-50%);
+    }
+
+    .flatpickr-months {
+        padding: 0;
+    }
+
+    .flatpickr-current-month {
+        padding: 10px 0;
+        font-size: 1.15rem;
+        height: auto;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 50px;
+    }
+
+    .flatpickr-prev-month,
+    .flatpickr-next-month {
+        padding: 12px;
+        width: 44px;
+        height: 44px;
+    }
+
+    .flatpickr-prev-month svg,
+    .flatpickr-next-month svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .flatpickr-weekdays {
+        height: 40px;
+        padding: 4px 0;
+    }
+
+    .flatpickr-weekday {
+        font-size: 1rem;
+        line-height: 40px;
+    }
+
+    .flatpickr-days {
+        padding: 8px;
+    }
+
+    .flatpickr-day {
+        height: 44px;
+        line-height: 44px;
+        max-width: 44px;
+        font-size: 1rem;
+        border-radius: 10px;
+        margin: 1px;
+    }
+
+    /* Ensure proper spacing for input fields on mobile */
+    .field-row {
+        grid-template-columns: 1fr;
+        display: grid;
+    }
+
+    .field-row > div {
+        width: 100%;
+    }
+
+    .input-wrap {
+        width: 100%;
+    }
+
+    .input-wrap input[type="text"],
+    .input-wrap .flatpickr-input {
+        font-size: 16px;
+        padding: 14px 12px 14px 40px;
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra optimizations for small phones */
+    .flatpickr-calendar {
+        max-width: calc(100vw - 32px);
+    }
+
+    .flatpickr-current-month {
+        font-size: 1.05rem;
+    }
+
+    .flatpickr-day {
+        height: 40px;
+        line-height: 40px;
+        max-width: 40px;
+        font-size: 0.95rem;
+    }
+
+    .input-wrap input[type="text"],
+    .input-wrap .flatpickr-input {
+        font-size: 16px;
+        min-height: 50px;
+    }
 }
 
 .link-btn {
@@ -1061,6 +1228,14 @@ button:hover {
 }
 
 @media (max-width: 480px) {
+    /* Prevent zoom on input focus for iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    .flatpickr-input {
+        font-size: 16px !important;
+    }
+
     .panel {
         padding: 18px;
     }

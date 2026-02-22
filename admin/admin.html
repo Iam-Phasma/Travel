@@ -1073,12 +1073,20 @@
 
         window.flatpickr(travelDateInput, {
             dateFormat: "Y-m-d",
-            allowInput: true
+            allowInput: true,
+            disableMobile: false,
+            static: false,
+            monthSelectorType: 'static',
+            position: 'auto center'
         });
 
         window.flatpickr(travelUntilInput, {
             dateFormat: "Y-m-d",
-            allowInput: true
+            allowInput: true,
+            disableMobile: false,
+            static: false,
+            monthSelectorType: 'static',
+            position: 'auto center'
         });
 
         const isValidTaNumber = (value) => /^\d{4}-\d{2}-\d{4}$/.test(value);
@@ -1634,12 +1642,20 @@
 
         window.flatpickr(updateTravelDateInput, {
             dateFormat: "Y-m-d",
-            allowInput: true
+            allowInput: true,
+            disableMobile: false,
+            static: false,
+            monthSelectorType: 'static',
+            position: 'auto center'
         });
 
         window.flatpickr(updateTravelUntilInput, {
             dateFormat: "Y-m-d",
-            allowInput: true
+            allowInput: true,
+            disableMobile: false,
+            static: false,
+            monthSelectorType: 'static',
+            position: 'auto center'
         });
 
         const applyAdminClientFilters = (rows) => {
@@ -2015,6 +2031,10 @@
         window.flatpickr(adminFilterTravelDateInput, {
             dateFormat: "Y-m-d",
             allowInput: true,
+            disableMobile: false,
+            static: false,
+            monthSelectorType: 'static',
+            position: 'auto center',
             onChange: function(selectedDates, dateStr) {
                 // Auto-sync year filter when date is selected
                 if (dateStr && dateStr.length >= 4) {
