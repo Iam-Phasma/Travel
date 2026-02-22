@@ -865,7 +865,7 @@ button:hover {
 .detail-row-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 20px;
 }
 
 .detail-divider {
@@ -895,6 +895,12 @@ button:hover {
 .detail-row {
     display: grid;
     gap: 6px;
+}
+
+.detail-row-dual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
 }
 
 .detail-label {
