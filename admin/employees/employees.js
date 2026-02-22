@@ -17,6 +17,7 @@ window.initEmployeeManagement = (supabase) => {
     const addEmployeeBtn = document.getElementById("add-employee-btn");
     const employeeStatus = document.getElementById("employee-status");
     const employeeListContainer = document.getElementById("employee-list");
+    const employeeSummaryContainer = document.getElementById("employee-summary");
     const employeeSearchInput = document.getElementById("employee-search");
     let allEmployeesData = []; // Store all employees for filtering
     let allEmployeesCache = []; // Always holds the full unfiltered list
@@ -41,6 +42,9 @@ window.initEmployeeManagement = (supabase) => {
                     </div>
                     <p class="loading-text">Loading employees...</p>
                 `;
+                if (employeeSummaryContainer) {
+                    employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
+                }
                 
                 const { data, error } = await supabase
                     .from("employee_list")
@@ -68,10 +72,10 @@ window.initEmployeeManagement = (supabase) => {
                         <span class="employee-header-action">Action</span>
                     </div>
                     <p class="no-employees">No employees found.</p>
-                    <div class="employee-summary">
-                        Total: 0 | Active: 0 | Inactive: 0
-                    </div>
                 `;
+                if (employeeSummaryContainer) {
+                    employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
+                }
                 return;
             }
 
@@ -120,13 +124,12 @@ window.initEmployeeManagement = (supabase) => {
                 `;
             }).join('');
 
-            const employeeSummary = `
-                <div class="employee-summary">
-                    Total: ${totalCount} | Active: ${activeCount} | Inactive: ${inactiveCount}
-                </div>
-            `;
-
-            employeeListContainer.innerHTML = tableHeader + employeeItems + employeeSummary;
+            employeeListContainer.innerHTML = tableHeader + employeeItems;
+            
+            // Update summary container
+            if (employeeSummaryContainer) {
+                employeeSummaryContainer.textContent = `Total: ${totalCount} | Active: ${activeCount} | Inactive: ${inactiveCount}`;
+            }
 
             // Add toggle active/inactive button listeners
             document.querySelectorAll('.toggle-employee-btn').forEach(btn => {
@@ -218,10 +221,10 @@ window.initEmployeeManagement = (supabase) => {
                     <span class="employee-header-action">Action</span>
                 </div>
                 <p class="error-text">Failed to load employees.</p>
-                <div class="employee-summary">
-                    Total: 0 | Active: 0 | Inactive: 0
-                </div>
             `;
+            if (employeeSummaryContainer) {
+                employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
+            }
         }
     };
 

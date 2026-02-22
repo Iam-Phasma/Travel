@@ -1699,9 +1699,9 @@ button:hover {
 
 .employee-summary {
     padding: 12px 14px;
-    margin-top: 8px;
+    margin-top: 12px;
     background: rgba(47, 111, 179, 0.08);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.9rem;
     color: var(--ink);
     font-weight: 500;
