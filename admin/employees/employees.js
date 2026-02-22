@@ -237,9 +237,9 @@ window.initEmployeeManagement = (supabase) => {
         }
 
         // Validate allowed characters
-        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.]+$/;
+        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.,]+$/;
         if (!namePattern.test(employeeName)) {
-            employeeStatus.textContent = "Only letters, spaces, hyphens, apostrophes, and periods are allowed.";
+            employeeStatus.textContent = "Only letters, hyphens, apostrophes, periods, and commas are allowed.";
             employeeStatus.classList.add("status--error");
             employeeStatus.classList.remove("status--shake");
             void employeeStatus.offsetWidth;
@@ -359,9 +359,9 @@ window.initEmployeeManagement = (supabase) => {
         }
 
         // Validate allowed characters
-        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.]+$/;
+        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.,]+$/;
         if (!namePattern.test(newName)) {
-            editEmployeeStatus.textContent = "Only letters, spaces, hyphens, apostrophes, and periods are allowed.";
+            editEmployeeStatus.textContent = "Only letters, spaces, hyphens, apostrophes, periods, and commas are allowed.";
             editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
             editEmployeeStatus.classList.add("status--error");
             void editEmployeeStatus.offsetWidth;
