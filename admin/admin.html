@@ -64,88 +64,7 @@
     </div>
         <div id="upload-panel-container"></div>
 
-        <section class="panel wide-panel hidden" id="view-panel">
-        <div class="panel-head">
-            <h2>Records</h2>
-            <div class="panel-head-actions">
-                <button id="admin-export-btn" class="filter-icon-btn" type="button" aria-label="Export to Excel" title="Export to Excel">
-                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                    </svg>
-                </button>
-                <button id="admin-filter-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle filters" title="Filter">
-                    <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                        <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                    </svg>
-                </button>
-                <span class="pill">Admin Access</span>
-            </div>
-        </div>
-        <div id="admin-filter-panel" class="filter-panel">
-            <div class="filter-content">
-                <h3>Filter Options</h3>
-                <div class="filter-mode">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="admin-filter-match-all">
-                        <span>Match all filters (AND)</span>
-                    </label>
-                    <p class="filter-mode-note">Unchecked: Match any filter (OR)</p>
-                </div>
-                <div class="filter-fields">
-                    <div class="filter-field">
-                        <label for="admin-filter-ta-number">TA Number</label>
-                        <input type="text" id="admin-filter-ta-number" placeholder="0000-00-0000" maxlength="12">
-                    </div>
-                    <div class="filter-field">
-                        <label for="admin-filter-employee">Employee</label>
-                        <select id="admin-filter-employee" class="filter-select">
-                            <option value="">All Employees</option>
-                        </select>
-                    </div>
-                    <div class="filter-field">
-                        <label for="admin-filter-year">Year</label>
-                        <select id="admin-filter-year" class="filter-select">
-                            <option value="">All Years</option>
-                        </select>
-                    </div>
-                    <div class="filter-field">
-                        <label for="admin-filter-travel-date">Travel Date</label>
-                        <input type="text" id="admin-filter-travel-date" placeholder="Select date">
-                    </div>
-                </div>
-                <div class="filter-actions">
-                    <button id="admin-clear-filter-btn" class="filter-btn clear-btn" type="button">Clear Filter</button>
-                    <button id="admin-apply-filter-btn" class="filter-btn apply-btn" type="button">Apply Filter</button>
-                </div>
-            </div>
-        </div>
-        <div class="table-wrap max-rows-10">
-            <table class="data-table" aria-describedby="view-status">
-                <thead>
-                    <tr>
-                        <th scope="col">View</th>
-                        <th scope="col">TA Number</th>
-                        <th scope="col">Purpose</th>
-                        <th scope="col">Destination</th>
-                        <th scope="col">Employees</th>
-                        <th scope="col">Travel Date</th>
-                        <th scope="col">Travel End</th>
-                        <th scope="col">File</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="view-body">
-                    <tr>
-                        <td colspan="9">Loading records...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="table-footer">
-            <span class="status" id="view-status">Fetching travel authorities.</span>
-            <button id="view-more" class="pagination-btn" type="button">Load more</button>
-        </div>
-    </section>
+        <div id="view-panel-container"></div>
 
         <div id="employees-panel-container"></div>
 
@@ -154,16 +73,7 @@
     </div>
     <!-- End of page-content -->
 
-    <div id="delete-modal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Deletion</h3>
-            <p>Are you sure you want to delete this travel authority record? This action cannot be undone.</p>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" id="cancel-delete">Cancel</button>
-                <button class="modal-btn confirm" id="confirm-delete">Delete</button>
-            </div>
-        </div>
-    </div>
+    <div id="view-modals-container"></div>
 
     <div id="employees-modals-container"></div>
 
@@ -179,174 +89,6 @@
     </div>
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <div id="view-modal" class="modal">
-        <div class="modal-content modal-form">
-            <h3>Travel Authority Details</h3>
-            <div class="detail-list">
-                <div class="detail-row-group">
-                    <div class="detail-row">
-                        <span class="detail-label">TA Number</span>
-                        <span class="detail-value" id="view-ta-number">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Purpose</span>
-                        <span class="detail-value" id="view-purpose">-</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Destination</span>
-                        <span class="detail-value" id="view-destination">-</span>
-                    </div>
-                </div>
-                <hr class="detail-divider">
-                <div class="detail-row-group">
-                    <div class="detail-row">
-                        <span class="detail-label">Employees</span>
-                        <span class="detail-value" id="view-employees">-</span>
-                    </div>
-                </div>
-                <hr class="detail-divider">
-                <div class="detail-row-group">
-                    <div class="detail-row-dual">
-                        <div class="detail-row">
-                            <span class="detail-label">Travel Date</span>
-                            <span class="detail-value" id="view-travel-date">-</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Travel End</span>
-                            <span class="detail-value" id="view-travel-until">-</span>
-                        </div>
-                    </div>
-                </div>
-                <hr class="detail-divider">
-                <div class="detail-row-group">
-                    <div class="detail-row">
-                        <span class="detail-label">File</span>
-                        <a class="file-link" id="view-file-link" href="#" target="_blank" rel="noopener">Open file</a>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button class="modal-btn" id="view-edit-btn" style="background: var(--ink); color: white;">Edit</button>
-                <button class="modal-btn cancel" id="close-view">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="export-modal" class="modal">
-        <div class="modal-content modal-form">
-            <h3>Export to Excel</h3>
-            <p>Select years to include in the export.</p>
-            <div class="fields">
-                <div>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="export-all-years">
-                        <span>All Years</span>
-                    </label>
-                </div>
-                <div id="export-years-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
-                    <!-- Year checkboxes will be populated dynamically -->
-                </div>
-            </div>
-            <span class="status hidden" id="export-status"></span>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" id="cancel-export">Cancel</button>
-                <button class="modal-btn confirm" id="confirm-export">Export</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="update-modal" class="modal">
-        <div class="modal-content modal-form">
-            <h3>Update TA</h3>
-            <p>Updating will overwrite the existing record.</p>
-            <div class="fields">
-                <div>
-                    <label for="update-ta-number">TA Number <span class="required">*</span></label>
-                    <div class="input-wrap">
-                        <span class="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
-                            </svg>
-                        </span>
-                        <input id="update-ta-number" type="text" placeholder="0000-00-0000" pattern="\d{4}-\d{2}-\d{4}" maxlength="12" inputmode="numeric" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="update-purpose">Purpose <span class="required">*</span></label>
-                    <div class="input-wrap">
-                        <span class="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M4 5h16a1 1 0 0 1 1 1v10a3 3 0 0 1-3 3H8a5 5 0 0 1-5-5V6a1 1 0 0 1 1-1Zm1 2v7a3 3 0 0 0 3 3h10a1 1 0 0 0 1-1V7H5Zm3 1h8a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Zm0 4h6a1 1 0 1 1 0 2H8a1 1 0 0 1 0-2Z" />
-                            </svg>
-                        </span>
-                        <input id="update-purpose" type="text" placeholder="Enter travel purpose" maxlength="300" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="update-destination">Destination <span class="required">*</span></label>
-                    <div class="input-wrap">
-                        <span class="icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                <path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
-                            </svg>
-                        </span>
-                        <input id="update-destination" type="text" placeholder="Enter destination" maxlength="300" required>
-                    </div>
-                </div>
-                <div>
-                    <label for="update-employees">Employees <span class="required">*</span></label>
-                    <div class="multiselect-wrapper">
-                        <div class="multiselect-display" id="update-employees-display">
-                            <span class="multiselect-placeholder">Select employees...</span>
-                        </div>
-                        <div class="multiselect-dropdown" id="update-employees-dropdown">
-                            <div class="multiselect-search-wrapper">
-                                <input type="text" class="multiselect-search" id="update-employees-search" placeholder="Search employees...">
-                            </div>
-                            <div class="multiselect-options" id="update-employees-options">
-                                <!-- Options loaded dynamically -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="field-row">
-                    <div>
-                        <label for="update-travel-date">Travel Date <span class="required">*</span></label>
-                        <div class="input-wrap">
-                            <span class="icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
-                                </svg>
-                            </span>
-                            <input id="update-travel-date" type="text" placeholder="Select travel date" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="update-travel-until">Travel End</label>
-                        <div class="input-wrap">
-                            <span class="icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                                    <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z" />
-                                </svg>
-                            </span>
-                            <input id="update-travel-until" type="text" placeholder="Select end date">
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <label for="update-scan-file">Upload Scanned</label>
-                    <input id="update-scan-file" type="file" accept="application/pdf,.pdf,image/jpeg,image/jpg,image/png" multiple>
-                    <p class="disclaimer">Leave empty to keep current file. Accept PDFs and/or images (max 10 files, 10MB total). Multiple files will be combined into one PDF.</p>
-                </div>
-            </div>
-            <span class="status hidden" id="update-status"></span>
-            <div class="modal-actions">
-                <button class="modal-btn cancel" id="cancel-update">Cancel</button>
-                <button class="modal-btn confirm" id="confirm-update">Update</button>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -371,6 +113,19 @@
                 console.error('Error loading upload panel:', error);
                 return false;
             });
+
+        // Load view panel and modals
+        const viewPanelLoaded = Promise.all([
+            fetch('view/view-panel.html').then(r => r.text()),
+            fetch('view/view-modals.html').then(r => r.text())
+        ]).then(([panelHTML, modalsHTML]) => {
+            document.getElementById('view-panel-container').innerHTML = panelHTML;
+            document.getElementById('view-modals-container').innerHTML = modalsHTML;
+            return true;
+        }).catch(error => {
+            console.error('Error loading view components:', error);
+            return false;
+        });
 
         // Load employee panel and modals
         const employeePanelLoaded = Promise.all([
@@ -834,13 +589,23 @@
             }
         });
 
-        const updateEmployeesMultiSelect = createMultiSelect(
-            'update-employees-display',
-            'update-employees-dropdown',
-            'update-employees-search',
-            'update-employees-options',
-            updateSelectedEmployees
-        );
+        // updateEmployeesMultiSelect will be initialized after view modals load
+        let updateEmployeesMultiSelect = null;
+
+        // Initialize update multi-select after view panel/modals are loaded
+        viewPanelLoaded.then(() => {
+            updateEmployeesMultiSelect = createMultiSelect(
+                'update-employees-display',
+                'update-employees-dropdown',
+                'update-employees-search',
+                'update-employees-options',
+                updateSelectedEmployees
+            );
+            // Render options now if employees already loaded
+            if (employeesList.length > 0) {
+                updateEmployeesMultiSelect.renderOptions();
+            }
+        });
 
         const renderEmployeesOptions = () => {
             if (window.uploadEmployeesMultiSelect) {
@@ -889,7 +654,6 @@
 
         // Panel switching logic
         const switchButtons = document.querySelectorAll(".switch-btn");
-        const viewPanel = document.getElementById("view-panel");
 
         switchButtons.forEach(btn => {
             btn.addEventListener("click", () => {
@@ -904,12 +668,13 @@
 
                 // Get dynamically loaded panels (they're loaded asynchronously)
                 const uploadPanel = document.getElementById("upload-panel");
+                const viewPanel = document.getElementById("view-panel");
                 const employeesPanel = document.getElementById("employees-panel");
                 const usersPanel = document.getElementById("users-panel");
 
                 // Show/hide panels
                 if (uploadPanel) uploadPanel.classList.add("hidden");
-                viewPanel.classList.add("hidden");
+                if (viewPanel) viewPanel.classList.add("hidden");
                 if (employeesPanel) employeesPanel.classList.add("hidden");
                 if (usersPanel) usersPanel.classList.add("hidden");
                 
@@ -918,10 +683,12 @@
                         uploadPanel.classList.remove("hidden");
                     }
                 } else if (targetPanel === "view-panel") {
-                    viewPanel.classList.remove("hidden");
-                    // Only reload if data hasn't been loaded yet
-                    if (viewRows.length === 0) {
-                        loadTravelAuthorities(true);
+                    if (viewPanel) {
+                        viewPanel.classList.remove("hidden");
+                        // Call loadTravelAuthoritiesIfNeeded if it exists on window
+                        if (window.loadTravelAuthoritiesIfNeeded) {
+                            window.loadTravelAuthoritiesIfNeeded();
+                        }
                     }
                 } else if (targetPanel === "employees-panel") {
                     if (employeesPanel) {
@@ -941,6 +708,12 @@
             });
         });
 
+        // ============================================
+        // VIEW PANEL FUNCTIONALITY  
+        // ============================================
+        
+        // Wait for view panel to load before initializing
+        viewPanelLoaded.then(() => {
         // Table view functionality
         const viewBody = document.getElementById("view-body");
                 const viewStatus = document.getElementById("view-status");
@@ -1400,8 +1173,15 @@
             }
         };
 
-        // Expose loadTravelAuthorities for use in upload.js
+        // Expose loadTravelAuthorities for use in upload.js and panel switching
         window.loadTravelAuthorities = loadTravelAuthorities;
+        
+        // Helper function for panel switching - only loads if no data yet
+        window.loadTravelAuthoritiesIfNeeded = () => {
+            if (viewRows.length === 0) {
+                loadTravelAuthorities(true);
+            }
+        };
 
         // Delete modal handlers
         cancelDeleteBtn.addEventListener("click", () => {
@@ -2082,6 +1862,8 @@
         autoClearCheckbox.addEventListener("change", () => {
             localStorage.setItem("autoClearFields", autoClearCheckbox.checked.toString());
         });
+        
+        }); // End of viewPanelLoaded.then()
 
         // ============================================
         // EMPLOYEE MANAGEMENT
@@ -2575,7 +2357,7 @@
         });
 
         // Restore last active panel (wait for panels to load first)
-        Promise.all([employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
+        Promise.all([viewPanelLoaded, employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
             const savedPanel = localStorage.getItem("adminActivePanel");
             if (!savedPanel || savedPanel === "upload-panel" || savedPanel === "users-panel") return;
             const targetBtn = document.querySelector(`.switch-btn[data-panel="${savedPanel}"]`);

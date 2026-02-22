@@ -1,0 +1,82 @@
+<section class="panel wide-panel hidden" id="view-panel">
+    <div class="panel-head">
+        <h2>Records</h2>
+        <div class="panel-head-actions">
+            <button id="admin-export-btn" class="filter-icon-btn" type="button" aria-label="Export to Excel" title="Export to Excel">
+                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+            </button>
+            <button id="admin-filter-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle filters" title="Filter">
+                <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                </svg>
+            </button>
+            <span class="pill">Admin Access</span>
+        </div>
+    </div>
+    <div id="admin-filter-panel" class="filter-panel">
+        <div class="filter-content">
+            <h3>Filter Options</h3>
+            <div class="filter-mode">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="admin-filter-match-all">
+                    <span>Match all filters (AND)</span>
+                </label>
+                <p class="filter-mode-note">Unchecked: Match any filter (OR)</p>
+            </div>
+            <div class="filter-fields">
+                <div class="filter-field">
+                    <label for="admin-filter-ta-number">TA Number</label>
+                    <input type="text" id="admin-filter-ta-number" placeholder="0000-00-0000" maxlength="12">
+                </div>
+                <div class="filter-field">
+                    <label for="admin-filter-employee">Employee</label>
+                    <select id="admin-filter-employee" class="filter-select">
+                        <option value="">All Employees</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="admin-filter-year">Year</label>
+                    <select id="admin-filter-year" class="filter-select">
+                        <option value="">All Years</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="admin-filter-travel-date">Travel Date</label>
+                    <input type="text" id="admin-filter-travel-date" placeholder="Select date">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button id="admin-clear-filter-btn" class="filter-btn clear-btn" type="button">Clear Filter</button>
+                <button id="admin-apply-filter-btn" class="filter-btn apply-btn" type="button">Apply Filter</button>
+            </div>
+        </div>
+    </div>
+    <div class="table-wrap max-rows-10">
+        <table class="data-table" aria-describedby="view-status">
+            <thead>
+                <tr>
+                    <th scope="col">View</th>
+                    <th scope="col">TA Number</th>
+                    <th scope="col">Purpose</th>
+                    <th scope="col">Destination</th>
+                    <th scope="col">Employees</th>
+                    <th scope="col">Travel Date</th>
+                    <th scope="col">Travel End</th>
+                    <th scope="col">File</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="view-body">
+                <tr>
+                    <td colspan="9">Loading records...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span class="status" id="view-status">Fetching travel authorities.</span>
+        <button id="view-more" class="pagination-btn" type="button">Load more</button>
+    </div>
+</section>
