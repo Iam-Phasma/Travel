@@ -900,6 +900,13 @@ button:hover {
         font-size: 16px;
         color: rgba(15, 26, 31, 0.45);
     }
+
+    /* Modal button mobile adjustments */
+    .modal-btn {
+        padding: 14px 20px;
+        font-size: 1rem;
+        min-height: 50px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1373,6 +1380,9 @@ button:hover {
 
     .modal-btn {
         width: 100%;
+        padding: 16px 20px;
+        font-size: 1rem;
+        min-height: 52px;
     }
 
     .panel-switcher {
