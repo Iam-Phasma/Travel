@@ -245,6 +245,15 @@ body.login-page {
     display: grid;
     gap: 14px;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    width: 100%;
+}
+
+/* Ensure all inputs and their containers are full width */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+.flatpickr-input {
+    box-sizing: border-box;
 }
 
 label {
@@ -273,6 +282,7 @@ label.checkbox-label {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 .input-wrap .icon {
@@ -312,11 +322,32 @@ input[type="file"] {
 
 .input-wrap .flatpickr-input {
     padding-left: 40px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-input:focus {
+input:focus,
+.flatpickr-input:focus {
     border-color: rgba(95, 183, 177, 0.8);
     box-shadow: 0 0 0 3px rgba(95, 183, 177, 0.18);
+}
+
+/* Ensure placeholder is visible and styled */
+input::placeholder,
+.flatpickr-input::placeholder {
+    color: rgba(15, 26, 31, 0.45);
+    opacity: 1;
+}
+
+input::-webkit-input-placeholder,
+.flatpickr-input::-webkit-input-placeholder {
+    color: rgba(15, 26, 31, 0.45);
+}
+
+input::-moz-placeholder,
+.flatpickr-input::-moz-placeholder {
+    color: rgba(15, 26, 31, 0.45);
+    opacity: 1;
 }
 
 .row {
@@ -807,14 +838,19 @@ button:hover {
     .field-row {
         grid-template-columns: 1fr;
         display: grid;
+        width: 100%;
     }
 
     .field-row > div {
         width: 100%;
+        max-width: 100%;
     }
 
     .input-wrap {
         width: 100%;
+        max-width: 100%;
+        display: flex;
+        position: relative;
     }
 
     .input-wrap input[type="text"],
@@ -822,6 +858,35 @@ button:hover {
         font-size: 16px;
         padding: 14px 12px 14px 40px;
         height: 48px;
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+        display: block;
+    }
+
+    /* Remove dropdown arrow on Android for date inputs */
+    input[type="text"].flatpickr-input {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: rgba(255, 255, 255, 0.85);
+    }
+
+    input[type="text"].flatpickr-input::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    input[type="text"].flatpickr-input::-webkit-inner-spin-button,
+    input[type="text"].flatpickr-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Ensure labels are readable */
+    label {
+        font-size: 0.95rem;
+        margin-bottom: 10px;
     }
 }
 
@@ -846,6 +911,25 @@ button:hover {
     .input-wrap .flatpickr-input {
         font-size: 16px;
         min-height: 50px;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 14px 12px 14px 40px;
+        display: block;
+        box-sizing: border-box;
+    }
+
+    .field-row {
+        width: 100%;
+        gap: 16px;
+    }
+
+    .field-row > div {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .input-wrap {
+        width: 100%;
     }
 }
 
@@ -1238,6 +1322,18 @@ button:hover {
 
     .panel {
         padding: 18px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .fields,
+    .field-row,
+    .field-row > div,
+    .input-wrap {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     .modal-content {
