@@ -3,7 +3,7 @@
     <div class="fields">
         <div>
             <label for="employee-name">Employee Name <span class="required">*</span></label>
-            <input id="employee-name" type="text" placeholder="Enter First name, Initial, Surname" required>
+            <input id="employee-name" type="text" placeholder="Enter First name, Initial, Surname" maxlength="30" pattern="[a-zA-ZÀ-ÿ\s\-'.]+" title="Only letters, spaces, hyphens, apostrophes, and periods allowed" required>
         </div>
     </div>
     <div class="row">

@@ -126,8 +126,8 @@ window.initEmployeeManagement = (supabase) => {
                     const action = newStatus ? 'unhide' : 'hide';
                     const title = newStatus ? 'Unhide Employee' : 'Hide Employee';
                     const message = newStatus 
-                        ? `Unhide "${employeeName}"?\n\nThis employee will be visible and selectable in travel authority forms.`
-                        : `Hide "${employeeName}"?\n\nThis employee will no longer appear in travel authority forms but existing records remain unchanged.`;
+                        ? `Unhide "${employeeName}"?\n\nThis employee will be marked as active and appear without the inactive tag.`
+                        : `Hide "${employeeName}"?\n\nThis employee will be marked as inactive and will appear with an "(Inactive)" tag in all dropdowns and selections. Existing records remain unchanged.`;
                     
                     // Show confirmation dialog
                     const confirmed = await showConfirmation(title, message);
@@ -236,6 +236,27 @@ window.initEmployeeManagement = (supabase) => {
             return;
         }
 
+        // Validate allowed characters
+        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.]+$/;
+        if (!namePattern.test(employeeName)) {
+            employeeStatus.textContent = "Only letters, spaces, hyphens, apostrophes, and periods are allowed.";
+            employeeStatus.classList.add("status--error");
+            employeeStatus.classList.remove("status--shake");
+            void employeeStatus.offsetWidth;
+            employeeStatus.classList.add("status--shake");
+            return;
+        }
+
+        // Validate length
+        if (employeeName.length > 30) {
+            employeeStatus.textContent = "Employee name cannot exceed 30 characters.";
+            employeeStatus.classList.add("status--error");
+            employeeStatus.classList.remove("status--shake");
+            void employeeStatus.offsetWidth;
+            employeeStatus.classList.add("status--shake");
+            return;
+        }
+
         try {
             employeeStatus.textContent = "Adding employee...";
             employeeStatus.classList.remove("status--error");
@@ -333,6 +354,27 @@ window.initEmployeeManagement = (supabase) => {
             editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
             editEmployeeStatus.classList.add("status--error");
             void editEmployeeStatus.offsetWidth; // Force reflow to restart animation
+            editEmployeeStatus.classList.add("status--shake");
+            return;
+        }
+
+        // Validate allowed characters
+        const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.]+$/;
+        if (!namePattern.test(newName)) {
+            editEmployeeStatus.textContent = "Only letters, spaces, hyphens, apostrophes, and periods are allowed.";
+            editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
+            editEmployeeStatus.classList.add("status--error");
+            void editEmployeeStatus.offsetWidth;
+            editEmployeeStatus.classList.add("status--shake");
+            return;
+        }
+
+        // Validate length
+        if (newName.length > 30) {
+            editEmployeeStatus.textContent = "Employee name cannot exceed 30 characters.";
+            editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
+            editEmployeeStatus.classList.add("status--error");
+            void editEmployeeStatus.offsetWidth;
             editEmployeeStatus.classList.add("status--shake");
             return;
         }

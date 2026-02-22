@@ -15,7 +15,7 @@
         <div class="fields">
             <div>
                 <label for="edit-employee-name">Employee Name <span class="required">*</span></label>
-                <input id="edit-employee-name" type="text" placeholder="Enter employee name" required>
+                <input id="edit-employee-name" type="text" placeholder="Enter employee name" maxlength="30" pattern="[a-zA-ZÀ-ÿ\s\-'.]+" title="Only letters, spaces, hyphens, apostrophes, and periods allowed" required>
             </div>
         </div>
         <span class="status hidden" id="edit-employee-status"></span>
