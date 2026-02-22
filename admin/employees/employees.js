@@ -68,6 +68,9 @@ window.initEmployeeManagement = (supabase) => {
                         <span class="employee-header-action">Action</span>
                     </div>
                     <p class="no-employees">No employees found.</p>
+                    <div class="employee-summary">
+                        Total: 0 | Active: 0 | Inactive: 0
+                    </div>
                 `;
                 return;
             }
@@ -79,7 +82,12 @@ window.initEmployeeManagement = (supabase) => {
                 </div>
             `;
 
-            employeeListContainer.innerHTML = tableHeader + allEmployeesData.map(emp => {
+            // Calculate employee counts
+            const totalCount = allEmployeesData.length;
+            const activeCount = allEmployeesData.filter(emp => emp.is_active !== false).length;
+            const inactiveCount = totalCount - activeCount;
+
+            const employeeItems = allEmployeesData.map(emp => {
                 // Ensure is_active is properly boolean (handle null/undefined)
                 const isActive = emp.is_active !== false; // Default to true if null/undefined
                 const inactiveClass = !isActive ? ' employee-inactive' : '';
@@ -111,6 +119,14 @@ window.initEmployeeManagement = (supabase) => {
                 </div>
                 `;
             }).join('');
+
+            const employeeSummary = `
+                <div class="employee-summary">
+                    Total: ${totalCount} | Active: ${activeCount} | Inactive: ${inactiveCount}
+                </div>
+            `;
+
+            employeeListContainer.innerHTML = tableHeader + employeeItems + employeeSummary;
 
             // Add toggle active/inactive button listeners
             document.querySelectorAll('.toggle-employee-btn').forEach(btn => {
@@ -202,6 +218,9 @@ window.initEmployeeManagement = (supabase) => {
                     <span class="employee-header-action">Action</span>
                 </div>
                 <p class="error-text">Failed to load employees.</p>
+                <div class="employee-summary">
+                    Total: 0 | Active: 0 | Inactive: 0
+                </div>
             `;
         }
     };
