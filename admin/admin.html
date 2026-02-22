@@ -1894,6 +1894,9 @@
         autoClearCheckbox.addEventListener("change", () => {
             localStorage.setItem("autoClearFields", autoClearCheckbox.checked.toString());
         });
+
+        // Load employees for admin filter (must be called inside viewPanelLoaded scope)
+        loadAdminEmployeesForFilter();
         
         }); // End of viewPanelLoaded.then()
 
@@ -2376,7 +2379,7 @@
         })();
         
         // loadEmployees() is now called in uploadPanelLoaded.then() to ensure proper initialization
-        loadAdminEmployeesForFilter();
+        // Note: loadAdminEmployeesForFilter() is called inside viewPanelLoaded.then() where it's defined
 
         // Preload travel authorities data in the background for faster first load
         Promise.all([employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
@@ -2391,7 +2394,7 @@
         // Restore last active panel (wait for panels to load first)
         Promise.all([viewPanelLoaded, employeePanelLoaded, usersPanelLoaded, uploadPanelLoaded]).then(() => {
             const savedPanel = localStorage.getItem("adminActivePanel");
-            if (!savedPanel || savedPanel === "upload-panel" || savedPanel === "users-panel") return;
+            if (!savedPanel || savedPanel === "upload-panel") return;
             const targetBtn = document.querySelector(`.switch-btn[data-panel="${savedPanel}"]`);
             if (!targetBtn || targetBtn.classList.contains("hidden")) return;
             targetBtn.click();
