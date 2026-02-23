@@ -607,6 +607,41 @@
             }
         });
 
+        // Parse a comma-separated employee string, respecting names that contain commas (e.g. "Aban, Jr.")
+        const parseEmployeeNames = (employeesStr) => {
+            if (!employeesStr) return [];
+            const knownNames = employeesList.map(emp => emp.name);
+            // Sort by length descending so longer names (with commas) match first
+            const sortedNames = knownNames.slice().sort((a, b) => b.length - a.length);
+            const result = [];
+            let remaining = employeesStr.trim();
+
+            while (remaining.length > 0) {
+                let matched = false;
+                for (const name of sortedNames) {
+                    if (remaining.startsWith(name)) {
+                        result.push(name);
+                        remaining = remaining.substring(name.length).replace(/^,\s*/, '');
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    // Fallback: take until next comma
+                    const commaIdx = remaining.indexOf(',');
+                    if (commaIdx > -1) {
+                        result.push(remaining.substring(0, commaIdx).trim());
+                        remaining = remaining.substring(commaIdx + 1).trim();
+                    } else {
+                        if (remaining.trim()) result.push(remaining.trim());
+                        remaining = '';
+                    }
+                }
+            }
+            return result.filter(name => name);
+        };
+        window.adminParseEmployeeNames = parseEmployeeNames;
+
         const renderEmployeesOptions = () => {
             if (window.uploadEmployeesMultiSelect) {
                 window.uploadEmployeesMultiSelect.renderOptions();
@@ -961,7 +996,7 @@
                 // Truncate employees to show max 2
                 let employeesText = row.employees || "-";
                 if (employeesText !== "-") {
-                    const employeeArray = employeesText.split(",").map(e => e.trim());
+                    const employeeArray = parseEmployeeNames(employeesText);
                     if (employeeArray.length > 2) {
                         employeesText = employeeArray.slice(0, 2).join(", ") + "...";
                     }
@@ -1045,7 +1080,7 @@
                     // Populate employees multiselect
                     updateSelectedEmployees.length = 0;
                     if (record.employees) {
-                        const employeeNames = record.employees.split(",").map(name => name.trim()).filter(name => name);
+                        const employeeNames = parseEmployeeNames(record.employees);
                         updateSelectedEmployees.push(...employeeNames);
                     }
                     updateEmployeesMultiSelect.updateDisplay();
@@ -1119,7 +1154,7 @@
 
                 updateSelectedEmployees.length = 0;
                 if (record.employees) {
-                    const employeeNames = record.employees.split(",").map(name => name.trim()).filter(name => name);
+                    const employeeNames = parseEmployeeNames(record.employees);
                     updateSelectedEmployees.push(...employeeNames);
                 }
                 updateEmployeesMultiSelect.updateDisplay();
