@@ -2026,7 +2026,7 @@
                     }
 
                     // Confirm role change
-                    const confirmChange = await showConfirmation(
+                    const confirmChange = await window.adminShowConfirmation(
                         'Confirm Role Change',
                         `Change user role from "${currentRole}" to "${newRole}"?`
                     );
@@ -2052,7 +2052,7 @@
                     
                     // Confirm access change
                     const action = newAccess ? 'enable' : 'disable';
-                    const confirmChange = await showConfirmation(
+                    const confirmChange = await window.adminShowConfirmation(
                         'Confirm Access Change',
                         `Are you sure you want to ${action} access for this user?`
                     );
@@ -2209,12 +2209,12 @@
                 if (usersStatus) {
                     usersStatus.textContent = 'Role updated successfully';
                 }
-                showToast(`Role changed to ${newRole}`, "success");
+                window.showToast(`Role changed to ${newRole}`, "success");
                 
                 // If user changed their own role, logout after showing success message
                 if (isChangingOwnRole) {
                     setTimeout(async () => {
-                        showToast('Your role has changed. Logging out...', "warning");
+                        window.showToast('Your role has changed. Logging out...', "warning");
                         await new Promise(resolve => setTimeout(resolve, 1500));
                         localStorage.removeItem('admin_session_token');
                         localStorage.removeItem('adminActivePanel');
@@ -2257,7 +2257,7 @@
                     usersStatus.textContent = errorMessage;
                     usersStatus.classList.add('status--error');
                 }
-                showToast(errorMessage, "error");
+                window.showToast(errorMessage, "error");
             }
         };
 
@@ -2287,7 +2287,7 @@
                 if (usersStatus) {
                     usersStatus.textContent = 'Access updated successfully';
                 }
-                showToast(`Access ${action}`, "success");
+                window.showToast(`Access ${action}`, "success");
                 
                 // Reload users to refresh the display
                 await loadUsers();
@@ -2322,7 +2322,7 @@
                     usersStatus.textContent = errorMessage;
                     usersStatus.classList.add('status--error');
                 }
-                showToast(errorMessage, "error");
+                window.showToast(errorMessage, "error");
             }
         };
 
