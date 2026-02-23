@@ -1,4 +1,4 @@
-// Employee Management Module
+// Official Management Module
 
 window.initEmployeeManagement = (supabase) => {
     // Get references to required functions and variables from parent scope
@@ -40,7 +40,7 @@ window.initEmployeeManagement = (supabase) => {
                         <span class="employee-header-name">Name</span>
                         <span class="employee-header-action">Action</span>
                     </div>
-                    <p class="loading-text">Loading employees...</p>
+                    <p class="loading-text">Loading officials...</p>
                 `;
                 if (employeeSummaryContainer) {
                     employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
@@ -71,7 +71,7 @@ window.initEmployeeManagement = (supabase) => {
                         <span class="employee-header-name">Name</span>
                         <span class="employee-header-action">Action</span>
                     </div>
-                    <p class="no-employees">No employees found.</p>
+                    <p class="no-employees">No officials found.</p>
                 `;
                 if (employeeSummaryContainer) {
                     employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
@@ -99,7 +99,7 @@ window.initEmployeeManagement = (supabase) => {
                 const toggleIcon = !isActive 
                     ? '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>' 
                     : '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
-                const toggleLabel = !isActive ? 'Unhide employee' : 'Hide employee';
+                const toggleLabel = !isActive ? 'Unhide official' : 'Hide official';
                 return `
                 <div class="employee-item${inactiveClass}">
                     <span class="employee-name">${emp.name}${inactiveLabel}</span>
@@ -109,12 +109,12 @@ window.initEmployeeManagement = (supabase) => {
                                 ${toggleIcon}
                             </svg>
                         </button>
-                        <button class="edit-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Update employee" title="Update employee">
+                        <button class="edit-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Update official" title="Update official">
                             <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
                                 <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                             </svg>
                         </button>
-                        <button class="delete-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Delete employee" title="Delete employee">
+                        <button class="delete-employee-btn icon-btn" data-id="${emp.id}" data-name="${emp.name}" aria-label="Delete official" title="Delete official">
                             <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
                                 <path d="M9 3h6l1 2h4a1 1 0 1 1 0 2h-1l-1.1 12.1a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9L5 7H4a1 1 0 0 1 0-2h4l1-2Zm1.1 7a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Zm5.9 0a1 1 0 1 0-2 0v7a1 1 0 1 0 2 0v-7Z" />
                             </svg>
@@ -143,10 +143,10 @@ window.initEmployeeManagement = (supabase) => {
                     
                     // Determine action and meaningful message
                     const action = newStatus ? 'unhide' : 'hide';
-                    const title = newStatus ? 'Unhide Employee' : 'Hide Employee';
+                    const title = newStatus ? 'Unhide Official' : 'Hide Official';
                     const message = newStatus 
-                        ? `Unhide "${employeeName}"?\n\nThis employee will be marked as active and appear without the inactive tag.`
-                        : `Hide "${employeeName}"?\n\nThis employee will be marked as inactive and will appear with an "(Inactive)" tag in all dropdowns and selections. Existing records remain unchanged.`;
+                        ? `Unhide "${employeeName}"?\n\nThis official will be marked as active and appear without the inactive tag.`
+                        : `Hide "${employeeName}"?\n\nThis official will be marked as inactive and will appear with an "(Inactive)" tag in all dropdowns and selections. Existing records remain unchanged.`;
                     
                     // Show confirmation dialog
                     const confirmed = await showConfirmation(title, message);
@@ -164,11 +164,11 @@ window.initEmployeeManagement = (supabase) => {
 
                         const statusText = newStatus ? 'unhidden' : 'hidden';
                         const toastType = newStatus ? 'success' : 'warning';
-                        showToast(`Employee "${employeeName}" ${statusText} successfully!`, toastType);
+                        showToast(`Official "${employeeName}" ${statusText} successfully!`, toastType);
                         await renderEmployeeList();
                     } catch (error) {
                         console.error("Toggle employee status error:", error);
-                        showToast(`Failed to update employee status: ${error.message}`, "error");
+                        showToast(`Failed to update official status: ${error.message}`, "error");
                     }
                 });
             });
@@ -207,7 +207,7 @@ window.initEmployeeManagement = (supabase) => {
                 const adminFilterEmployeeSelect = getAdminFilterEmployeeSelect();
                 setAdminEmployeesListForFilter(allEmployeesData ? allEmployeesData : []);
                 if (adminFilterEmployeeSelect) {
-                    adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                        adminFilterEmployeeSelect.innerHTML = '<option value="">All Officials</option>' +
                         getAdminEmployeesListForFilter().map(emp => {
                             const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
                             return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
@@ -221,7 +221,7 @@ window.initEmployeeManagement = (supabase) => {
                     <span class="employee-header-name">Name</span>
                     <span class="employee-header-action">Action</span>
                 </div>
-                <p class="error-text">Failed to load employees.</p>
+                <p class="error-text">Failed to load officials.</p>
             `;
             if (employeeSummaryContainer) {
                 employeeSummaryContainer.textContent = 'Total: 0 | Active: 0 | Inactive: 0';
@@ -251,7 +251,7 @@ window.initEmployeeManagement = (supabase) => {
         const employeeName = employeeNameInput.value.trim();
 
         if (!employeeName) {
-            employeeStatus.textContent = "Please enter an employee name.";
+            employeeStatus.textContent = "Please enter an official name.";
             employeeStatus.classList.add("status--error");
             employeeStatus.classList.remove("status--shake");
             void employeeStatus.offsetWidth;
@@ -272,7 +272,7 @@ window.initEmployeeManagement = (supabase) => {
 
         // Validate length
         if (employeeName.length > 30) {
-            employeeStatus.textContent = "Employee name cannot exceed 30 characters.";
+            employeeStatus.textContent = "Official name cannot exceed 30 characters.";
             employeeStatus.classList.add("status--error");
             employeeStatus.classList.remove("status--shake");
             void employeeStatus.offsetWidth;
@@ -281,13 +281,13 @@ window.initEmployeeManagement = (supabase) => {
         }
 
         try {
-            employeeStatus.textContent = "Adding employee...";
+            employeeStatus.textContent = "Adding official...";
             employeeStatus.classList.remove("status--error");
 
             // Check if employee already exists in the current list
             const existingEmployee = getEmployeesList().find(emp => emp.name.toLowerCase() === employeeName.toLowerCase());
             if (existingEmployee) {
-                throw new Error(`Employee "${existingEmployee.name}" already exists.`);
+                throw new Error(`Official "${existingEmployee.name}" already exists.`);
             }
 
             const { error } = await supabase
@@ -305,21 +305,21 @@ window.initEmployeeManagement = (supabase) => {
                         .limit(1);
                     
                     if (existingData && existingData.length > 0) {
-                        throw new Error(`Employee "${existingData[0].name}" already exists (ID: ${existingData[0].id}).`);
+                        throw new Error(`Official "${existingData[0].name}" already exists (ID: ${existingData[0].id}).`);
                     } else {
-                        throw new Error("This employee name already exists in the database.");
+                        throw new Error("This official name already exists in the database.");
                     }
                 }
                 throw error;
             }
 
-            employeeStatus.textContent = "Employee added successfully!";
+            employeeStatus.textContent = "Official added successfully!";
             employeeNameInput.value = "";
             await renderEmployeeList();
-            showToast("Employee added successfully!", "success");
+            showToast("Official added successfully!", "success");
         } catch (error) {
             console.error("Add employee error:", error);
-            const message = error && error.message ? error.message : "Failed to add employee.";
+            const message = error && error.message ? error.message : "Failed to add official.";
             employeeStatus.textContent = message;
             employeeStatus.classList.add("status--error");
             employeeStatus.classList.remove("status--shake");
@@ -347,10 +347,10 @@ window.initEmployeeManagement = (supabase) => {
             deleteEmployeeModal.classList.remove("show");
             deleteEmployeeData = null;
             await renderEmployeeList();
-            showToast("Employee removed successfully!", "success");
+            showToast("Official removed successfully!", "success");
         } catch (error) {
             console.error("Delete employee error:", error);
-            showToast("Failed to remove employee.", "error");
+            showToast("Failed to remove official.", "error");
         }
     });
 
@@ -373,7 +373,7 @@ window.initEmployeeManagement = (supabase) => {
 
         const newName = editEmployeeNameInput.value.trim();
         if (!newName) {
-            editEmployeeStatus.textContent = "Please enter an employee name.";
+            editEmployeeStatus.textContent = "Please enter an official name.";
             editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
             editEmployeeStatus.classList.add("status--error");
             void editEmployeeStatus.offsetWidth; // Force reflow to restart animation
@@ -394,7 +394,7 @@ window.initEmployeeManagement = (supabase) => {
 
         // Validate length
         if (newName.length > 30) {
-            editEmployeeStatus.textContent = "Employee name cannot exceed 30 characters.";
+            editEmployeeStatus.textContent = "Official name cannot exceed 30 characters.";
             editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
             editEmployeeStatus.classList.add("status--error");
             void editEmployeeStatus.offsetWidth;
@@ -412,7 +412,7 @@ window.initEmployeeManagement = (supabase) => {
         }
 
         try {
-            editEmployeeStatus.textContent = "Updating employee...";
+            editEmployeeStatus.textContent = "Updating official...";
             editEmployeeStatus.classList.remove("hidden", "status--error", "status--success");
 
             const { data: updatedRows, error } = await supabase
@@ -423,7 +423,7 @@ window.initEmployeeManagement = (supabase) => {
 
             if (error) {
                 if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-                    throw new Error("This employee name already exists.");
+                    throw new Error("This official name already exists.");
                 }
                 throw error;
             }
@@ -433,7 +433,7 @@ window.initEmployeeManagement = (supabase) => {
                 throw new Error("Update failed — record not found or insufficient permissions.");
             }
 
-            editEmployeeStatus.textContent = "Employee updated successfully!";
+            editEmployeeStatus.textContent = "Official updated successfully!";
             editEmployeeStatus.classList.add("status--success");
             editEmployeeStatus.classList.remove("status--error");
             
@@ -445,10 +445,10 @@ window.initEmployeeManagement = (supabase) => {
             }, 1000);
             
             await renderEmployeeList();
-            showToast("Employee updated successfully!", "success");
+            showToast("Official updated successfully!", "success");
         } catch (error) {
             console.error("Edit employee error:", error);
-            const message = error && error.message ? error.message : "Failed to update employee.";
+            const message = error && error.message ? error.message : "Failed to update official.";
             editEmployeeStatus.textContent = message;
             editEmployeeStatus.classList.remove("hidden", "status--success", "status--shake");
             editEmployeeStatus.classList.add("status--error");

@@ -54,12 +54,12 @@
     <div class="page-content">
         <div class="page-header-section">
             <h2 class="page-title">Admin Panel</h2>
-            <p class="page-description">Manage travel authority records, employees, and system settings.</p>
+            <p class="page-description">Manage travel authority records, officials, and system settings.</p>
         </div>
         <div class="panel-switcher">
         <button class="switch-btn active" data-panel="upload-panel">Upload Files</button>
         <button class="switch-btn" data-panel="view-panel">Manage Files </button>
-        <button class="switch-btn" data-panel="employees-panel">Manage Employees</button>
+        <button class="switch-btn" data-panel="employees-panel">Manage Officials</button>
         <button class="switch-btn hidden" id="users-panel-btn" data-panel="users-panel">Manage User</button>
     </div>
         <div id="upload-panel-container"></div>
@@ -492,7 +492,7 @@
 
             const updateDisplay = () => {
                 if (selectedArray.length === 0) {
-                    display.innerHTML = '<span class=\"multiselect-placeholder\">Select employees...</span>';
+                    display.innerHTML = '<span class=\"multiselect-placeholder\">Select officials...</span>';
                 } else {
                     display.innerHTML = selectedArray.map(name => 
                         `<span class=\"multiselect-tag\">${name}<button type=\"button\" class=\"multiselect-remove\" data-name=\"${name}\">&times;</button></span>`
@@ -1294,7 +1294,7 @@
                 adminEmployeesListForFilter = data ? data : [];
                 
                 // Populate filter dropdown
-                adminFilterEmployeeSelect.innerHTML = '<option value="">All Employees</option>' +
+                adminFilterEmployeeSelect.innerHTML = '<option value="">All Officials</option>' +
                     adminEmployeesListForFilter.map(emp => {
                         const inactiveLabel = emp.is_active === false ? ' (Inactive)' : '';
                         return `<option value="${emp.name}">${emp.name}${inactiveLabel}</option>`;
