@@ -166,6 +166,10 @@ window.initEmployeeManagement = (supabase) => {
                         const toastType = newStatus ? 'success' : 'warning';
                         showToast(`Official "${employeeName}" ${statusText} successfully!`, toastType);
                         await renderEmployeeList();
+                        // Refresh the global employee list for dropdowns
+                        if (window.adminLoadEmployees) {
+                            await window.adminLoadEmployees();
+                        }
                     } catch (error) {
                         console.error("Toggle employee status error:", error);
                         showToast(`Failed to update official status: ${error.message}`, "error");
@@ -316,6 +320,10 @@ window.initEmployeeManagement = (supabase) => {
             employeeStatus.textContent = "Official added successfully!";
             employeeNameInput.value = "";
             await renderEmployeeList();
+            // Refresh the global employee list for dropdowns
+            if (window.adminLoadEmployees) {
+                await window.adminLoadEmployees();
+            }
             showToast("Official added successfully!", "success");
         } catch (error) {
             console.error("Add employee error:", error);
@@ -347,6 +355,10 @@ window.initEmployeeManagement = (supabase) => {
             deleteEmployeeModal.classList.remove("show");
             deleteEmployeeData = null;
             await renderEmployeeList();
+            // Refresh the global employee list for dropdowns
+            if (window.adminLoadEmployees) {
+                await window.adminLoadEmployees();
+            }
             showToast("Official removed successfully!", "success");
         } catch (error) {
             console.error("Delete employee error:", error);
@@ -445,6 +457,10 @@ window.initEmployeeManagement = (supabase) => {
             }, 1000);
             
             await renderEmployeeList();
+            // Refresh the global employee list for dropdowns
+            if (window.adminLoadEmployees) {
+                await window.adminLoadEmployees();
+            }
             showToast("Official updated successfully!", "success");
         } catch (error) {
             console.error("Edit employee error:", error);

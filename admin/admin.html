@@ -483,6 +483,9 @@
                 employeesList = [];
             }
         };
+        
+        // Expose loadEmployees globally so it can be called from employees.js
+        window.adminLoadEmployees = loadEmployees;
 
         const createMultiSelect = (displayId, dropdownId, searchId, optionsId, selectedArray) => {
             const display = document.getElementById(displayId);
