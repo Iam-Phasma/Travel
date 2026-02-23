@@ -180,6 +180,9 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
         return await combineFilesToPDF(files, taNumber);
     };
 
+    // Expose for use in admin.html update flow
+    window.validateAndProcessFiles = validateAndProcessFiles;
+
     // Use validation functions from global scope (defined in admin.html)
     const isValidTaNumber = window.isValidTaNumber;
     const bindTaFormatter = window.bindTaFormatter;

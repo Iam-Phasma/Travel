@@ -1739,7 +1739,7 @@
                     // Validate and process files (PDF or images)
                     updateStatus.textContent = 'Processing files...';
                     
-                    const processedFile = await validateAndProcessFiles(updateScanFileInput, taNumber);
+                    const processedFile = await window.validateAndProcessFiles(updateScanFileInput, taNumber);
                     const processedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
                     
                     // Check if file is still too large
