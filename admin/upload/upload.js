@@ -1,3 +1,132 @@
+// ============================================
+// FILE PROCESSING UTILITIES (available immediately on script load)
+// ============================================
+
+// Convert images and PDFs to a single combined PDF
+const combineFilesToPDF = async (files, taNumber) => {
+    const { PDFDocument } = window.PDFLib;
+    const finalPdf = await PDFDocument.create();
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        if (file.type === 'application/pdf') {
+            // Handle PDF - copy all pages
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const copiedPages = await finalPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+            copiedPages.forEach((page) => finalPdf.addPage(page));
+        } else if (file.type.startsWith('image/')) {
+            // Handle image - add as new page
+            const imgData = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+
+            // Get image dimensions
+            const img = await new Promise((resolve) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.src = imgData;
+            });
+
+            // Create a new page in A4 size
+            const pageWidth = 595.28; // A4 width in points
+            const pageHeight = 841.89; // A4 height in points
+            const page = finalPdf.addPage([pageWidth, pageHeight]);
+
+            // Embed image
+            let embeddedImage;
+            const imageBytes = await fetch(imgData).then(res => res.arrayBuffer());
+            
+            if (file.type === 'image/png') {
+                embeddedImage = await finalPdf.embedPng(imageBytes);
+            } else {
+                embeddedImage = await finalPdf.embedJpg(imageBytes);
+            }
+
+            // Calculate scaling to fit image on page while maintaining aspect ratio
+            const margin = 28.35; // 10mm margin in points
+            const maxWidth = pageWidth - (margin * 2);
+            const maxHeight = pageHeight - (margin * 2);
+
+            let imgWidth = embeddedImage.width;
+            let imgHeight = embeddedImage.height;
+            const aspectRatio = imgWidth / imgHeight;
+
+            if (imgWidth > imgHeight) {
+                imgWidth = maxWidth;
+                imgHeight = imgWidth / aspectRatio;
+            } else {
+                imgHeight = maxHeight;
+                imgWidth = imgHeight * aspectRatio;
+            }
+
+            // Further scale down if still too large
+            if (imgWidth > maxWidth) {
+                imgWidth = maxWidth;
+                imgHeight = imgWidth / aspectRatio;
+            }
+            if (imgHeight > maxHeight) {
+                imgHeight = maxHeight;
+                imgWidth = imgHeight * aspectRatio;
+            }
+
+            // Center image on page
+            const x = (pageWidth - imgWidth) / 2;
+            const y = (pageHeight - imgHeight) / 2;
+
+            page.drawImage(embeddedImage, {
+                x: x,
+                y: y,
+                width: imgWidth,
+                height: imgHeight,
+            });
+        }
+    }
+
+    // Save the combined PDF
+    const pdfBytes = await finalPdf.save({
+        useObjectStreams: true,
+        addDefaultPage: false
+    });
+
+    return new File([pdfBytes], `${taNumber}.pdf`, {
+        type: 'application/pdf',
+        lastModified: Date.now()
+    });
+};
+
+// Validate and process files (PDF and/or images combined)
+window.validateAndProcessFiles = async (fileInput, taNumber) => {
+    const files = Array.from(fileInput.files);
+    
+    if (files.length === 0) {
+        throw new Error('No file selected');
+    }
+
+    // Validate: max 10 total files (PDFs + images combined)
+    if (files.length > 10) {
+        throw new Error('Maximum 10 files allowed (PDFs and images combined)');
+    }
+
+    // Check file types
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const invalidFiles = files.filter(f => !validTypes.includes(f.type));
+    
+    if (invalidFiles.length > 0) {
+        throw new Error('Only PDF, JPEG, and PNG files are supported');
+    }
+
+    // Combine all files (PDFs and images) into one PDF
+    return await combineFilesToPDF(files, taNumber);
+};
+
+// ============================================
+// UPLOAD PANEL INITIALIZATION
+// ============================================
+
 // Upload panel initialization and management
 window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSelect) {
     const uploadStatus = document.getElementById("upload-status");
@@ -7,181 +136,6 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
     const travelDateInput = document.getElementById("travel-date");
     const travelUntilInput = document.getElementById("travel-until");
     const scanFileInput = document.getElementById("scan-file");
-
-    // PDF compression function with multiple strategies
-    const compressPDF = async (file, maxSizeMB = 5) => {
-        // Only process PDFs
-        if (file.type !== 'application/pdf') {
-            return file;
-        }
-
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const { PDFDocument } = window.PDFLib;
-            const pdfDoc = await PDFDocument.load(arrayBuffer);
-
-            // Try multiple compression strategies
-            let compressedPdfBytes;
-            
-            // Strategy 1: Maximum compression with object streams
-            try {
-                compressedPdfBytes = await pdfDoc.save({
-                    useObjectStreams: true,
-                    addDefaultPage: false,
-                    objectsPerTick: 50
-                });
-            } catch (e) {
-                // Strategy 2: Fallback without object streams
-                compressedPdfBytes = await pdfDoc.save({
-                    useObjectStreams: false,
-                    addDefaultPage: false
-                });
-            }
-
-            const compressedSize = compressedPdfBytes.length;
-
-            // Create a new File object from the compressed bytes
-            const compressedFile = new File([compressedPdfBytes], file.name, {
-                type: 'application/pdf',
-                lastModified: Date.now()
-            });
-
-            // Warn if still too large
-            if (compressedSize > maxSizeMB * 1024 * 1024) {
-                console.warn(`PDF still exceeds ${maxSizeMB}MB after compression. Current size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB`);
-            }
-
-            return compressedFile;
-        } catch (error) {
-            console.error('PDF compression error:', error);
-            // Return original file if compression fails
-            return file;
-        }
-    };
-
-    // Convert images and PDFs to a single combined PDF
-    const combineFilesToPDF = async (files, taNumber) => {
-        const { PDFDocument } = window.PDFLib;
-        const finalPdf = await PDFDocument.create();
-
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-
-            if (file.type === 'application/pdf') {
-                // Handle PDF - copy all pages
-                const arrayBuffer = await file.arrayBuffer();
-                const pdfDoc = await PDFDocument.load(arrayBuffer);
-                const copiedPages = await finalPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
-                copiedPages.forEach((page) => finalPdf.addPage(page));
-            } else if (file.type.startsWith('image/')) {
-                // Handle image - add as new page
-                const imgData = await new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.readAsDataURL(file);
-                });
-
-                // Get image dimensions
-                const img = await new Promise((resolve) => {
-                    const image = new Image();
-                    image.onload = () => resolve(image);
-                    image.src = imgData;
-                });
-
-                // Create a new page in A4 size
-                const pageWidth = 595.28; // A4 width in points
-                const pageHeight = 841.89; // A4 height in points
-                const page = finalPdf.addPage([pageWidth, pageHeight]);
-
-                // Embed image
-                let embeddedImage;
-                const imageBytes = await fetch(imgData).then(res => res.arrayBuffer());
-                
-                if (file.type === 'image/png') {
-                    embeddedImage = await finalPdf.embedPng(imageBytes);
-                } else {
-                    embeddedImage = await finalPdf.embedJpg(imageBytes);
-                }
-
-                // Calculate scaling to fit image on page while maintaining aspect ratio
-                const margin = 28.35; // 10mm margin in points
-                const maxWidth = pageWidth - (margin * 2);
-                const maxHeight = pageHeight - (margin * 2);
-
-                let imgWidth = embeddedImage.width;
-                let imgHeight = embeddedImage.height;
-                const aspectRatio = imgWidth / imgHeight;
-
-                if (imgWidth > imgHeight) {
-                    imgWidth = maxWidth;
-                    imgHeight = imgWidth / aspectRatio;
-                } else {
-                    imgHeight = maxHeight;
-                    imgWidth = imgHeight * aspectRatio;
-                }
-
-                // Further scale down if still too large
-                if (imgWidth > maxWidth) {
-                    imgWidth = maxWidth;
-                    imgHeight = imgWidth / aspectRatio;
-                }
-                if (imgHeight > maxHeight) {
-                    imgHeight = maxHeight;
-                    imgWidth = imgHeight * aspectRatio;
-                }
-
-                // Center image on page
-                const x = (pageWidth - imgWidth) / 2;
-                const y = (pageHeight - imgHeight) / 2;
-
-                page.drawImage(embeddedImage, {
-                    x: x,
-                    y: y,
-                    width: imgWidth,
-                    height: imgHeight,
-                });
-            }
-        }
-
-        // Save the combined PDF
-        const pdfBytes = await finalPdf.save({
-            useObjectStreams: true,
-            addDefaultPage: false
-        });
-
-        return new File([pdfBytes], `${taNumber}.pdf`, {
-            type: 'application/pdf',
-            lastModified: Date.now()
-        });
-    };
-
-    // Validate and process files (PDF and/or images combined)
-    const validateAndProcessFiles = async (fileInput, taNumber) => {
-        const files = Array.from(fileInput.files);
-        
-        if (files.length === 0) {
-            throw new Error('No file selected');
-        }
-
-        // Validate: max 10 total files (PDFs + images combined)
-        if (files.length > 10) {
-            throw new Error('Maximum 10 files allowed (PDFs and images combined)');
-        }
-
-        // Check file types
-        const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-        const invalidFiles = files.filter(f => !validTypes.includes(f.type));
-        
-        if (invalidFiles.length > 0) {
-            throw new Error('Only PDF, JPEG, and PNG files are supported');
-        }
-
-        // Combine all files (PDFs and images) into one PDF
-        return await combineFilesToPDF(files, taNumber);
-    };
-
-    // Expose for use in admin.html update flow
-    window.validateAndProcessFiles = validateAndProcessFiles;
 
     // Use validation functions from global scope (defined in admin.html)
     const isValidTaNumber = window.isValidTaNumber;
@@ -336,7 +290,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
             uploadStatus.textContent = 'Processing files...';
             uploadStatus.classList.remove("status--error");
 
-            const processedFile = await validateAndProcessFiles(scanFileInput, taNumber);
+            const processedFile = await window.validateAndProcessFiles(scanFileInput, taNumber);
             const processedSizeMB = (processedFile.size / 1024 / 1024).toFixed(2);
             
             // Check if file is still too large
