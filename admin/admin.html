@@ -562,6 +562,9 @@
                 if (headerPopup && (headerPopup.contains(e.target) || e.target === userMenuBtn || userMenuBtn?.contains(e.target))) {
                     return;
                 }
+                if (dropdown.classList.contains('show')) {
+                    search.value = ''; // Clear search input when closing dropdown
+                }
                 dropdown.classList.remove('show');
             });
 
