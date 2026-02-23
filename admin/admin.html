@@ -534,6 +534,7 @@
                             const name = opt.getAttribute('data-name');
                             if (!selectedArray.includes(name)) {
                                 selectedArray.push(name);
+                                search.value = ''; // Clear search input after selection
                                 updateDisplay();
                                 renderOptions();
                             }
