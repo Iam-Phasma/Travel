@@ -845,8 +845,76 @@
             travelDate: "",
             matchAll: false
         };
+        let adminActiveSort = {
+            by: "",
+            order: "asc"
+        };
         let adminEmployeesListForFilter = [];
         window.adminEmployeesListForFilter = adminEmployeesListForFilter;
+
+        // Helper functions for localStorage persistence
+        const saveAdminFiltersToStorage = () => {
+            localStorage.setItem('adminFilters', JSON.stringify(adminActiveFilters));
+        };
+
+        const loadAdminFiltersFromStorage = () => {
+            const saved = localStorage.getItem('adminFilters');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    adminActiveFilters = { ...adminActiveFilters, ...parsed };
+                } catch (e) {
+                    console.error('Failed to parse saved admin filters:', e);
+                }
+            }
+        };
+
+        const saveAdminSortToStorage = () => {
+            localStorage.setItem('adminSort', JSON.stringify(adminActiveSort));
+        };
+
+        const loadAdminSortFromStorage = () => {
+            const saved = localStorage.getItem('adminSort');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    adminActiveSort = { ...adminActiveSort, ...parsed };
+                } catch (e) {
+                    console.error('Failed to parse saved admin sort:', e);
+                }
+            }
+        };
+
+        const updateAdminButtonStates = () => {
+            const adminFilterToggleBtn = document.getElementById("admin-filter-toggle-btn");
+            const adminSortToggleBtn = document.getElementById("admin-sort-toggle-btn");
+            
+            // Check if filters are active (not default)
+            const isFilterActive = adminActiveFilters.taNumber || 
+                adminActiveFilters.employee || 
+                (adminActiveFilters.year && adminActiveFilters.year !== new Date().getFullYear().toString()) || 
+                adminActiveFilters.travelDate || 
+                adminActiveFilters.matchAll;
+            
+            // Check if sort is active
+            const isSortActive = adminActiveSort.by !== "";
+            
+            if (adminFilterToggleBtn) {
+                if (isFilterActive) {
+                    adminFilterToggleBtn.classList.add('active');
+                } else {
+                    adminFilterToggleBtn.classList.remove('active');
+                }
+            }
+            
+            if (adminSortToggleBtn) {
+                if (isSortActive) {
+                    adminSortToggleBtn.classList.add('active');
+                } else {
+                    adminSortToggleBtn.classList.remove('active');
+                }
+            }
+        };
 
         const showToast = (message, type = 'success', duration = 2600) => {
             if (!toast) return;
@@ -979,21 +1047,48 @@
             });
         };
 
+        const applyAdminClientSorting = (rows) => {
+            if (!adminActiveSort.by) {
+                return rows;
+            }
+
+            const sorted = [...rows].sort((a, b) => {
+                let aVal, bVal;
+
+                if (adminActiveSort.by === 'ta') {
+                    aVal = a.ta_number || '';
+                    bVal = b.ta_number || '';
+                } else if (adminActiveSort.by === 'travel-date') {
+                    aVal = a.travel_date || '';
+                    bVal = b.travel_date || '';
+                }
+
+                if (adminActiveSort.order === 'asc') {
+                    return aVal.localeCompare(bVal);
+                } else {
+                    return bVal.localeCompare(aVal);
+                }
+            });
+
+            return sorted;
+        };
+
         const renderViewRows = (rows) => {
             const filteredRows = applyAdminClientFilters(rows);
+            const sortedRows = applyAdminClientSorting(filteredRows);
             
-            if (!filteredRows.length) {
+            if (!sortedRows.length) {
                 recordCache.clear();
                 viewBody.innerHTML = "<tr><td colspan=\"8\">No records match the current filters.</td></tr>";
                 return;
             }
 
             recordCache.clear();
-            filteredRows.forEach((row) => {
+            sortedRows.forEach((row) => {
                 recordCache.set(String(row.id), row);
             });
 
-            viewBody.innerHTML = filteredRows.map((row) => {
+            viewBody.innerHTML = sortedRows.map((row) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
                 const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
@@ -1389,6 +1484,8 @@
             adminActiveFilters.year = adminFilterYearSelect.value;
             adminActiveFilters.travelDate = adminFilterTravelDateInput.value;
             adminActiveFilters.matchAll = adminFilterMatchAllCheckbox.checked;
+            saveAdminFiltersToStorage();
+            updateAdminButtonStates();
             renderViewRows(viewRows);
             updateViewFooter();
             adminFilterPanel.classList.remove("show");
@@ -1405,14 +1502,52 @@
             adminFilterYearSelect.value = "";
             adminFilterTravelDateInput.value = "";
             adminFilterMatchAllCheckbox.checked = false;
+            saveAdminFiltersToStorage();
+            updateAdminButtonStates();
             renderViewRows(viewRows);
             updateViewFooter();
         });
 
-        // Close admin filter panel when clicking outside
+        // Admin sort panel functionality
+        const adminSortToggleBtn = document.getElementById("admin-sort-toggle-btn");
+        const adminSortPanel = document.getElementById("admin-sort-panel");
+        const adminApplySortBtn = document.getElementById("admin-apply-sort-btn");
+        const adminClearSortBtn = document.getElementById("admin-clear-sort-btn");
+        const adminSortBySelect = document.getElementById("admin-sort-by");
+        const adminSortOrderSelect = document.getElementById("admin-sort-order");
+
+        adminSortToggleBtn.addEventListener("click", () => {
+            adminSortPanel.classList.toggle("show");
+        });
+
+        adminApplySortBtn.addEventListener("click", () => {
+            adminActiveSort.by = adminSortBySelect.value;
+            adminActiveSort.order = adminSortOrderSelect.value;
+            saveAdminSortToStorage();
+            updateAdminButtonStates();
+            renderViewRows(viewRows);
+            updateViewFooter();
+            adminSortPanel.classList.remove("show");
+        });
+
+        adminClearSortBtn.addEventListener("click", () => {
+            adminActiveSort.by = "";
+            adminActiveSort.order = "asc";
+            adminSortBySelect.value = "ta";
+            adminSortOrderSelect.value = "asc";
+            saveAdminSortToStorage();
+            updateAdminButtonStates();
+            renderViewRows(viewRows);
+            updateViewFooter();
+        });
+
+        // Close admin filter and sort panels when clicking outside
         document.addEventListener("click", (e) => {
             if (!adminFilterPanel.contains(e.target) && !adminFilterToggleBtn.contains(e.target) && adminFilterPanel.classList.contains("show")) {
                 adminFilterPanel.classList.remove("show");
+            }
+            if (!adminSortPanel.contains(e.target) && !adminSortToggleBtn.contains(e.target) && adminSortPanel.classList.contains("show")) {
+                adminSortPanel.classList.remove("show");
             }
         });
 
@@ -1938,7 +2073,26 @@
         });
 
         // Load employees for admin filter (must be called inside viewPanelLoaded scope)
+        // Load saved filters and sort from localStorage
+        loadAdminFiltersFromStorage();
+        loadAdminSortFromStorage();
+        
+        // Restore UI state from loaded filters/sort
+        if (adminFilterTaNumberInput) adminFilterTaNumberInput.value = adminActiveFilters.taNumber || "";
+        if (adminFilterEmployeeSelect) adminFilterEmployeeSelect.value = adminActiveFilters.employee || "";
+        if (adminFilterYearSelect) adminFilterYearSelect.value = adminActiveFilters.year || "";
+        if (adminFilterTravelDateInput) adminFilterTravelDateInput.value = adminActiveFilters.travelDate || "";
+        if (adminFilterMatchAllCheckbox) adminFilterMatchAllCheckbox.checked = adminActiveFilters.matchAll || false;
+        
+        if (adminSortBySelect) adminSortBySelect.value = adminActiveSort.by || "ta";
+        if (adminSortOrderSelect) adminSortOrderSelect.value = adminActiveSort.order || "asc";
+        
         loadAdminEmployeesForFilter();
+        
+        // Update button states after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            updateAdminButtonStates();
+        }, 100);
         
         }); // End of viewPanelLoaded.then()
 

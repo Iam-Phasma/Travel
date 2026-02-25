@@ -1470,7 +1470,7 @@ button:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
+    padding: 8px 12px;
     border-radius: 8px;
     background: rgba(47, 111, 179, 0.15);
     color: var(--sea);
@@ -1502,6 +1502,23 @@ button:hover {
     animation: new-data-pulse 1.4s ease-out infinite;
     color: #2563eb;
     background: rgba(37, 99, 235, 0.15);
+}
+
+/* Active state for filter and sort buttons */
+.filter-icon-btn.active {
+    background: var(--ink);
+    color: white;
+}
+
+.filter-icon-btn.active:hover {
+    background: #081430;
+}
+
+.filter-icon-btn .btn-label {
+    margin-left: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .filter-panel {

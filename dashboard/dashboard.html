@@ -48,15 +48,23 @@
             <div class="panel-head">
                 <h2>Records</h2>
                 <div class="panel-head-actions">
-                    <button id="filter-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle filters" title="Filter">
-                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                        </svg>
-                    </button>
                     <button id="refresh-table-btn" class="filter-icon-btn" type="button" aria-label="Refresh table" title="Refresh">
                         <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
                             <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                         </svg>
+                        <span class="btn-label">Refresh</span>
+                    </button>
+                    <button id="sort-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle sort" title="Sort">
+                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                        </svg>
+                        <span class="btn-label">Sort</span>
+                    </button>
+                    <button id="filter-toggle-btn" class="filter-icon-btn" type="button" aria-label="Toggle filters" title="Filter">
+                        <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                            <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                        </svg>
+                        <span class="btn-label">Filter</span>
                     </button>
                     <span class="pill">Read only</span>
                 </div>
@@ -96,6 +104,31 @@
                     <div class="filter-actions">
                         <button id="clear-filter-btn" class="filter-btn clear-btn" type="button">Clear Filter</button>
                         <button id="apply-filter-btn" class="filter-btn apply-btn" type="button">Apply Filter</button>
+                    </div>
+                </div>
+            </div>
+            <div id="sort-panel" class="filter-panel">
+                <div class="filter-content">
+                    <h3>Sort Options</h3>
+                    <div class="filter-fields">
+                        <div class="filter-field">
+                            <label for="sort-by">Sort by</label>
+                            <select id="sort-by" class="filter-select">
+                                <option value="ta">TA Number</option>
+                                <option value="travel-date">Travel Date</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label for="sort-order">Order</label>
+                            <select id="sort-order" class="filter-select">
+                                <option value="asc">A-Z (Ascending)</option>
+                                <option value="desc">Z-A (Descending)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="clear-sort-btn" class="filter-btn clear-btn" type="button">Clear Sort</button>
+                        <button id="apply-sort-btn" class="filter-btn apply-btn" type="button">Apply Sort</button>
                     </div>
                 </div>
             </div>
@@ -416,7 +449,75 @@
             travelDate: "",
             matchAll: false
         };
+        let activeSort = {
+            by: "",
+            order: "asc"
+        };
         let employeesListForFilter = [];
+
+        // Helper functions for localStorage persistence
+        const saveFiltersToStorage = () => {
+            localStorage.setItem('dashboardFilters', JSON.stringify(activeFilters));
+        };
+
+        const loadFiltersFromStorage = () => {
+            const saved = localStorage.getItem('dashboardFilters');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    activeFilters = { ...activeFilters, ...parsed };
+                } catch (e) {
+                    console.error('Failed to parse saved filters:', e);
+                }
+            }
+        };
+
+        const saveSortToStorage = () => {
+            localStorage.setItem('dashboardSort', JSON.stringify(activeSort));
+        };
+
+        const loadSortFromStorage = () => {
+            const saved = localStorage.getItem('dashboardSort');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    activeSort = { ...activeSort, ...parsed };
+                } catch (e) {
+                    console.error('Failed to parse saved sort:', e);
+                }
+            }
+        };
+
+        const updateButtonStates = () => {
+            const filterToggleBtn = document.getElementById("filter-toggle-btn");
+            const sortToggleBtn = document.getElementById("sort-toggle-btn");
+            
+            // Check if filters are active (not default)
+            const isFilterActive = activeFilters.taNumber || 
+                activeFilters.employee || 
+                (activeFilters.year && activeFilters.year !== new Date().getFullYear().toString()) || 
+                activeFilters.travelDate || 
+                activeFilters.matchAll;
+            
+            // Check if sort is active
+            const isSortActive = activeSort.by !== "";
+            
+            if (filterToggleBtn) {
+                if (isFilterActive) {
+                    filterToggleBtn.classList.add('active');
+                } else {
+                    filterToggleBtn.classList.remove('active');
+                }
+            }
+            
+            if (sortToggleBtn) {
+                if (isSortActive) {
+                    sortToggleBtn.classList.add('active');
+                } else {
+                    sortToggleBtn.classList.remove('active');
+                }
+            }
+        };
 
         const toast = document.getElementById("toast");
         let toastTimer = null;
@@ -497,15 +598,42 @@
             });
         };
 
+        const applyClientSorting = (rows) => {
+            if (!activeSort.by) {
+                return rows;
+            }
+
+            const sorted = [...rows].sort((a, b) => {
+                let aVal, bVal;
+
+                if (activeSort.by === 'ta') {
+                    aVal = a.ta_number || '';
+                    bVal = b.ta_number || '';
+                } else if (activeSort.by === 'travel-date') {
+                    aVal = a.travel_date || '';
+                    bVal = b.travel_date || '';
+                }
+
+                if (activeSort.order === 'asc') {
+                    return aVal.localeCompare(bVal);
+                } else {
+                    return bVal.localeCompare(aVal);
+                }
+            });
+
+            return sorted;
+        };
+
         const renderRows = (rows) => {
             const filteredRows = applyClientFilters(rows);
+            const sortedRows = applyClientSorting(filteredRows);
             
-            if (!filteredRows.length) {
+            if (!sortedRows.length) {
                 taBody.innerHTML = "<tr><td colspan=\"8\">No records match the current filters.</td></tr>";
                 return;
             }
 
-            taBody.innerHTML = filteredRows.map((row, index) => {
+            taBody.innerHTML = sortedRows.map((row, index) => {
                 const dateText = row.travel_date ? new Date(row.travel_date).toLocaleDateString() : "-";
                 const untilText = row.travel_until ? new Date(row.travel_until).toLocaleDateString() : "-";
                 const fileUrl = row.file_url || "#";
@@ -546,7 +674,7 @@
             document.querySelectorAll(".view-btn").forEach((btn) => {
                 btn.addEventListener("click", (e) => {
                     const index = Number(e.currentTarget.getAttribute("data-index"));
-                    const record = filteredRows[index];
+                    const record = sortedRows[index];
                     if (!record) return;
 
                     viewTaNumber.textContent = record.ta_number || "-";
@@ -752,6 +880,8 @@
             activeFilters.year = filterYearSelect.value;
             activeFilters.travelDate = filterTravelDateInput.value;
             activeFilters.matchAll = filterMatchAllCheckbox.checked;
+            saveFiltersToStorage();
+            updateButtonStates();
             renderRows(taRows);
             updateTaFooter();
             filterPanel.classList.remove("show");
@@ -768,21 +898,77 @@
             filterYearSelect.value = "";
             filterTravelDateInput.value = "";
             filterMatchAllCheckbox.checked = false;
+            saveFiltersToStorage();
+            updateButtonStates();
             renderRows(taRows);
             updateTaFooter();
         });
 
-        // Close filter panel when clicking outside
+        // Sort panel functionality
+        const sortToggleBtn = document.getElementById("sort-toggle-btn");
+        const sortPanel = document.getElementById("sort-panel");
+        const applySortBtn = document.getElementById("apply-sort-btn");
+        const clearSortBtn = document.getElementById("clear-sort-btn");
+        const sortBySelect = document.getElementById("sort-by");
+        const sortOrderSelect = document.getElementById("sort-order");
+
+        sortToggleBtn.addEventListener("click", () => {
+            sortPanel.classList.toggle("show");
+        });
+
+        applySortBtn.addEventListener("click", () => {
+            activeSort.by = sortBySelect.value;
+            activeSort.order = sortOrderSelect.value;
+            saveSortToStorage();
+            updateButtonStates();
+            renderRows(taRows);
+            updateTaFooter();
+            sortPanel.classList.remove("show");
+        });
+
+        clearSortBtn.addEventListener("click", () => {
+            activeSort.by = "";
+            activeSort.order = "asc";
+            sortBySelect.value = "ta";
+            sortOrderSelect.value = "asc";
+            saveSortToStorage();
+            updateButtonStates();
+            renderRows(taRows);
+            updateTaFooter();
+        });
+
+        // Close filter and sort panels when clicking outside
         document.addEventListener("click", (e) => {
             if (!filterPanel.contains(e.target) && !filterToggleBtn.contains(e.target) && filterPanel.classList.contains("show")) {
                 filterPanel.classList.remove("show");
+            }
+            if (!sortPanel.contains(e.target) && !sortToggleBtn.contains(e.target) && sortPanel.classList.contains("show")) {
+                sortPanel.classList.remove("show");
             }
         });
 
         const init = async () => {
             await requireUser();
+            
+            // Load saved filters and sort from localStorage
+            loadFiltersFromStorage();
+            loadSortFromStorage();
+            
+            // Restore UI state from loaded filters/sort
+            if (filterTaNumberInput) filterTaNumberInput.value = activeFilters.taNumber || "";
+            if (filterEmployeeSelect) filterEmployeeSelect.value = activeFilters.employee || "";
+            if (filterYearSelect) filterYearSelect.value = activeFilters.year || "";
+            if (filterTravelDateInput) filterTravelDateInput.value = activeFilters.travelDate || "";
+            if (filterMatchAllCheckbox) filterMatchAllCheckbox.checked = activeFilters.matchAll || false;
+            
+            if (sortBySelect) sortBySelect.value = activeSort.by || "ta";
+            if (sortOrderSelect) sortOrderSelect.value = activeSort.order || "asc";
+            
             await loadEmployeesForFilter();
             await loadTravelAuthorities(true);
+            
+            // Update button states after loading data
+            updateButtonStates();
             
             // Start heartbeat to track online status
             const updateHeartbeat = async () => {
