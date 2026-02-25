@@ -907,6 +907,16 @@ button:hover {
         font-size: 1rem;
         min-height: 50px;
     }
+
+    /* Hide button labels on small screens - keep only icons */
+    .filter-icon-btn .btn-label {
+        display: none;
+    }
+
+    /* Adjust button padding when labels are hidden */
+    .filter-icon-btn {
+        padding: 10px;
+    }
 }
 
 @media (max-width: 480px) {
