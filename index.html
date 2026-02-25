@@ -574,8 +574,8 @@
              }
 
             try {
-                // Use the current origin for the redirect URL
-                const redirectUrl = window.location.origin + '/index.html';
+                // Use configured production URL for the redirect (works for GitHub Pages)
+                const redirectUrl = supabaseConfig.productionUrl + '/index.html';
                 
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: redirectUrl

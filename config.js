@@ -14,5 +14,11 @@ export const supabaseConfig = {
     
     // Your Supabase anonymous/public key (starts with "eyJ")
     // This key is exposed to the browser - security depends on RLS policies
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdGZicGt0ZWJhamh2d3ZsZmtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNDkzOTQsImV4cCI6MjA4NjkyNTM5NH0.G5K-x2646_M_XJpdiA8lkFk2KeMASK68lUM7kT2vXDI"
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdwdGZicGt0ZWJhamh2d3ZsZmtkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNDkzOTQsImV4cCI6MjA4NjkyNTM5NH0.G5K-x2646_M_XJpdiA8lkFk2KeMASK68lUM7kT2vXDI",
+    
+    // ⚠️ IMPORTANT: Set your production URL for password reset emails
+    // For GitHub Pages, use: https://YOUR-USERNAME.github.io/YOUR-REPO-NAME
+    // For custom domain, use: https://yourdomain.com
+    // For local development, use: http://localhost:5500 (or your local server port)
+    productionUrl: "https://iam-phasma.github.io/Travel"
 };
