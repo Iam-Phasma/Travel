@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="header/header.css">
     <link rel="stylesheet" href="footer/footer.css">
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 <body class="login-page">
     <main class="shell">
@@ -42,12 +43,84 @@
                     <input type="checkbox" id="show-password">
                     <span>Show password</span>
                 </label>
+                <div class="forgot-password-container">
+                    <a href="#" id="forgot-password-link" class="forgot-password-link">Forgot Password?</a>
+                </div>
             </div>
             <div class="login-actions">
                 <button id="login-btn" type="button">Sign in</button>
                 <span class="status status--neutral hidden" id="login-status">Enter your credentials.</span>
             </div>
         </section>
+
+        <!-- New Password Panel (shown when user clicks reset link from email) -->
+        <section class="panel hidden" id="new-password-panel">
+            <h2>Set New Password</h2>
+            <div class="fields">
+                <div>
+                    <label for="new-password">New Password <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                                <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 0 1 4 0v2h-4V7Z" />
+                            </svg>
+                        </span>
+                        <input id="new-password" type="password" autocomplete="new-password" placeholder="new password">
+                    </div>
+                </div>
+                <div>
+                    <label for="confirm-password">Confirm Password <span class="required">*</span></label>
+                    <div class="input-wrap">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" role="img" focusable="false">
+                                <path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Zm-7-2a2 2 0 0 1 4 0v2h-4V7Z" />
+                            </svg>
+                        </span>
+                        <input id="confirm-password" type="password" autocomplete="new-password" placeholder="confirm password">
+                    </div>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="show-new-password">
+                    <span>Show password</span>
+                </label>
+            </div>
+            <div class="login-actions">
+                <button id="update-password-btn" type="button">Update Password</button>
+                <span class="status status--neutral hidden" id="update-password-status">Enter your new password.</span>
+            </div>
+        </section>
+
+        <!-- Password Reset Modal -->
+        <div id="reset-password-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Reset Password</h3>
+                    <button class="close-modal" id="close-reset-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="margin-bottom: 16px; color: rgba(15, 26, 31, 0.7); font-size: 0.9rem;">Enter your email address and we'll send you a password reset link.</p>
+                    <div>
+                        <label for="reset-email">Email <span class="required">*</span></label>
+                        <div class="input-wrap">
+                            <span class="icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" role="img" focusable="false">
+                                    <path d="M12 12.2c2.4 0 4.4-2 4.4-4.4S14.4 3.4 12 3.4 7.6 5.4 7.6 7.8s2 4.4 4.4 4.4Zm0 2.2c-3.4 0-8.2 1.7-8.2 5.1v1.1h16.4v-1.1c0-3.4-4.8-5.1-8.2-5.1Z" />
+                                </svg>
+                            </span>
+                            <input id="reset-email" type="email" autocomplete="email" placeholder="email">
+                        </div>
+                    </div>
+                    <!-- hCaptcha container (ready for integration) -->
+                    <!-- To enable hCaptcha: uncomment the script in <head>, add your site key below, and uncomment the verification code in the JavaScript -->
+                    <div id="hcaptcha-container" class="h-captcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 16px; display: none;"></div>
+                    <span class="status status--neutral hidden" id="reset-status">Enter your email address.</span>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-reset-btn" type="button" class="btn-secondary">Cancel</button>
+                    <button id="send-reset-btn" type="button" class="btn-primary">Send Reset Link</button>
+                </div>
+            </div>
+        </div>
 
     </main>
 
@@ -61,9 +134,20 @@
         const emailInput = document.getElementById("email");
         const passwordInput = document.getElementById("password");
         const loginBtn = document.getElementById("login-btn");
+        const loginPanel = document.getElementById("login-panel");
+        const newPasswordPanel = document.getElementById("new-password-panel");
 
         document.getElementById("show-password").addEventListener("change", (e) => {
             passwordInput.type = e.target.checked ? "text" : "password";
+        });
+
+        // Show/hide new password
+        document.getElementById("show-new-password").addEventListener("change", (e) => {
+            const newPasswordInput = document.getElementById("new-password");
+            const confirmPasswordInput = document.getElementById("confirm-password");
+            const type = e.target.checked ? "text" : "password";
+            newPasswordInput.type = type;
+            confirmPasswordInput.type = type;
         });
 
         // Database function to check if user is locked out
@@ -212,7 +296,7 @@
                 return;
             }
 
-            // ✅ Check lockout status from DATABASE (cannot be bypassed)
+            // Check lockout status from DATABASE (cannot be bypassed)
             const lockoutStatus = await checkLockoutStatus(email);
             if (lockoutStatus.locked) {
                 // Start dynamic countdown
@@ -238,7 +322,7 @@
                     throw new Error("Unable to load user session.");
                 }
 
-                // ✅ SUCCESS - Clear failed attempts from DATABASE
+                // SUCCESS - Clear failed attempts from DATABASE
                 await clearLoginAttempts(email);
 
                 const { role, page } = await getRedirectPage(user.id);
@@ -273,7 +357,7 @@
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
 
-                // ✅ FAILED - Record attempt in DATABASE (cannot be bypassed)
+                // FAILED - Record attempt in DATABASE (cannot be bypassed)
                 const attemptResult = await recordFailedAttempt(email);
 
                 if (attemptResult.locked) {
@@ -320,7 +404,211 @@
             }
         });
 
-        redirectIfLoggedIn();
+        // Check if user is in password recovery mode (clicked email link)
+        const checkPasswordRecovery = async () => {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const type = hashParams.get('type');
+            
+            if (type === 'recovery') {
+                // User clicked the reset link from email - show new password form
+                loginPanel.classList.add('hidden');
+                newPasswordPanel.classList.remove('hidden');
+                return true;
+            }
+            return false;
+        };
+
+        // Handle new password update
+        const handlePasswordUpdate = async () => {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const updatePasswordStatus = document.getElementById('update-password-status');
+            const updatePasswordBtn = document.getElementById('update-password-btn');
+
+            if (!newPassword || !confirmPassword) {
+                updatePasswordStatus.textContent = 'Please enter and confirm your new password.';
+                updatePasswordStatus.classList.remove('status--success', 'hidden');
+                updatePasswordStatus.classList.add('status--error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                updatePasswordStatus.textContent = 'Passwords do not match.';
+                updatePasswordStatus.classList.remove('status--success', 'hidden');
+                updatePasswordStatus.classList.add('status--error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                updatePasswordStatus.textContent = 'Password must be at least 6 characters long.';
+                updatePasswordStatus.classList.remove('status--success', 'hidden');
+                updatePasswordStatus.classList.add('status--error');
+                return;
+            }
+
+            updatePasswordStatus.textContent = 'Updating password...';
+            updatePasswordStatus.classList.remove('status--error', 'status--success', 'hidden');
+            updatePasswordBtn.disabled = true;
+
+            try {
+                const { error } = await supabase.auth.updateUser({
+                    password: newPassword
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                updatePasswordStatus.textContent = 'Password updated successfully! Redirecting to login...';
+                updatePasswordStatus.classList.remove('status--error', 'hidden');
+                updatePasswordStatus.classList.add('status--success');
+
+                // Clear the hash from URL and redirect to login
+                setTimeout(() => {
+                    window.location.href = window.location.origin + '/index.html';
+                }, 2000);
+            } catch (error) {
+                console.error('Password update error:', error);
+                updatePasswordStatus.textContent = error.message || 'Failed to update password. Please try again.';
+                updatePasswordStatus.classList.remove('status--success', 'hidden');
+                updatePasswordStatus.classList.add('status--error');
+                updatePasswordBtn.disabled = false;
+            }
+        };
+
+        // Add event listener for update password button
+        document.getElementById('update-password-btn').addEventListener('click', handlePasswordUpdate);
+
+        // Allow Enter key to update password
+        document.getElementById('new-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handlePasswordUpdate();
+            }
+        });
+
+        document.getElementById('confirm-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handlePasswordUpdate();
+            }
+        });
+
+        // Initialize - check if in recovery mode first
+        const initializePage = async () => {
+            const isRecovery = await checkPasswordRecovery();
+            if (!isRecovery) {
+                // Only check login redirect if not in recovery mode
+                await redirectIfLoggedIn();
+            }
+        };
+
+        initializePage();
+
+        // Password Reset Functionality
+        const resetPasswordModal = document.getElementById('reset-password-modal');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const closeResetModal = document.getElementById('close-reset-modal');
+        const cancelResetBtn = document.getElementById('cancel-reset-btn');
+        const sendResetBtn = document.getElementById('send-reset-btn');
+        const resetEmailInput = document.getElementById('reset-email');
+        const resetStatus = document.getElementById('reset-status');
+
+        // Open reset password modal
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            resetPasswordModal.classList.remove('hidden');
+            resetEmailInput.value = emailInput.value; // Pre-fill if email is entered
+            resetEmailInput.focus();
+            resetStatus.classList.add('hidden');
+        });
+
+        // Close modal handlers
+        const closeResetPasswordModal = () => {
+            resetPasswordModal.classList.add('hidden');
+            resetEmailInput.value = '';
+            resetStatus.classList.add('hidden');
+        };
+
+        closeResetModal.addEventListener('click', closeResetPasswordModal);
+        cancelResetBtn.addEventListener('click', closeResetPasswordModal);
+
+        // Close modal when clicking outside
+        resetPasswordModal.addEventListener('click', (e) => {
+            if (e.target === resetPasswordModal) {
+                closeResetPasswordModal();
+            }
+        });
+
+        // Send password reset email
+        sendResetBtn.addEventListener('click', async () => {
+            const email = resetEmailInput.value.trim();
+
+            if (!email) {
+                resetStatus.textContent = 'Please enter your email address.';
+                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.add('status--error');
+                return;
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                resetStatus.textContent = 'Please enter a valid email address.';
+                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.add('status--error');
+                return;
+            }
+
+            resetStatus.textContent = 'Sending reset link...';
+            resetStatus.classList.remove('status--error', 'status--success', 'hidden');
+            sendResetBtn.disabled = true;
+
+            // Optional: Add hCaptcha verification here
+            // Uncomment the following lines when hCaptcha is enabled:
+            const hcaptchaResponse = hcaptcha.getResponse();
+            if (!hcaptchaResponse) {
+                resetStatus.textContent = 'Please complete the CAPTCHA verification.';
+                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.add('status--error');
+                sendResetBtn.disabled = false;
+                return;
+             }
+
+            try {
+                // Use the current origin for the redirect URL
+                const redirectUrl = window.location.origin + '/index.html';
+                
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: redirectUrl
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                resetStatus.textContent = 'Password reset link sent! Check your email.';
+                resetStatus.classList.remove('status--error', 'hidden');
+                resetStatus.classList.add('status--success');
+
+                // Close modal after success
+                setTimeout(() => {
+                    closeResetPasswordModal();
+                }, 3000);
+            } catch (error) {
+                console.error('Password reset error:', error);
+                resetStatus.textContent = error.message || 'Failed to send reset link. Please try again.';
+                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.add('status--error');
+            } finally {
+                sendResetBtn.disabled = false;
+            }
+        });
+
+        // Allow Enter key to send reset email
+        resetEmailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendResetBtn.click();
+            }
+        });
 
         // Prevent browser back navigation after logout
         // This prevents users from navigating back to authenticated pages after logging out

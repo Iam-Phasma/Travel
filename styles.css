@@ -369,6 +369,10 @@ input::-moz-placeholder,
     width: 30%;
 }
 
+#update-password-btn {
+    width: 50%;
+}
+
 button {
     cursor: pointer;
     border: none;
@@ -383,6 +387,144 @@ button {
 button:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 18px rgba(15, 26, 31, 0.25);
+}
+
+/* Forgot Password Link */
+.forgot-password-container {
+    text-align: right;
+    margin-top: 4px;
+}
+
+.forgot-password-link {
+    font-size: 0.85rem;
+    color: var(--sea);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 150ms ease;
+}
+
+.forgot-password-link:hover {
+    color: var(--ink);
+    text-decoration: underline;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 28, 59, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(47, 111, 179, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--ink);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: rgba(15, 26, 31, 0.5);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 150ms ease, color 150ms ease;
+}
+
+.close-modal:hover {
+    background: rgba(47, 111, 179, 0.1);
+    color: var(--ink);
+    transform: none;
+    box-shadow: none;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(47, 111, 179, 0.15);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    background: var(--sea);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 150ms ease, transform 150ms ease;
+}
+
+.btn-primary:hover {
+    background: var(--ink);
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: rgba(47, 111, 179, 0.4);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: rgba(47, 111, 179, 0.1);
+    color: var(--ink);
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 150ms ease, transform 150ms ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(47, 111, 179, 0.2);
+    transform: translateY(-1px);
 }
 
 .status {
