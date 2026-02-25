@@ -1335,7 +1335,7 @@
                 const adminRefreshBtnEl = document.getElementById("admin-refresh-btn");
                 if (data && data.created_at > latestKnownTimestamp) {
                     if (adminRefreshBtnEl) adminRefreshBtnEl.classList.add("has-new-data");
-                    showToast("New records available — click Refresh", "info", 30000);
+                    showToast("New updates available - click Reload", "info", 30000);
                 }
             } catch (e) {}
         };
