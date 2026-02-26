@@ -98,9 +98,16 @@
         // Import Supabase
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
         import { supabaseConfig } from "../config.js";
+        import { initAutoLogout } from "../auto-logout.js";
 
         // Initialize Supabase
         const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
+
+        // Initialize auto-logout (4 minutes warning, 5 minutes total)
+        initAutoLogout(supabase, {
+            warningTime: 4 * 60 * 1000, // 4 minutes
+            logoutTime: 5 * 60 * 1000   // 5 minutes
+        });
 
         // Load upload panel
         const uploadPanelLoaded = fetch('upload/upload-panel.html')

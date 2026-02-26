@@ -2557,3 +2557,199 @@ button:hover {
         padding: 6px 28px 6px 8px;
     }
 }
+
+/* ========================================
+   AUTO-LOGOUT MODAL STYLES
+   ======================================== */
+
+.auto-logout-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.auto-logout-modal.active {
+    display: flex;
+}
+
+.auto-logout-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 28, 59, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.auto-logout-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 40px 32px;
+    max-width: 480px;
+    width: calc(100% - 32px);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(12, 21, 24, 0.25);
+    animation: auto-logout-slide-up 0.3s ease-out;
+}
+
+@keyframes auto-logout-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auto-logout-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background: linear-gradient(135deg, #2f6fb3, #7fb3e6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.auto-logout-icon svg {
+    width: 48px;
+    height: 48px;
+    stroke-width: 2.5;
+}
+
+.auto-logout-content h3 {
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.auto-logout-content p {
+    font-size: 1rem;
+    color: rgba(11, 28, 59, 0.7);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.auto-logout-countdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 32px 0;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(47, 111, 179, 0.08), rgba(127, 179, 230, 0.08));
+    border-radius: 12px;
+    border: 2px solid rgba(47, 111, 179, 0.2);
+}
+
+#auto-logout-seconds {
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--sea);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease;
+}
+
+#auto-logout-seconds.urgent {
+    color: #d32f2f;
+    animation: auto-logout-pulse 1s ease-in-out infinite;
+}
+
+@keyframes auto-logout-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.auto-logout-label {
+    font-size: 1rem;
+    color: rgba(11, 28, 59, 0.6);
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.auto-logout-hint {
+    font-size: 0.9rem !important;
+    color: rgba(11, 28, 59, 0.5) !important;
+    font-style: italic;
+    margin-top: 16px !important;
+    margin-bottom: 24px !important;
+}
+
+.auto-logout-btn-primary {
+    background: linear-gradient(135deg, var(--sea), var(--clay));
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(47, 111, 179, 0.3);
+}
+
+.auto-logout-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(47, 111, 179, 0.4);
+}
+
+.auto-logout-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(47, 111, 179, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .auto-logout-content {
+        padding: 32px 24px;
+    }
+    
+    .auto-logout-icon {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 20px;
+    }
+    
+    .auto-logout-icon svg {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .auto-logout-content h3 {
+        font-size: 1.25rem;
+    }
+    
+    .auto-logout-content p {
+        font-size: 0.9rem;
+    }
+    
+    #auto-logout-seconds {
+        font-size: 3rem;
+    }
+    
+    .auto-logout-countdown {
+        padding: 20px;
+        margin: 24px 0;
+    }
+}
