@@ -299,8 +299,8 @@
             }
 
             // Verify hCaptcha from the login widget
-            const loginHcaptchaWidget = document.getElementById('login-hcaptcha');
-            const hcaptchaResponse = hcaptcha.getResponse(loginHcaptchaWidget);
+            // Use getResponse() without parameters - it gets the response from the visible widget
+            const hcaptchaResponse = hcaptcha.getResponse();
             console.log('Login hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 loginStatus.textContent = "Please complete the CAPTCHA verification.";
@@ -348,7 +348,7 @@
                 await clearLoginAttempts(email);
 
                 // Reset hCaptcha after successful login
-                hcaptcha.reset(loginHcaptchaWidget);
+                hcaptcha.reset();
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -383,7 +383,7 @@
                 const errorMessage = error?.message || "Invalid email or password";
 
                 // Reset hCaptcha after failed login
-                hcaptcha.reset(loginHcaptchaWidget);
+                hcaptcha.reset();
 
                 // FAILED - Record attempt in DATABASE (cannot be bypassed)
                 const attemptResult = await recordFailedAttempt(email);
@@ -642,7 +642,8 @@
             sendResetBtn.disabled = true;
 
             // Verify hCaptcha for password reset
-            const hcaptchaResponse = hcaptcha.getResponse(document.getElementById('hcaptcha-container'));
+            // Use getResponse() without parameters for the modal's widget
+            const hcaptchaResponse = hcaptcha.getResponse();
             console.log('Reset hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 resetStatus.textContent = 'Please complete the CAPTCHA verification.';
@@ -672,7 +673,7 @@
                 resetStatus.classList.add('status--success');
 
                 // Reset hCaptcha
-                hcaptcha.reset(document.getElementById('hcaptcha-container'));
+                hcaptcha.reset();
 
                 // Close modal after success
                 setTimeout(() => {
@@ -684,7 +685,7 @@
                 resetStatus.classList.remove('status--success', 'hidden');
                 resetStatus.classList.add('status--error');
                 // Reset hCaptcha on error
-                hcaptcha.reset(document.getElementById('hcaptcha-container'));
+                hcaptcha.reset();
             } finally {
                 sendResetBtn.disabled = false;
             }
