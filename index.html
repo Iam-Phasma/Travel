@@ -98,10 +98,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Reset Password</h3>
-                    <button class="close-modal" id="close-reset-modal">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p style="margin-bottom: 16px; color: rgba(15, 26, 31, 0.7); font-size: 0.9rem;">Enter your email address and we'll send you a password reset link.</p>
+                    <p style="margin-top: 0; margin-bottom: 20px; color: rgba(15, 26, 31, 0.7); font-size: 0.9rem; line-height: 1.5;">Enter your email address and we'll send you a password reset link.</p>
                     <div>
                         <label for="reset-email">Email <span class="required">*</span></label>
                         <div class="input-wrap">
@@ -117,9 +116,9 @@
                     <div id="hcaptcha-container" style="margin-top: 16px;"></div>
                     <span class="status status--neutral hidden" id="reset-status">Enter your email address.</span>
                 </div>
-                <div class="modal-footer">
-                    <button id="cancel-reset-btn" type="button" class="btn-secondary">Cancel</button>
-                    <button id="send-reset-btn" type="button" class="btn-primary">Send Reset Link</button>
+                <div class="modal-actions">
+                    <button id="cancel-reset-btn" type="button" class="modal-btn cancel">Cancel</button>
+                    <button id="send-reset-btn" type="button" class="modal-btn confirm">Send Reset Link</button>
                 </div>
             </div>
         </div>
@@ -580,7 +579,6 @@
         // Password Reset Functionality
         const resetPasswordModal = document.getElementById('reset-password-modal');
         const forgotPasswordLink = document.getElementById('forgot-password-link');
-        const closeResetModal = document.getElementById('close-reset-modal');
         const cancelResetBtn = document.getElementById('cancel-reset-btn');
         const sendResetBtn = document.getElementById('send-reset-btn');
         const resetEmailInput = document.getElementById('reset-email');
@@ -621,7 +619,6 @@
             resetStatus.classList.add('hidden');
         };
 
-        closeResetModal.addEventListener('click', closeResetPasswordModal);
         cancelResetBtn.addEventListener('click', closeResetPasswordModal);
 
         // Close modal when clicking outside
@@ -637,8 +634,11 @@
 
             if (!email) {
                 resetStatus.textContent = 'Please enter your email address.';
-                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.remove('status--success', 'hidden', 'status--shake');
                 resetStatus.classList.add('status--error');
+                // Trigger shake animation
+                void resetStatus.offsetWidth; // Force reflow
+                resetStatus.classList.add('status--shake');
                 return;
             }
 
@@ -646,21 +646,27 @@
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 resetStatus.textContent = 'Please enter a valid email address.';
-                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.remove('status--success', 'hidden', 'status--shake');
                 resetStatus.classList.add('status--error');
+                // Trigger shake animation
+                void resetStatus.offsetWidth; // Force reflow
+                resetStatus.classList.add('status--shake');
                 return;
             }
 
             resetStatus.textContent = 'Sending reset link...';
-            resetStatus.classList.remove('status--error', 'status--success', 'hidden');
+            resetStatus.classList.remove('status--error', 'status--success', 'hidden', 'status--shake');
             sendResetBtn.disabled = true;
 
             // Verify hCaptcha for password reset
             const hcaptchaResponse = resetCaptchaWidgetId !== null ? hcaptcha.getResponse(resetCaptchaWidgetId) : null;
             if (!hcaptchaResponse) {
                 resetStatus.textContent = 'Please complete the CAPTCHA verification.';
-                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.remove('status--success', 'hidden', 'status--shake');
                 resetStatus.classList.add('status--error');
+                // Trigger shake animation
+                void resetStatus.offsetWidth; // Force reflow
+                resetStatus.classList.add('status--shake');
                 sendResetBtn.disabled = false;
                 return;
             }

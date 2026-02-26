@@ -6,6 +6,8 @@
 
 export class AutoLogout {
     constructor(options = {}) {
+        console.log('[Auto-Logout] 🚀 Initializing Auto-Logout system...');
+        
         // Configuration
         this.warningTime = options.warningTime || 1 * 60 * 1000; // 4 minutes in milliseconds
         this.logoutTime = options.logoutTime || 2 * 60 * 1000; // 5 minutes in milliseconds
@@ -13,8 +15,15 @@ export class AutoLogout {
         this.supabase = options.supabase; // Supabase client instance
         this.onLogout = options.onLogout || null; // Optional callback before logout
         
+        console.log('[Auto-Logout] ⏰ Configuration:', {
+            warningTime: this.warningTime / 1000 + 's',
+            logoutTime: this.logoutTime / 1000 + 's',
+            countdownDuration: this.countdownDuration / 1000 + 's'
+        });
+        
         // State
         this.activityTimer = null;
+        this.activityTrackingPaused = false; // For testing/debugging
         this.countdownTimer = null;
         this.countdownInterval = null;
         this.modalVisible = false;
@@ -22,13 +31,16 @@ export class AutoLogout {
         this.lastResetTime = 0; // Track last time timer was reset for throttling
         
         // Activity event types to monitor
+        // Note: mousemove is excluded to prevent phantom events from resetting timer
+        // Only deliberate user actions (clicks, keypresses, scrolling) reset the timer
         this.activityEvents = [
             'mousedown',
-            'mousemove',
+            'keydown',
             'keypress',
             'scroll',
             'touchstart',
-            'click'
+            'click',
+            'wheel'
         ];
         
         // Bind methods
@@ -38,91 +50,86 @@ export class AutoLogout {
         this.performLogout = this.performLogout.bind(this);
         this.startCountdown = this.startCountdown.bind(this);
         
-        // Initialize
-        this.createModal();
-        this.init();
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.createModal();
+                this.init();
+            });
+        } else {
+            this.createModal();
+            this.init();
+        }
     }
     
     /**
      * Create the warning modal HTML
      */
     createModal() {
-        // Check if modal already exists
         if (document.getElementById('auto-logout-modal')) {
             return;
         }
         
-        const modal = document.createElement('div');
-        modal.id = 'auto-logout-modal';
-        modal.className = 'auto-logout-modal';
-        modal.innerHTML = `
-            <div class="auto-logout-overlay"></div>
-            <div class="auto-logout-content">
-                <div class="auto-logout-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
+        try {
+            const modal = document.createElement('div');
+            modal.id = 'auto-logout-modal';
+            modal.className = 'auto-logout-modal';
+            modal.innerHTML = `
+                <div class="auto-logout-overlay"></div>
+                <div class="auto-logout-content">
+                    <h3>Session Timeout</h3>
+                    <p>You will be logged out in <strong id="auto-logout-seconds">60</strong> seconds</p>
+                    <button id="auto-logout-stay-btn" class="modal-btn confirm">
+                        Stay Signed In
+                    </button>
                 </div>
-                <h3>Session Timeout Warning</h3>
-                <p>You've been inactive for a while. For your security, you'll be automatically logged out in:</p>
-                <div class="auto-logout-countdown">
-                    <span id="auto-logout-seconds">60</span>
-                    <span class="auto-logout-label">seconds</span>
-                </div>
-                <p class="auto-logout-hint">Click the button below to stay signed in.</p>
-                <button id="auto-logout-stay-btn" class="auto-logout-btn-primary">
-                    Stay Signed In
-                </button>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Add event listener to "Stay Signed In" button
-        document.getElementById('auto-logout-stay-btn').addEventListener('click', () => {
-            this.hideWarningModal();
-            this.resetTimer();
-        });
+            `;
+            
+            document.body.appendChild(modal);
+            
+            const stayBtn = document.getElementById('auto-logout-stay-btn');
+            if (stayBtn) {
+                stayBtn.addEventListener('click', () => {
+                    this.hideWarningModal();
+                    this.resetTimer();
+                });
+            }
+        } catch (error) {
+            console.error('[Auto-Logout] Error creating modal:', error);
+        }
     }
     
     /**
      * Initialize the auto-logout system
      */
     init() {
-        // Add activity listeners
         this.activityEvents.forEach(event => {
             document.addEventListener(event, this.handleActivity, true);
         });
         
-        // Start the timer
         this.resetTimer();
-        
-        console.log('Auto-logout initialized: Warning at', this.warningTime / 1000, 'seconds, Logout at', this.logoutTime / 1000, 'seconds');
     }
     
     /**
      * Handle user activity
      */
-    handleActivity() {
-        // SECURITY: Ignore all activity when modal is visible
-        // This prevents users from exploiting mouse movement or keyboard presses
-        // Only the explicit "Stay Signed In" button click can reset the timer
+    handleActivity(event) {
+        if (this.activityTrackingPaused) {
+            return;
+        }
+        
         if (this.modalVisible) {
             return;
         }
         
         this.lastActivity = Date.now();
         
-        // Throttle timer resets to once per second to reduce overhead
-        // This prevents excessive timer resets from rapid mouse movements
         const now = Date.now();
-        const throttleDelay = 1000; // 1 second
+        const throttleDelay = 1000;
         
         if (now - this.lastResetTime >= throttleDelay) {
             this.lastResetTime = now;
             this.resetTimer();
-            console.log('[Auto-Logout] Timer reset due to user activity');
         }
     }
     
@@ -130,7 +137,6 @@ export class AutoLogout {
      * Reset the inactivity timer
      */
     resetTimer() {
-        // Clear existing timers
         if (this.activityTimer) {
             clearTimeout(this.activityTimer);
         }
@@ -141,7 +147,6 @@ export class AutoLogout {
             clearInterval(this.countdownInterval);
         }
         
-        // Set new timer for warning
         this.activityTimer = setTimeout(this.showWarningModal, this.warningTime);
     }
     
@@ -149,20 +154,26 @@ export class AutoLogout {
      * Show the warning modal
      */
     showWarningModal() {
-        if (this.modalVisible) return;
+        if (this.modalVisible) {
+            return;
+        }
         
-        console.log('[Auto-Logout] ⚠️ Showing warning modal - user has been inactive');
-        this.modalVisible = true;
         const modal = document.getElementById('auto-logout-modal');
-        modal.classList.add('active');
+        if (!modal) {
+            this.createModal();
+            const retryModal = document.getElementById('auto-logout-modal');
+            if (!retryModal) {
+                return;
+            }
+            retryModal.classList.add('active');
+        } else {
+            modal.classList.add('active');
+        }
         
-        // Prevent body scrolling
+        this.modalVisible = true;
         document.body.style.overflow = 'hidden';
         
-        // Start countdown
         this.startCountdown();
-        
-        // Set timer to logout after countdown
         this.countdownTimer = setTimeout(this.performLogout, this.countdownDuration);
     }
     
@@ -170,16 +181,18 @@ export class AutoLogout {
      * Hide the warning modal
      */
     hideWarningModal() {
-        if (!this.modalVisible) return;
+        if (!this.modalVisible) {
+            return;
+        }
         
         this.modalVisible = false;
         const modal = document.getElementById('auto-logout-modal');
-        modal.classList.remove('active');
+        if (modal) {
+            modal.classList.remove('active');
+        }
         
-        // Restore body scrolling
         document.body.style.overflow = '';
         
-        // Clear countdown
         if (this.countdownInterval) {
             clearInterval(this.countdownInterval);
             this.countdownInterval = null;
@@ -195,6 +208,7 @@ export class AutoLogout {
      */
     startCountdown() {
         const secondsElement = document.getElementById('auto-logout-seconds');
+        const modalContent = document.querySelector('.auto-logout-content');
         let remainingSeconds = Math.floor(this.countdownDuration / 1000);
         
         // Update immediately
@@ -212,9 +226,16 @@ export class AutoLogout {
             
             secondsElement.textContent = remainingSeconds;
             
-            // Add urgency class when less than 10 seconds
+            // Add urgency class and shake effect when less than 10 seconds
             if (remainingSeconds <= 10) {
                 secondsElement.classList.add('urgent');
+                
+                // Add shake effect
+                if (modalContent) {
+                    modalContent.classList.remove('shake');
+                    void modalContent.offsetWidth; // Trigger reflow to restart animation
+                    modalContent.classList.add('shake');
+                }
             }
         }, 1000);
     }
@@ -257,6 +278,20 @@ export class AutoLogout {
     }
     
     /**
+     * Pause activity tracking (for testing/debugging)
+     */
+    pauseActivityTracking() {
+        this.activityTrackingPaused = true;
+    }
+    
+    /**
+     * Resume activity tracking (for testing/debugging)
+     */
+    resumeActivityTracking() {
+        this.activityTrackingPaused = false;
+    }
+    
+    /**
      * Destroy the auto-logout instance
      */
     destroy() {
@@ -285,8 +320,11 @@ export class AutoLogout {
  * Simple initialization function for easy setup
  */
 export function initAutoLogout(supabase, options = {}) {
-    return new AutoLogout({
+    const instance = new AutoLogout({
         supabase,
         ...options
     });
+    
+    window.__autoLogoutInstance = instance;
+    return instance;
 }

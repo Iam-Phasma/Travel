@@ -220,10 +220,10 @@
         // Initialize Supabase
         const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
 
-        // Initialize auto-logout (4 minutes warning, 5 minutes total)
+        // Initialize auto-logout (1 minute warning, 2 minutes total)
         initAutoLogout(supabase, {
-            warningTime: 4 * 60 * 1000, // 4 minutes
-            logoutTime: 5 * 60 * 1000   // 5 minutes
+            warningTime: 1 * 60 * 1000, // 1 minute
+            logoutTime: 2 * 60 * 1000   // 2 minutes (1 min warning + 1 min countdown)
         });
 
         // Periodically check if current user's access_enabled is still true
