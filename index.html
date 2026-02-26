@@ -45,13 +45,13 @@
                     <span>Show password</span>
                 </label>
                 <!-- hCaptcha widget for login -->
-                <div class="h-captcha" id="login-hcaptcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 12px;"></div>
+                <div class="h-captcha hidden" id="login-hcaptcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 12px;"></div>
                 <div class="forgot-password-container">
                     <a href="#" id="forgot-password-link" class="forgot-password-link">Forgot Password?</a>
                 </div>
             </div>
             <div class="login-actions">
-                <button id="login-btn" type="button">Sign in</button>
+                <button id="login-btn" type="button">Verify</button>
                 <span class="status status--neutral hidden" id="login-status">Enter your credentials.</span>
             </div>
         </section>
@@ -114,7 +114,7 @@
                         </div>
                     </div>
                     <!-- hCaptcha container for password reset -->
-                    <div id="hcaptcha-container" class="h-captcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 16px;"></div>
+                    <div id="hcaptcha-container" style="margin-top: 16px;"></div>
                     <span class="status status--neutral hidden" id="reset-status">Enter your email address.</span>
                 </div>
                 <div class="modal-footer">
@@ -138,6 +138,8 @@
         const loginBtn = document.getElementById("login-btn");
         const loginPanel = document.getElementById("login-panel");
         const newPasswordPanel = document.getElementById("new-password-panel");
+        const loginHcaptcha = document.getElementById("login-hcaptcha");
+        let captchaShown = false;
 
         document.getElementById("show-password").addEventListener("change", (e) => {
             passwordInput.type = e.target.checked ? "text" : "password";
@@ -298,6 +300,16 @@
                 return;
             }
 
+            // Show captcha on first click
+            if (!captchaShown) {
+                loginHcaptcha.classList.remove("hidden");
+                captchaShown = true;
+                loginBtn.textContent = "Login";
+                loginStatus.textContent = "Please complete the CAPTCHA verification.";
+                loginStatus.classList.remove("status--success", "status--error", "hidden");
+                return;
+            }
+
             // Verify hCaptcha from the login widget
             const hcaptchaResponse = hcaptcha.getResponse();
             if (!hcaptchaResponse) {
@@ -344,6 +356,9 @@
 
                 // Reset hCaptcha after successful login
                 hcaptcha.reset();
+                captchaShown = false;
+                loginHcaptcha.classList.add("hidden");
+                loginBtn.textContent = "Verify";
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -379,6 +394,9 @@
 
                 // Reset hCaptcha after failed login
                 hcaptcha.reset();
+                captchaShown = false;
+                loginHcaptcha.classList.add("hidden");
+                loginBtn.textContent = "Verify";
 
                 // Record failed attempt in database
                 const attemptResult = await recordFailedAttempt(email);
@@ -567,18 +585,37 @@
         const sendResetBtn = document.getElementById('send-reset-btn');
         const resetEmailInput = document.getElementById('reset-email');
         const resetStatus = document.getElementById('reset-status');
+        const hcaptchaContainer = document.getElementById('hcaptcha-container');
+        let resetCaptchaWidgetId = null;
 
         // Open reset password modal
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            resetPasswordModal.classList.remove('hidden');
-            resetEmailInput.value = emailInput.value; // Pre-fill if email is entered
-            resetEmailInput.focus();
-            resetStatus.classList.add('hidden');
-        });
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetPasswordModal.classList.remove('hidden');
+                resetPasswordModal.classList.add('show');
+                resetEmailInput.value = emailInput.value; // Pre-fill if email is entered
+                resetEmailInput.focus();
+                resetStatus.classList.add('hidden');
+                
+                // Render captcha for the modal if not already rendered
+                if (resetCaptchaWidgetId === null && typeof hcaptcha !== 'undefined') {
+                    // Wait a bit for modal to be visible, then render
+                    setTimeout(() => {
+                        resetCaptchaWidgetId = hcaptcha.render('hcaptcha-container', {
+                            sitekey: 'fcc42bc6-e25c-48f2-85ea-497021987410'
+                        });
+                    }, 100);
+                } else if (resetCaptchaWidgetId !== null) {
+                    // Reset the existing widget
+                    hcaptcha.reset(resetCaptchaWidgetId);
+                }
+            });
+        }
 
         // Close modal handlers
         const closeResetPasswordModal = () => {
+            resetPasswordModal.classList.remove('show');
             resetPasswordModal.classList.add('hidden');
             resetEmailInput.value = '';
             resetStatus.classList.add('hidden');
@@ -619,7 +656,7 @@
             sendResetBtn.disabled = true;
 
             // Verify hCaptcha for password reset
-            const hcaptchaResponse = hcaptcha.getResponse();
+            const hcaptchaResponse = resetCaptchaWidgetId !== null ? hcaptcha.getResponse(resetCaptchaWidgetId) : null;
             if (!hcaptchaResponse) {
                 resetStatus.textContent = 'Please complete the CAPTCHA verification.';
                 resetStatus.classList.remove('status--success', 'hidden');
@@ -645,7 +682,9 @@
                 resetStatus.classList.add('status--success');
 
                 // Reset hCaptcha
-                hcaptcha.reset();
+                if (resetCaptchaWidgetId !== null) {
+                    hcaptcha.reset(resetCaptchaWidgetId);
+                }
 
                 // Close modal after success
                 setTimeout(() => {
@@ -657,7 +696,9 @@
                 resetStatus.classList.remove('status--success', 'hidden');
                 resetStatus.classList.add('status--error');
                 // Reset hCaptcha on error
-                hcaptcha.reset();
+                if (resetCaptchaWidgetId !== null) {
+                    hcaptcha.reset(resetCaptchaWidgetId);
+                }
             } finally {
                 sendResetBtn.disabled = false;
             }
