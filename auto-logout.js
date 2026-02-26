@@ -9,9 +9,12 @@ export class AutoLogout {
         console.log('[Auto-Logout] 🚀 Initializing Auto-Logout system...');
         
         // Configuration
-        this.warningTime = options.warningTime || 1 * 60 * 1000; // 4 minutes in milliseconds
-        this.logoutTime = options.logoutTime || 2 * 60 * 1000; // 5 minutes in milliseconds
-        this.countdownDuration = this.logoutTime - this.warningTime; // 1 minute countdown
+        // ⏱️ CHANGE SESSION TIMEOUT HERE:
+        // warningTime: when to show the warning modal (in milliseconds)
+        // logoutTime: when to actually log out the user (in milliseconds)
+        this.warningTime = options.warningTime || 5 * 10 * 1000;
+        this.logoutTime = options.logoutTime || 1 * 10 * 1000; 
+        this.countdownDuration = this.logoutTime - this.warningTime;
         this.supabase = options.supabase; // Supabase client instance
         this.onLogout = options.onLogout || null; // Optional callback before logout
         
