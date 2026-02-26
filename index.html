@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="header/header.css">
     <link rel="stylesheet" href="footer/footer.css">
-    <!-- hCaptcha Script - Uncomment when ready to use -->
-    <!-- <script src="https://js.hcaptcha.com/1/api.js" async defer></script> -->
+    <!-- hCaptcha Script -->
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 <body class="login-page">
     <main class="shell">
@@ -44,6 +44,8 @@
                     <input type="checkbox" id="show-password">
                     <span>Show password</span>
                 </label>
+                <!-- hCaptcha widget for login -->
+                <div class="h-captcha" id="login-hcaptcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 12px;"></div>
                 <div class="forgot-password-container">
                     <a href="#" id="forgot-password-link" class="forgot-password-link">Forgot Password?</a>
                 </div>
@@ -111,9 +113,8 @@
                             <input id="reset-email" type="email" autocomplete="email" placeholder="email">
                         </div>
                     </div>
-                    <!-- hCaptcha container (ready for integration) -->
-                    <!-- To enable hCaptcha: uncomment the script in <head>, add your site key below, and uncomment the verification code in the JavaScript -->
-                    <div id="hcaptcha-container" class="h-captcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 16px; display: none;"></div>
+                    <!-- hCaptcha container for password reset -->
+                    <div id="hcaptcha-container" class="h-captcha" data-sitekey="fcc42bc6-e25c-48f2-85ea-497021987410" style="margin-top: 16px;"></div>
                     <span class="status status--neutral hidden" id="reset-status">Enter your email address.</span>
                 </div>
                 <div class="modal-footer">
@@ -297,6 +298,18 @@
                 return;
             }
 
+            // Verify hCaptcha
+            const hcaptchaResponse = hcaptcha.getResponse();
+            if (!hcaptchaResponse) {
+                loginStatus.textContent = "Please complete the CAPTCHA verification.";
+                loginStatus.classList.remove("status--success", "hidden");
+                loginStatus.classList.add("status--error");
+                loginStatus.classList.remove("status--shake");
+                void loginStatus.offsetWidth;
+                loginStatus.classList.add("status--shake");
+                return;
+            }
+
             // Check lockout status from DATABASE (cannot be bypassed)
             const lockoutStatus = await checkLockoutStatus(email);
             if (lockoutStatus.locked) {
@@ -325,6 +338,9 @@
 
                 // SUCCESS - Clear failed attempts from DATABASE
                 await clearLoginAttempts(email);
+
+                // Reset hCaptcha after successful login
+                hcaptcha.reset();
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -357,6 +373,9 @@
                 }, 500);
             } catch (error) {
                 const errorMessage = error?.message || "Invalid email or password";
+
+                // Reset hCaptcha after failed login
+                hcaptcha.reset();
 
                 // FAILED - Record attempt in DATABASE (cannot be bypassed)
                 const attemptResult = await recordFailedAttempt(email);
@@ -614,16 +633,15 @@
             resetStatus.classList.remove('status--error', 'status--success', 'hidden');
             sendResetBtn.disabled = true;
 
-            // Optional: Add hCaptcha verification here
-            // Uncomment the following lines when you want to enable hCaptcha:
-            // const hcaptchaResponse = hcaptcha.getResponse();
-            // if (!hcaptchaResponse) {
-            //     resetStatus.textContent = 'Please complete the CAPTCHA verification.';
-            //     resetStatus.classList.remove('status--success', 'hidden');
-            //     resetStatus.classList.add('status--error');
-            //     sendResetBtn.disabled = false;
-            //     return;
-            // }
+            // Verify hCaptcha for password reset
+            const hcaptchaResponse = hcaptcha.getResponse(document.getElementById('hcaptcha-container'));
+            if (!hcaptchaResponse) {
+                resetStatus.textContent = 'Please complete the CAPTCHA verification.';
+                resetStatus.classList.remove('status--success', 'hidden');
+                resetStatus.classList.add('status--error');
+                sendResetBtn.disabled = false;
+                return;
+            }
 
             try {
                 // Auto-detect environment (localhost or production)
@@ -642,6 +660,9 @@
                 resetStatus.classList.remove('status--error', 'hidden');
                 resetStatus.classList.add('status--success');
 
+                // Reset hCaptcha
+                hcaptcha.reset(document.getElementById('hcaptcha-container'));
+
                 // Close modal after success
                 setTimeout(() => {
                     closeResetPasswordModal();
@@ -651,6 +672,8 @@
                 resetStatus.textContent = error.message || 'Failed to send reset link. Please try again.';
                 resetStatus.classList.remove('status--success', 'hidden');
                 resetStatus.classList.add('status--error');
+                // Reset hCaptcha on error
+                hcaptcha.reset(document.getElementById('hcaptcha-container'));
             } finally {
                 sendResetBtn.disabled = false;
             }
