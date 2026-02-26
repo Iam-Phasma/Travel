@@ -501,10 +501,10 @@
                 
                 updatePasswordStatus.textContent = 'Password updated successfully! Redirecting to login...';
                 
-                // Redirect to clean login page
+                // Always redirect to production URL after password reset
                 setTimeout(() => {
-                    // Use replace to prevent back button issues
-                    window.location.replace(window.location.origin + window.location.pathname);
+                    // Redirect to GitHub Pages for login (works from localhost or production)
+                    window.location.replace(supabaseConfig.productionUrl + '/index.html');
                 }, 2000);
             } catch (error) {
                 console.error('Password update error:', error);
