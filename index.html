@@ -298,8 +298,10 @@
                 return;
             }
 
-            // Verify hCaptcha
-            const hcaptchaResponse = hcaptcha.getResponse();
+            // Verify hCaptcha from the login widget
+            const loginHcaptchaWidget = document.getElementById('login-hcaptcha');
+            const hcaptchaResponse = hcaptcha.getResponse(loginHcaptchaWidget);
+            console.log('Login hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 loginStatus.textContent = "Please complete the CAPTCHA verification.";
                 loginStatus.classList.remove("status--success", "hidden");
@@ -322,10 +324,16 @@
             loginStatus.classList.remove("status--error", "status--success", "hidden");
 
             try {
+                // Pass captcha token to Supabase for verification
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
-                    password
+                    password,
+                    options: {
+                        captchaToken: hcaptchaResponse
+                    }
                 });
+
+                console.log('Supabase login response:', { data, error }); // Debug
 
                 if (error) {
                     throw error;
@@ -340,7 +348,7 @@
                 await clearLoginAttempts(email);
 
                 // Reset hCaptcha after successful login
-                hcaptcha.reset();
+                hcaptcha.reset(loginHcaptchaWidget);
 
                 const { role, page } = await getRedirectPage(user.id);
                 
@@ -375,7 +383,7 @@
                 const errorMessage = error?.message || "Invalid email or password";
 
                 // Reset hCaptcha after failed login
-                hcaptcha.reset();
+                hcaptcha.reset(loginHcaptchaWidget);
 
                 // FAILED - Record attempt in DATABASE (cannot be bypassed)
                 const attemptResult = await recordFailedAttempt(email);
@@ -635,6 +643,7 @@
 
             // Verify hCaptcha for password reset
             const hcaptchaResponse = hcaptcha.getResponse(document.getElementById('hcaptcha-container'));
+            console.log('Reset hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 resetStatus.textContent = 'Please complete the CAPTCHA verification.';
                 resetStatus.classList.remove('status--success', 'hidden');
@@ -648,8 +657,10 @@
                 const redirectUrl = supabaseConfig.getRedirectUrl();
                 console.log('Password reset redirect URL:', redirectUrl); // Debug log
                 
+                // Pass captcha token to Supabase for verification
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: redirectUrl
+                    redirectTo: redirectUrl,
+                    captchaToken: hcaptchaResponse
                 });
 
                 if (error) {
