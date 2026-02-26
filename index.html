@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="header/header.css">
     <link rel="stylesheet" href="footer/footer.css">
-    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <!-- hCaptcha Script - Uncomment when ready to use -->
+    <!-- <script src="https://js.hcaptcha.com/1/api.js" async defer></script> -->
 </head>
 <body class="login-page">
     <main class="shell">
@@ -409,8 +410,13 @@
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const type = hashParams.get('type');
             
+            console.log('Full URL:', window.location.href); // Debug log
+            console.log('Hash:', window.location.hash); // Debug log
+            console.log('Type parameter:', type); // Debug log
+            
             if (type === 'recovery') {
                 // User clicked the reset link from email - show new password form
+                console.log('Recovery mode detected - showing password reset form'); // Debug log
                 loginPanel.classList.add('hidden');
                 newPasswordPanel.classList.remove('hidden');
                 return true;
@@ -451,24 +457,58 @@
             updatePasswordBtn.disabled = true;
 
             try {
-                const { error } = await supabase.auth.updateUser({
+                // Check if user has a valid session
+                const { data: sessionData } = await supabase.auth.getSession();
+                console.log('Current session:', sessionData); // Debug log
+                
+                if (!sessionData?.session) {
+                    throw new Error('No active session. Please click the reset link from your email again.');
+                }
+
+                // Update the password
+                const { data, error } = await supabase.auth.updateUser({
                     password: newPassword
                 });
+
+                console.log('Update user response:', data, error); // Debug log
 
                 if (error) {
                     throw error;
                 }
 
-                updatePasswordStatus.textContent = 'Password updated successfully! Redirecting to login...';
+                updatePasswordStatus.textContent = 'Password updated! Clearing session...';
                 updatePasswordStatus.classList.remove('status--error', 'hidden');
                 updatePasswordStatus.classList.add('status--success');
 
-                // Clear the hash from URL and redirect to login
+                // Clear any failed login attempts for this user
+                const userEmail = sessionData?.session?.user?.email;
+                if (userEmail) {
+                    console.log('Clearing login attempts for:', userEmail);
+                    await clearLoginAttempts(userEmail);
+                }
+
+                // Important: Sign out to clear the recovery session completely
+                // This ensures the new password takes effect immediately
+                const { error: signOutError } = await supabase.auth.signOut();
+                
+                if (signOutError) {
+                    console.error('Sign out error:', signOutError);
+                }
+
+                // Clear all local storage and session storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                updatePasswordStatus.textContent = 'Password updated successfully! Redirecting to login...';
+                
+                // Redirect to clean login page
                 setTimeout(() => {
-                    window.location.href = window.location.origin + '/index.html';
+                    // Use replace to prevent back button issues
+                    window.location.replace(window.location.origin + window.location.pathname);
                 }, 2000);
             } catch (error) {
                 console.error('Password update error:', error);
+                console.error('Error details:', JSON.stringify(error)); // More detailed error log
                 updatePasswordStatus.textContent = error.message || 'Failed to update password. Please try again.';
                 updatePasswordStatus.classList.remove('status--success', 'hidden');
                 updatePasswordStatus.classList.add('status--error');
@@ -502,6 +542,18 @@
         };
 
         initializePage();
+
+        // Listen for auth state changes (helpful for debugging)
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session);
+            
+            // If we get a PASSWORD_RECOVERY event, ensure we show the reset form
+            if (event === 'PASSWORD_RECOVERY') {
+                console.log('Password recovery event detected');
+                loginPanel.classList.add('hidden');
+                newPasswordPanel.classList.remove('hidden');
+            }
+        });
 
         // Password Reset Functionality
         const resetPasswordModal = document.getElementById('reset-password-modal');
@@ -563,19 +615,20 @@
             sendResetBtn.disabled = true;
 
             // Optional: Add hCaptcha verification here
-            // Uncomment the following lines when hCaptcha is enabled:
-            const hcaptchaResponse = hcaptcha.getResponse();
-            if (!hcaptchaResponse) {
-                resetStatus.textContent = 'Please complete the CAPTCHA verification.';
-                resetStatus.classList.remove('status--success', 'hidden');
-                resetStatus.classList.add('status--error');
-                sendResetBtn.disabled = false;
-                return;
-             }
+            // Uncomment the following lines when you want to enable hCaptcha:
+            // const hcaptchaResponse = hcaptcha.getResponse();
+            // if (!hcaptchaResponse) {
+            //     resetStatus.textContent = 'Please complete the CAPTCHA verification.';
+            //     resetStatus.classList.remove('status--success', 'hidden');
+            //     resetStatus.classList.add('status--error');
+            //     sendResetBtn.disabled = false;
+            //     return;
+            // }
 
             try {
-                // Use configured production URL for the redirect (works for GitHub Pages)
-                const redirectUrl = supabaseConfig.productionUrl + '/index.html';
+                // Auto-detect environment (localhost or production)
+                const redirectUrl = supabaseConfig.getRedirectUrl();
+                console.log('Password reset redirect URL:', redirectUrl); // Debug log
                 
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: redirectUrl
