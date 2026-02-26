@@ -299,9 +299,7 @@
             }
 
             // Verify hCaptcha from the login widget
-            // Use getResponse() without parameters - it gets the response from the visible widget
             const hcaptchaResponse = hcaptcha.getResponse();
-            console.log('Login hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 loginStatus.textContent = "Please complete the CAPTCHA verification.";
                 loginStatus.classList.remove("status--success", "hidden");
@@ -312,7 +310,7 @@
                 return;
             }
 
-            // Check lockout status from DATABASE (cannot be bypassed)
+            // Check lockout status from database
             const lockoutStatus = await checkLockoutStatus(email);
             if (lockoutStatus.locked) {
                 // Start dynamic countdown
@@ -324,7 +322,6 @@
             loginStatus.classList.remove("status--error", "status--success", "hidden");
 
             try {
-                // Pass captcha token to Supabase for verification
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password,
@@ -332,8 +329,6 @@
                         captchaToken: hcaptchaResponse
                     }
                 });
-
-                console.log('Supabase login response:', { data, error }); // Debug
 
                 if (error) {
                     throw error;
@@ -344,7 +339,7 @@
                     throw new Error("Unable to load user session.");
                 }
 
-                // SUCCESS - Clear failed attempts from DATABASE
+                // Clear failed attempts from database
                 await clearLoginAttempts(email);
 
                 // Reset hCaptcha after successful login
@@ -385,7 +380,7 @@
                 // Reset hCaptcha after failed login
                 hcaptcha.reset();
 
-                // FAILED - Record attempt in DATABASE (cannot be bypassed)
+                // Record failed attempt in database
                 const attemptResult = await recordFailedAttempt(email);
 
                 if (attemptResult.locked) {
@@ -437,13 +432,7 @@
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const type = hashParams.get('type');
             
-            console.log('Full URL:', window.location.href); // Debug log
-            console.log('Hash:', window.location.hash); // Debug log
-            console.log('Type parameter:', type); // Debug log
-            
             if (type === 'recovery') {
-                // User clicked the reset link from email - show new password form
-                console.log('Recovery mode detected - showing password reset form'); // Debug log
                 loginPanel.classList.add('hidden');
                 newPasswordPanel.classList.remove('hidden');
                 return true;
@@ -484,20 +473,15 @@
             updatePasswordBtn.disabled = true;
 
             try {
-                // Check if user has a valid session
                 const { data: sessionData } = await supabase.auth.getSession();
-                console.log('Current session:', sessionData); // Debug log
                 
                 if (!sessionData?.session) {
                     throw new Error('No active session. Please click the reset link from your email again.');
                 }
 
-                // Update the password
                 const { data, error } = await supabase.auth.updateUser({
                     password: newPassword
                 });
-
-                console.log('Update user response:', data, error); // Debug log
 
                 if (error) {
                     throw error;
@@ -510,12 +494,10 @@
                 // Clear any failed login attempts for this user
                 const userEmail = sessionData?.session?.user?.email;
                 if (userEmail) {
-                    console.log('Clearing login attempts for:', userEmail);
                     await clearLoginAttempts(userEmail);
                 }
 
-                // Important: Sign out to clear the recovery session completely
-                // This ensures the new password takes effect immediately
+                // Sign out to clear the recovery session
                 const { error: signOutError } = await supabase.auth.signOut();
                 
                 if (signOutError) {
@@ -535,7 +517,6 @@
                 }, 2000);
             } catch (error) {
                 console.error('Password update error:', error);
-                console.error('Error details:', JSON.stringify(error)); // More detailed error log
                 updatePasswordStatus.textContent = error.message || 'Failed to update password. Please try again.';
                 updatePasswordStatus.classList.remove('status--success', 'hidden');
                 updatePasswordStatus.classList.add('status--error');
@@ -570,13 +551,9 @@
 
         initializePage();
 
-        // Listen for auth state changes (helpful for debugging)
+        // Listen for auth state changes
         supabase.auth.onAuthStateChange((event, session) => {
-            console.log('Auth state changed:', event, session);
-            
-            // If we get a PASSWORD_RECOVERY event, ensure we show the reset form
             if (event === 'PASSWORD_RECOVERY') {
-                console.log('Password recovery event detected');
                 loginPanel.classList.add('hidden');
                 newPasswordPanel.classList.remove('hidden');
             }
@@ -642,9 +619,7 @@
             sendResetBtn.disabled = true;
 
             // Verify hCaptcha for password reset
-            // Use getResponse() without parameters for the modal's widget
             const hcaptchaResponse = hcaptcha.getResponse();
-            console.log('Reset hCaptcha response:', hcaptchaResponse ? 'Token received' : 'No token'); // Debug
             if (!hcaptchaResponse) {
                 resetStatus.textContent = 'Please complete the CAPTCHA verification.';
                 resetStatus.classList.remove('status--success', 'hidden');
@@ -654,11 +629,8 @@
             }
 
             try {
-                // Auto-detect environment (localhost or production)
                 const redirectUrl = supabaseConfig.getRedirectUrl();
-                console.log('Password reset redirect URL:', redirectUrl); // Debug log
                 
-                // Pass captcha token to Supabase for verification
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                     redirectTo: redirectUrl,
                     captchaToken: hcaptchaResponse
