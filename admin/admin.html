@@ -498,7 +498,7 @@
         // Expose loadEmployees globally so it can be called from employees.js
         window.adminLoadEmployees = loadEmployees;
 
-        const createMultiSelect = (displayId, dropdownId, searchId, optionsId, selectedArray) => {
+        const createMultiSelect = (displayId, dropdownId, searchId, optionsId, selectedArray, supabase) => {
             const display = document.getElementById(displayId);
             const dropdown = document.getElementById(dropdownId);
             const search = document.getElementById(searchId);
@@ -534,7 +534,95 @@
                 );
                 
                 if (filtered.length === 0) {
-                    options.innerHTML = '<div class=\"multiselect-no-options\">No options available</div>';
+                    if (searchTerm.trim()) {
+                        // If there's a search term but no matches, offer to add it
+                        options.innerHTML = `
+                            <div class="multiselect-no-options">
+                                No matching officials found
+                                <br>
+                                <button type="button" class="multiselect-add-btn">Add "${search.value.trim()}"</button>
+                            </div>
+                        `;
+                        
+                        // Add click handler for the add button
+                        const addBtn = options.querySelector('.multiselect-add-btn');
+                        if (addBtn) {
+                            addBtn.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                const nameToAdd = search.value.trim();
+                                
+                                if (!nameToAdd) return;
+                                
+                                // Validate allowed characters
+                                const namePattern = /^[a-zA-ZÀ-ÿ\s\-'.,]+$/;
+                                if (!namePattern.test(nameToAdd)) {
+                                    alert('Only letters, hyphens, apostrophes, periods, and commas are allowed.');
+                                    return;
+                                }
+                                
+                                // Validate length
+                                if (nameToAdd.length > 30) {
+                                    alert('Official name cannot exceed 30 characters.');
+                                    return;
+                                }
+                                
+                                // Check if already exists in the list
+                                const existingEmployee = employeesList.find(emp => emp.name.toLowerCase() === nameToAdd.toLowerCase());
+                                if (existingEmployee) {
+                                    // If exists, just add to selection
+                                    if (!selectedArray.includes(existingEmployee.name)) {
+                                        selectedArray.push(existingEmployee.name);
+                                        search.value = '';
+                                        updateDisplay();
+                                        renderOptions();
+                                    }
+                                    return;
+                                }
+                                
+                                try {
+                                    // Disable button during operation
+                                    addBtn.disabled = true;
+                                    addBtn.textContent = 'Adding...';
+                                    
+                                    // Insert into database
+                                    const { error } = await supabase
+                                        .from('employee_list')
+                                        .insert([{ name: nameToAdd, is_active: true }]);
+                                    
+                                    if (error) {
+                                        console.error('Database insert error:', error);
+                                        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+                                            alert('This official name already exists in the database.');
+                                        } else {
+                                            alert('Failed to add official: ' + error.message);
+                                        }
+                                        addBtn.disabled = false;
+                                        addBtn.textContent = `Add "${nameToAdd}"`;
+                                        return;
+                                    }
+                                    
+                                    // Reload employees list
+                                    await loadEmployees();
+                                    
+                                    // Add to selection
+                                    if (!selectedArray.includes(nameToAdd)) {
+                                        selectedArray.push(nameToAdd);
+                                    }
+                                    
+                                    search.value = '';
+                                    updateDisplay();
+                                    renderOptions();
+                                } catch (error) {
+                                    console.error('Error adding official:', error);
+                                    alert('Failed to add official.');
+                                    addBtn.disabled = false;
+                                    addBtn.textContent = `Add "${nameToAdd}"`;
+                                }
+                            });
+                        }
+                    } else {
+                        options.innerHTML = '<div class="multiselect-no-options">No options available</div>';
+                    }
                 } else {
                     options.innerHTML = filtered.map(emp => {
                         const inactiveClass = emp.is_active === false ? ' inactive-employee' : '';
@@ -595,7 +683,8 @@
                 'employees-dropdown',
                 'employees-search',
                 'employees-options',
-                selectedEmployees
+                selectedEmployees,
+                supabase
             );
             
             // Store reference globally for renderEmployeesOptions
@@ -617,7 +706,8 @@
                 'update-employees-dropdown',
                 'update-employees-search',
                 'update-employees-options',
-                updateSelectedEmployees
+                updateSelectedEmployees,
+                supabase
             );
             // Render options now if employees already loaded
             if (employeesList.length > 0) {

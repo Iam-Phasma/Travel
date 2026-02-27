@@ -268,7 +268,25 @@ window.initEmployeeManagement = (supabase) => {
             .slice(0, 10); // Show max 10 suggestions
         
         if (matches.length === 0) {
-            autocompleteList.style.display = 'none';
+            // Show "add employee" button when no matches
+            autocompleteList.innerHTML = `
+                <div class="autocomplete-no-options">
+                    No matching officials found
+                    <br>
+                    <button type="button" class="autocomplete-add-btn">Add "${employeeNameInput.value.trim()}"</button>
+                </div>
+            `;
+            autocompleteList.style.display = 'block';
+            
+            // Add click handler for the add button
+            const addBtn = autocompleteList.querySelector('.autocomplete-add-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    autocompleteList.style.display = 'none';
+                    addEmployeeBtn.click(); // Trigger the add employee button
+                });
+            }
             return;
         }
         
