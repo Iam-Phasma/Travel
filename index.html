@@ -357,7 +357,6 @@
                 hcaptcha.reset();
                 captchaShown = false;
                 loginHcaptcha.classList.add("hidden");
-                loginBtn.textContent = "Verify";
 
                 const { role, page } = await getRedirectPage(user.id);
                 
