@@ -11,9 +11,20 @@ WHERE id NOT IN (
     ORDER BY email, last_attempt_at DESC
 );
 
--- Step 2: Add UNIQUE constraint to email column (this is what was missing!)
-ALTER TABLE login_attempts 
-ADD CONSTRAINT login_attempts_email_unique UNIQUE (email);
+-- Step 2: Add UNIQUE constraint to email column (safe to re-run)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'login_attempts_email_unique'
+          AND conrelid = 'login_attempts'::regclass
+    ) THEN
+        ALTER TABLE login_attempts
+        ADD CONSTRAINT login_attempts_email_unique UNIQUE (email);
+    END IF;
+END;
+$$;
 
 -- Step 3: Verify the constraint was added
 SELECT constraint_name, constraint_type 
@@ -26,6 +37,7 @@ WHERE table_name = 'login_attempts';
 DROP FUNCTION IF EXISTS record_failed_login(TEXT);
 DROP FUNCTION IF EXISTS check_login_lockout(TEXT);
 DROP FUNCTION IF EXISTS clear_failed_login(TEXT);
+DROP FUNCTION IF EXISTS clear_failed_login();
 
 -- Recreate check_login_lockout function
 CREATE OR REPLACE FUNCTION check_login_lockout(user_email TEXT)
@@ -153,18 +165,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Recreate clear_failed_login function
-CREATE OR REPLACE FUNCTION clear_failed_login(user_email TEXT)
+-- Recreate clear_failed_login function (authenticated user only)
+CREATE OR REPLACE FUNCTION clear_failed_login()
 RETURNS VOID AS $$
+DECLARE
+    calling_user_id UUID;
+    calling_user_email TEXT;
 BEGIN
-    DELETE FROM login_attempts WHERE email = user_email;
+    calling_user_id := auth.uid();
+
+    IF calling_user_id IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+
+    SELECT email INTO calling_user_email
+    FROM auth.users
+    WHERE id = calling_user_id;
+
+    IF calling_user_email IS NULL THEN
+        RAISE EXCEPTION 'Unable to resolve caller email';
+    END IF;
+
+    DELETE FROM login_attempts WHERE email = calling_user_email;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Re-grant permissions
 GRANT EXECUTE ON FUNCTION check_login_lockout(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION record_failed_login(TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION clear_failed_login(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION clear_failed_login() TO authenticated;
 
 -- Step 5: Clear all existing login attempts to start fresh
 TRUNCATE TABLE login_attempts;

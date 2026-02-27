@@ -197,11 +197,9 @@
         };
 
         // Database function to clear login attempts on successful login
-        const clearLoginAttempts = async (email) => {
+        const clearLoginAttempts = async () => {
             try {
-                await supabase.rpc('clear_failed_login', {
-                    user_email: email
-                });
+                await supabase.rpc('clear_failed_login');
             } catch (err) {
                 console.error("Failed to clear attempts:", err);
             }
@@ -355,7 +353,7 @@
                 }
 
                 // Clear failed attempts from database
-                await clearLoginAttempts(email);
+                await clearLoginAttempts();
 
                 // Reset hCaptcha after successful login
                 hcaptcha.reset();
@@ -524,7 +522,7 @@
                 // Clear any failed login attempts for this user
                 const userEmail = sessionData?.session?.user?.email;
                 if (userEmail) {
-                    await clearLoginAttempts(userEmail);
+                    await clearLoginAttempts();
                 }
 
                 // Sign out to clear the recovery session
