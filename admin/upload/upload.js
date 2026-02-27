@@ -136,6 +136,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
     const travelDateInput = document.getElementById("travel-date");
     const travelUntilInput = document.getElementById("travel-until");
     const scanFileInput = document.getElementById("scan-file");
+    const isDemoCheckbox = document.getElementById("is-demo-checkbox");
 
     // Use validation functions from global scope (defined in admin.html)
     const isValidTaNumber = window.isValidTaNumber;
@@ -239,6 +240,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
         const travelDate = travelDateInput.value;
         let travelUntil = travelUntilInput.value;
         const employees = selectedEmployees.join(", ");
+        const isDemo = isDemoCheckbox ? isDemoCheckbox.checked : false;
 
         if (!taNumber || !purpose || !destination || !travelDate || scanFileInput.files.length === 0 || selectedEmployees.length === 0) {
             uploadStatus.textContent = "Please fill in all required fields.";
@@ -366,7 +368,8 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
                             travel_date: travelDate,
                             travel_until: travelUntil,
                             file_name: newFileName,
-                            file_url: fileUrl
+                            file_url: fileUrl,
+                            is_demo: isDemo
                         }
                     ],
                     { returning: "minimal" }
@@ -415,6 +418,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
                         travelDateInput.value = "";
                         travelUntilInput.value = "";
                         scanFileInput.value = "";
+                        if (isDemoCheckbox) isDemoCheckbox.checked = false;
                         selectedEmployees.length = 0;
                         employeesMultiSelect.updateDisplay();
                         employeesMultiSelect.renderOptions();
@@ -452,6 +456,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
                 travelDateInput.value = "";
                 travelUntilInput.value = "";
                 scanFileInput.value = "";
+                if (isDemoCheckbox) isDemoCheckbox.checked = false;
                 selectedEmployees.length = 0;
                 employeesMultiSelect.updateDisplay();
                 employeesMultiSelect.renderOptions();
@@ -481,6 +486,7 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
         travelDateInput.value = "";
         travelUntilInput.value = "";
         scanFileInput.value = "";
+        if (isDemoCheckbox) isDemoCheckbox.checked = false;
         selectedEmployees.length = 0;
         employeesMultiSelect.updateDisplay();
         employeesMultiSelect.renderOptions();

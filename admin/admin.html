@@ -794,6 +794,7 @@
         const updateTravelDateInput = document.getElementById("update-travel-date");
         const updateTravelUntilInput = document.getElementById("update-travel-until");
         const updateScanFileInput = document.getElementById("update-scan-file");
+        const updateIsDemoCheckbox = document.getElementById("update-is-demo-checkbox");
         const updateStatus = document.getElementById("update-status");
         const toast = document.getElementById("toast");
         bindTaFormatter(updateTaInput);
@@ -1101,6 +1102,7 @@
                 const fileUrl = row.file_url || "#";
                 const safeName = row.file_name || "Download";
                 const displayName = formatFileLabel(safeName);
+                const isDemoClass = row.is_demo ? " is-demo" : "";
                 
                 // Truncate employees to show max 2
                 let employeesText = row.employees || "-";
@@ -1112,7 +1114,7 @@
                 }
 
                 return `
-                    <tr data-id="${row.id}">
+                    <tr data-id="${row.id}" class="${isDemoClass}">
                         <td>
                             <button class="view-btn icon-btn" data-id="${row.id}" aria-label="View details">
                                 <svg viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
@@ -1251,7 +1253,8 @@
                     destination: record.destination || "",
                     employees: record.employees || "",
                     travel_date: record.travel_date || "",
-                    travel_until: record.travel_until || ""
+                    travel_until: record.travel_until || "",
+                    is_demo: record.is_demo || false
                 };
 
                 updateTaInput.value = record.ta_number || "";
@@ -1260,6 +1263,7 @@
                 updateTravelDateInput.value = record.travel_date || "";
                 updateTravelUntilInput.value = record.travel_until || "";
                 updateScanFileInput.value = "";
+                if (updateIsDemoCheckbox) updateIsDemoCheckbox.checked = record.is_demo || false;
 
                 updateSelectedEmployees.length = 0;
                 if (record.employees) {
@@ -1300,7 +1304,7 @@
             try {
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("id, ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at")
+                    .select("id, ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at, is_demo")
                     .order("created_at", { ascending: false });
 
                 if (error) {
@@ -1642,10 +1646,11 @@
 
                 exportStatus.textContent = "Fetching records...";
 
-                // Fetch all records
+                // Fetch all records (excluding demo files)
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("ta_number, purpose, destination, employees, travel_date, travel_until")
+                    .select("ta_number, purpose, destination, employees, travel_date, travel_until, is_demo")
+                    .eq("is_demo", false)
                     .order("travel_date", { ascending: false });
 
                 if (error) throw error;
@@ -1778,6 +1783,7 @@
             const travelDate = updateTravelDateInput.value;
             let travelUntil = updateTravelUntilInput.value;
             const employees = updateSelectedEmployees.join(", ");
+            const isDemo = updateIsDemoCheckbox ? updateIsDemoCheckbox.checked : false;
 
             if (!taNumber || !purpose || !destination || !travelDate || updateSelectedEmployees.length === 0) {
                 updateStatus.textContent = "Please fill in all required fields.";
@@ -1862,9 +1868,10 @@
             const hasEmployeesChange = employees !== updateRecordData.employees;
             const hasTravelDateChange = travelDate !== updateRecordData.travel_date;
             const hasTravelUntilChange = travelUntil !== updateRecordData.travel_until;
+            const hasIsDemoChange = isDemo !== updateRecordData.is_demo;
             
             const hasAnyChange = hasFileChange || hasTaNumberChange || hasPurposeChange || 
-                                 hasDestinationChange || hasEmployeesChange || hasTravelDateChange || hasTravelUntilChange;
+                                 hasDestinationChange || hasEmployeesChange || hasTravelDateChange || hasTravelUntilChange || hasIsDemoChange;
             
             if (!hasAnyChange) {
                 updateStatus.textContent = "No changes made.";
@@ -2015,7 +2022,8 @@
                         travel_date: travelDate,
                         travel_until: travelUntil,
                         file_name: fileName,
-                        file_url: fileUrl
+                        file_url: fileUrl,
+                        is_demo: isDemo
                     })
                     .eq("id", updateRecordData.id)
                     .select();

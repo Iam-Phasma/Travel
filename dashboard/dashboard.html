@@ -731,7 +731,8 @@
             try {
                 const { data, error } = await supabase
                     .from("travel_authorities")
-                    .select("ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at")
+                    .select("ta_number, purpose, destination, employees, travel_date, travel_until, file_name, file_url, created_at, is_demo")
+                    .eq("is_demo", false)
                     .order("created_at", { ascending: false });
 
                 if (error) {

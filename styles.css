@@ -812,6 +812,15 @@ button:hover {
     background: rgba(207, 228, 255, 0.35);
 }
 
+/* Demo file rows - light gray background */
+.data-table tbody tr.is-demo {
+    background: rgba(200, 200, 200, 0.2);
+}
+
+.data-table tbody tr.is-demo:hover {
+    background: rgba(200, 200, 200, 0.3);
+}
+
 .truncate {
     display: block;
     max-width: 100%;
