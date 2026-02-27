@@ -103,10 +103,10 @@
         // Initialize Supabase
         const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey);
 
-        // Initialize auto-logout (1 minute warning, 2 minutes total)
+        // Initialize auto-logout (5 minutes warning, 6 minutes total)
         initAutoLogout(supabase, {
-            warningTime: 1 * 60 * 1000, // 1 minute
-            logoutTime: 2 * 60 * 1000   // 2 minutes (1 min warning + 1 min countdown)
+            warningTime: 5 * 60 * 1000, // 5 minutes
+            logoutTime: 6 * 60 * 1000   // 6 minutes (5 min warning + 1 min countdown)
         });
 
         // Load upload panel

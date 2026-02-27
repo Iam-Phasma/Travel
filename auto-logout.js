@@ -9,12 +9,10 @@ export class AutoLogout {
         console.log('[Auto-Logout] 🚀 Initializing Auto-Logout system...');
         
         // Configuration
-        // ⏱️ CHANGE SESSION TIMEOUT HERE:
-        // warningTime: when to show the warning modal (in milliseconds)
-        // logoutTime: when to actually log out the user (in milliseconds)
-        this.warningTime = options.warningTime || 5 * 10 * 1000;
-        this.logoutTime = options.logoutTime || 1 * 10 * 1000; 
-        this.countdownDuration = this.logoutTime - this.warningTime;
+        // CHANGE SESSION TIMEOUT HERE:
+        this.warningTime = options.warningTime || 5 * 60 * 1000; // 5 minutes
+        this.logoutTime = options.logoutTime || 6 * 60 * 1000; // 6 minutes total (5 min + 1 min countdown)
+        this.countdownDuration = this.logoutTime - this.warningTime; // 1 minute countdown
         this.supabase = options.supabase; // Supabase client instance
         this.onLogout = options.onLogout || null; // Optional callback before logout
         
@@ -211,7 +209,6 @@ export class AutoLogout {
      */
     startCountdown() {
         const secondsElement = document.getElementById('auto-logout-seconds');
-        const modalContent = document.querySelector('.auto-logout-content');
         let remainingSeconds = Math.floor(this.countdownDuration / 1000);
         
         // Update immediately
@@ -229,16 +226,9 @@ export class AutoLogout {
             
             secondsElement.textContent = remainingSeconds;
             
-            // Add urgency class and shake effect when less than 10 seconds
+            // Add urgency class when less than 10 seconds
             if (remainingSeconds <= 10) {
                 secondsElement.classList.add('urgent');
-                
-                // Add shake effect
-                if (modalContent) {
-                    modalContent.classList.remove('shake');
-                    void modalContent.offsetWidth; // Trigger reflow to restart animation
-                    modalContent.classList.add('shake');
-                }
             }
         }, 1000);
     }
