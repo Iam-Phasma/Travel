@@ -251,6 +251,111 @@ window.initEmployeeManagement = (supabase) => {
         });
     }
 
+    // Autocomplete functionality for "Add Official" field
+    const autocompleteList = document.getElementById('employee-autocomplete-list');
+    
+    const showAutocompleteSuggestions = (inputValue) => {
+        const trimmed = inputValue.toLowerCase().trim();
+        
+        if (!trimmed || trimmed.length === 0) {
+            autocompleteList.style.display = 'none';
+            return;
+        }
+        
+        // Filter employees that match the input (only active employees)
+        const matches = allEmployeesCache
+            .filter(emp => emp.is_active !== false && emp.name.toLowerCase().includes(trimmed))
+            .slice(0, 10); // Show max 10 suggestions
+        
+        if (matches.length === 0) {
+            autocompleteList.style.display = 'none';
+            return;
+        }
+        
+        // Build the suggestions HTML
+        autocompleteList.innerHTML = matches.map((emp, index) => {
+            return `<div class="autocomplete-item" data-value="${emp.name}" data-index="${index}" role="option">${emp.name}</div>`;
+        }).join('');
+        
+        autocompleteList.style.display = 'block';
+        
+        // Add click handlers to suggestions
+        document.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', () => {
+                employeeNameInput.value = item.getAttribute('data-value');
+                autocompleteList.style.display = 'none';
+                employeeNameInput.focus();
+            });
+            
+            item.addEventListener('mouseenter', () => {
+                document.querySelectorAll('.autocomplete-item').forEach(i => i.classList.remove('highlighted'));
+                item.classList.add('highlighted');
+            });
+        });
+    };
+    
+    // Handle input event for autocomplete
+    employeeNameInput.addEventListener('input', (e) => {
+        showAutocompleteSuggestions(e.target.value);
+    });
+    
+    // Handle keyboard navigation in autocomplete
+    employeeNameInput.addEventListener('keydown', (e) => {
+        const items = document.querySelectorAll('.autocomplete-item');
+        if (items.length === 0) return;
+        
+        const highlighted = document.querySelector('.autocomplete-item.highlighted');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!highlighted) {
+                items[0].classList.add('highlighted');
+            } else {
+                const nextIndex = Array.from(items).indexOf(highlighted) + 1;
+                if (nextIndex < items.length) {
+                    highlighted.classList.remove('highlighted');
+                    items[nextIndex].classList.add('highlighted');
+                }
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (highlighted) {
+                const prevIndex = Array.from(items).indexOf(highlighted) - 1;
+                if (prevIndex >= 0) {
+                    highlighted.classList.remove('highlighted');
+                    items[prevIndex].classList.add('highlighted');
+                } else {
+                    highlighted.classList.remove('highlighted');
+                }
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlighted) {
+                employeeNameInput.value = highlighted.getAttribute('data-value');
+                autocompleteList.style.display = 'none';
+            } else if (employeeNameInput.value.trim()) {
+                // Trigger add button if Enter is pressed with no selection
+                addEmployeeBtn.click();
+            }
+        } else if (e.key === 'Escape') {
+            autocompleteList.style.display = 'none';
+        }
+    });
+    
+    // Close autocomplete when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            autocompleteList.style.display = 'none';
+        }
+    });
+    
+    // Show autocomplete when field is focused
+    employeeNameInput.addEventListener('focus', (e) => {
+        if (e.target.value.length > 0) {
+            showAutocompleteSuggestions(e.target.value);
+        }
+    });
+
     addEmployeeBtn.addEventListener("click", async () => {
         const employeeName = employeeNameInput.value.trim();
 
@@ -319,6 +424,7 @@ window.initEmployeeManagement = (supabase) => {
 
             employeeStatus.textContent = "Official added successfully!";
             employeeNameInput.value = "";
+            autocompleteList.style.display = 'none';
             await renderEmployeeList();
             // Refresh the global employee list for dropdowns
             if (window.adminLoadEmployees) {
