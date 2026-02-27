@@ -4,9 +4,13 @@
 -- This function allows ONLY super users to enable/disable user access.
 -- CRITICAL SECURITY: Server-side validation ensures only 'super' role can execute this.
 
+-- Drop old function signature first
+DROP FUNCTION IF EXISTS toggle_user_access(UUID, BOOLEAN);
+
 CREATE OR REPLACE FUNCTION toggle_user_access(
     target_user_id UUID,
-    new_access_enabled BOOLEAN
+    new_access_enabled BOOLEAN,
+    client_session_token TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -15,6 +19,7 @@ AS $$
 DECLARE
     calling_user_id UUID;
     calling_user_role TEXT;
+    db_session_token TEXT;
     target_user_role TEXT;
     super_user_count INTEGER;
     result JSON;
@@ -28,8 +33,8 @@ BEGIN
             USING HINT = 'You must be logged in to perform this action';
     END IF;
     
-    -- Security Check 2: Get the calling user's role from the database
-    SELECT role INTO calling_user_role
+    -- Security Check 2: Get the calling user's role and session token from the database
+    SELECT role, session_token INTO calling_user_role, db_session_token
     FROM profiles
     WHERE id = calling_user_id;
     
@@ -37,6 +42,14 @@ BEGIN
     IF calling_user_role != 'super' THEN
         RAISE EXCEPTION 'Permission denied'
             USING HINT = 'Only super users can enable/disable user access';
+    END IF;
+    
+    -- Security Check 4: Validate session token for admin/super users (single-session enforcement)
+    IF calling_user_role IN ('admin', 'super') THEN
+        IF client_session_token IS NULL OR db_session_token IS NULL OR client_session_token != db_session_token THEN
+            RAISE EXCEPTION 'Session invalid'
+                USING HINT = 'Your session has expired or another device logged in. Please log in again.';
+        END IF;
     END IF;
     
     -- Get the target user's role
@@ -94,7 +107,7 @@ $$;
 
 -- Grant execute permission to authenticated users
 -- (The function itself will check if they're super users)
-GRANT EXECUTE ON FUNCTION toggle_user_access(UUID, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION toggle_user_access(UUID, BOOLEAN, TEXT) TO authenticated;
 
 -- Add comment for documentation
 COMMENT ON FUNCTION toggle_user_access IS 'Allows super users to enable/disable user access. Validates permissions server-side.';

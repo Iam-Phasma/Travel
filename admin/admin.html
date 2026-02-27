@@ -2440,7 +2440,9 @@
                 usersStatus.classList.remove('status--error');
                 // Use RPC function to get users with emails from auth.users
                 // This is secure because the RPC function validates super user permission
-                const { data, error } = await supabase.rpc('get_all_users_with_emails');
+                const { data, error } = await supabase.rpc('get_all_users_with_emails', {
+                    client_session_token: localStorage.getItem('admin_session_token')
+                });
                 if (error) {
                     console.error('Error loading users:', error);
                     console.error('Error details:', {
@@ -2550,7 +2552,8 @@
                 // CRITICAL: This RPC function MUST verify that the calling user is 'super'
                 const { data, error } = await supabase.rpc('change_user_role', {
                     target_user_id: userId,
-                    new_role: newRole
+                    new_role: newRole,
+                    client_session_token: localStorage.getItem('admin_session_token')
                 });
 
                 if (error) {
@@ -2628,7 +2631,8 @@
                 // CRITICAL: This RPC function MUST verify that the calling user is 'super'
                 const { data, error } = await supabase.rpc('toggle_user_access', {
                     target_user_id: userId,
-                    new_access_enabled: newAccessEnabled
+                    new_access_enabled: newAccessEnabled,
+                    client_session_token: localStorage.getItem('admin_session_token')
                 });
 
                 if (error) {

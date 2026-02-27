@@ -11,7 +11,12 @@
 -- - We need to join them together to display user emails with their roles
 -- - Client-side code cannot access auth.users directly for security reasons
 
-CREATE OR REPLACE FUNCTION get_all_users_with_emails()
+-- Drop old function signature first
+DROP FUNCTION IF EXISTS get_all_users_with_emails();
+
+CREATE OR REPLACE FUNCTION get_all_users_with_emails(
+    client_session_token TEXT DEFAULT NULL
+)
 RETURNS TABLE (
     id UUID,
     email TEXT,
@@ -25,14 +30,22 @@ SECURITY DEFINER -- This allows the function to access auth.users
 AS $$
 DECLARE
     calling_user_role TEXT;
+    db_session_token TEXT;
 BEGIN
-    -- Security Check: Only super users can view all users
-    SELECT p.role INTO calling_user_role
+    -- Security Check 1: Only super users can view all users
+    SELECT p.role, p.session_token INTO calling_user_role, db_session_token
     FROM profiles p
     WHERE p.id = auth.uid();
     
     IF calling_user_role != 'super' THEN
         RAISE EXCEPTION 'Permission denied: Only super users can view all users';
+    END IF;
+    
+    -- Security Check 2: Validate session token for admin/super users (single-session enforcement)
+    IF calling_user_role IN ('admin', 'super') THEN
+        IF client_session_token IS NULL OR db_session_token IS NULL OR client_session_token != db_session_token THEN
+            RAISE EXCEPTION 'Session invalid: Your session has expired or another device logged in. Please log in again.';
+        END IF;
     END IF;
     
     -- Return all users with their emails, roles, and online status
@@ -55,6 +68,6 @@ $$;
 
 -- Grant execute permission to authenticated users
 -- (The function itself checks if they're super users)
-GRANT EXECUTE ON FUNCTION get_all_users_with_emails() TO authenticated;
+GRANT EXECUTE ON FUNCTION get_all_users_with_emails(TEXT) TO authenticated;
 
 COMMENT ON FUNCTION get_all_users_with_emails IS 'Returns all users with emails from auth.users and roles from profiles. Only accessible by super users.';

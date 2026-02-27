@@ -10,9 +10,13 @@
 --   new_role: 'admin'
 -- });
 
+-- Drop old function signature first
+DROP FUNCTION IF EXISTS change_user_role(UUID, TEXT);
+
 CREATE OR REPLACE FUNCTION change_user_role(
     target_user_id UUID,
-    new_role TEXT
+    new_role TEXT,
+    client_session_token TEXT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -21,6 +25,7 @@ AS $$
 DECLARE
     calling_user_id UUID;
     calling_user_role TEXT;
+    db_session_token TEXT;
     target_user_role TEXT;
     super_user_count INTEGER;
     result JSON;
@@ -34,8 +39,8 @@ BEGIN
             USING HINT = 'You must be logged in to perform this action';
     END IF;
     
-    -- Security Check 2: Get the calling user's role from the database
-    SELECT role INTO calling_user_role
+    -- Security Check 2: Get the calling user's role and session token from the database
+    SELECT role, session_token INTO calling_user_role, db_session_token
     FROM profiles
     WHERE id = calling_user_id;
     
@@ -43,6 +48,14 @@ BEGIN
     IF calling_user_role != 'super' THEN
         RAISE EXCEPTION 'Permission denied'
             USING HINT = 'Only super users can change user roles';
+    END IF;
+    
+    -- Security Check 4: Validate session token for admin/super users (single-session enforcement)
+    IF calling_user_role IN ('admin', 'super') THEN
+        IF client_session_token IS NULL OR db_session_token IS NULL OR client_session_token != db_session_token THEN
+            RAISE EXCEPTION 'Session invalid'
+                USING HINT = 'Your session has expired or another device logged in. Please log in again.';
+        END IF;
     END IF;
     
     -- Validation: Ensure new_role is valid
@@ -99,7 +112,7 @@ $$;
 
 -- Grant execute permission to authenticated users
 -- (The function itself will check if they're super users)
-GRANT EXECUTE ON FUNCTION change_user_role(UUID, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION change_user_role(UUID, TEXT, TEXT) TO authenticated;
 
 -- Add comment for documentation
 COMMENT ON FUNCTION change_user_role IS 'Allows super users to change other users roles. Validates permissions server-side.';
