@@ -305,8 +305,6 @@
                 return null;
             }
             
-            return role; // Return the role for UI customization
-
             // Additional check: Verify session token matches database
             const localToken = localStorage.getItem('admin_session_token');
             if (!localToken) {
@@ -344,6 +342,8 @@
                     .update({ session_token: localToken })
                     .eq("id", user.id);
             }
+            
+            return role; // Return the role for UI customization
 
             // Note: Actual access control for admin operations (upload, delete) 
             // is enforced by Supabase RLS policies, not this client-side check.
