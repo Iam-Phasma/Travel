@@ -254,11 +254,22 @@ window.initEmployeeManagement = (supabase) => {
     // Autocomplete functionality for "Add Official" field
     const autocompleteList = document.getElementById('employee-autocomplete-list');
     
+    // Helper to show/hide dropdown with proper class management
+    const setDropdownVisible = (visible) => {
+        if (visible) {
+            autocompleteList.style.display = 'block';
+            employeeNameInput.classList.add('autocomplete-active');
+        } else {
+            autocompleteList.style.display = 'none';
+            employeeNameInput.classList.remove('autocomplete-active');
+        }
+    };
+    
     const showAutocompleteSuggestions = (inputValue) => {
         const trimmed = inputValue.toLowerCase().trim();
         
         if (!trimmed || trimmed.length === 0) {
-            autocompleteList.style.display = 'none';
+            setDropdownVisible(false);
             return;
         }
         
@@ -276,14 +287,14 @@ window.initEmployeeManagement = (supabase) => {
                     <button type="button" class="autocomplete-add-btn">Add "${employeeNameInput.value.trim()}"</button>
                 </div>
             `;
-            autocompleteList.style.display = 'block';
+            setDropdownVisible(true);
             
             // Add click handler for the add button
             const addBtn = autocompleteList.querySelector('.autocomplete-add-btn');
             if (addBtn) {
                 addBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    autocompleteList.style.display = 'none';
+                    setDropdownVisible(false);
                     addEmployeeBtn.click(); // Trigger the add employee button
                 });
             }
@@ -295,13 +306,13 @@ window.initEmployeeManagement = (supabase) => {
             return `<div class="autocomplete-item" data-value="${emp.name}" data-index="${index}" role="option">${emp.name}</div>`;
         }).join('');
         
-        autocompleteList.style.display = 'block';
+        setDropdownVisible(true);
         
         // Add click handlers to suggestions
         document.querySelectorAll('.autocomplete-item').forEach(item => {
             item.addEventListener('click', () => {
                 employeeNameInput.value = item.getAttribute('data-value');
-                autocompleteList.style.display = 'none';
+                setDropdownVisible(false);
                 employeeNameInput.focus();
             });
             
@@ -350,20 +361,20 @@ window.initEmployeeManagement = (supabase) => {
             e.preventDefault();
             if (highlighted) {
                 employeeNameInput.value = highlighted.getAttribute('data-value');
-                autocompleteList.style.display = 'none';
+                setDropdownVisible(false);
             } else if (employeeNameInput.value.trim()) {
                 // Trigger add button if Enter is pressed with no selection
                 addEmployeeBtn.click();
             }
         } else if (e.key === 'Escape') {
-            autocompleteList.style.display = 'none';
+            setDropdownVisible(false);
         }
     });
     
     // Close autocomplete when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.autocomplete-wrapper')) {
-            autocompleteList.style.display = 'none';
+            setDropdownVisible(false);
         }
     });
     
@@ -442,7 +453,7 @@ window.initEmployeeManagement = (supabase) => {
 
             employeeStatus.textContent = "Official added successfully!";
             employeeNameInput.value = "";
-            autocompleteList.style.display = 'none';
+            setDropdownVisible(false);
             await renderEmployeeList();
             // Refresh the global employee list for dropdowns
             if (window.adminLoadEmployees) {
