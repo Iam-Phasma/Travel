@@ -439,15 +439,19 @@
                     }
 
                     try {
-                        // Clear admin session token and panel memory
+                        // Clear admin session token, panel memory, filters, and sort settings
                         localStorage.removeItem('admin_session_token');
                         localStorage.removeItem('adminActivePanel');
+                        localStorage.removeItem('adminFilters');
+                        localStorage.removeItem('adminSort');
                         await supabase.auth.signOut();
                         window.location.href = "../index.html";
                     } catch (error) {
                         console.error("Logout error:", error);
                         localStorage.removeItem('admin_session_token');
                         localStorage.removeItem('adminActivePanel');
+                        localStorage.removeItem('adminFilters');
+                        localStorage.removeItem('adminSort');
                         window.location.href = "../index.html";
                     }
                 });
