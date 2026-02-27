@@ -195,17 +195,30 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
     // Demo checkbox handler
     if (isDemoCheckbox) {
         const disclaimerModal = document.getElementById("demo-disclaimer-modal");
+        const undemoModal = document.getElementById("undemo-disclaimer-modal");
         const cancelBtn = document.getElementById("cancel-demo-disclaimer");
         const confirmBtn = document.getElementById("confirm-demo-disclaimer");
+        const cancelUndemoBtn = document.getElementById("cancel-undemo-disclaimer");
+        const confirmUndemoBtn = document.getElementById("confirm-undemo-disclaimer");
+        
+        let isCheckPending = false;
         
         isDemoCheckbox.addEventListener("change", () => {
-            if (isDemoCheckbox.checked) {
+            if (isDemoCheckbox.checked && !isCheckPending) {
+                isCheckPending = true;
                 if (disclaimerModal) {
                     disclaimerModal.classList.add("show");
                 }
+            } else if (!isDemoCheckbox.checked && !isCheckPending) {
+                isCheckPending = true;
+                if (undemoModal) {
+                    undemoModal.classList.add("show");
+                }
             }
+            isCheckPending = false;
         });
         
+        // Demo checkbox handlers
         if (cancelBtn) {
             cancelBtn.addEventListener("click", () => {
                 isDemoCheckbox.checked = false;
@@ -228,6 +241,33 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
                 if (e.target === disclaimerModal) {
                     isDemoCheckbox.checked = false;
                     disclaimerModal.classList.remove("show");
+                }
+            });
+        }
+        
+        // Undemo checkbox handlers
+        if (cancelUndemoBtn) {
+            cancelUndemoBtn.addEventListener("click", () => {
+                isDemoCheckbox.checked = true;
+                if (undemoModal) {
+                    undemoModal.classList.remove("show");
+                }
+            });
+        }
+        
+        if (confirmUndemoBtn) {
+            confirmUndemoBtn.addEventListener("click", () => {
+                if (undemoModal) {
+                    undemoModal.classList.remove("show");
+                }
+            });
+        }
+        
+        if (undemoModal) {
+            undemoModal.addEventListener("click", (e) => {
+                if (e.target === undemoModal) {
+                    isDemoCheckbox.checked = true;
+                    undemoModal.classList.remove("show");
                 }
             });
         }

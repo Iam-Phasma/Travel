@@ -814,11 +814,11 @@ button:hover {
 
 /* Demo file rows - light gray background */
 .data-table tbody tr.is-demo {
-    background: rgba(200, 200, 200, 0.2);
+    background: rgba(255, 172, 172, 0.2);
 }
 
 .data-table tbody tr.is-demo:hover {
-    background: rgba(200, 200, 200, 0.3);
+    background: rgba(255, 132, 132, 0.243);
 }
 
 .truncate {
