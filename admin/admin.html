@@ -1178,7 +1178,8 @@
                         destination: record.destination || "",
                         employees: record.employees || "",
                         travel_date: record.travel_date || "",
-                        travel_until: record.travel_until || ""
+                        travel_until: record.travel_until || "",
+                        is_demo: record.is_demo || false
                     };
 
                     updateTaInput.value = record.ta_number || "";
@@ -1187,6 +1188,7 @@
                     updateTravelDateInput.value = record.travel_date || "";
                     updateTravelUntilInput.value = record.travel_until || "";
                     updateScanFileInput.value = "";
+                    if (updateIsDemoCheckbox) updateIsDemoCheckbox.checked = record.is_demo || false;
                     
                     // Populate employees multiselect
                     updateSelectedEmployees.length = 0;
@@ -1362,6 +1364,47 @@
             updateModal.classList.remove("show");
             updateRecordData = null;
         });
+
+        // Demo checkbox handler for edit modal
+        if (updateIsDemoCheckbox) {
+            const disclaimerModal = document.getElementById("demo-disclaimer-modal");
+            const cancelBtn = document.getElementById("cancel-demo-disclaimer");
+            const confirmBtn = document.getElementById("confirm-demo-disclaimer");
+            
+            updateIsDemoCheckbox.addEventListener("change", () => {
+                if (updateIsDemoCheckbox.checked) {
+                    if (disclaimerModal) {
+                        disclaimerModal.classList.add("show");
+                    }
+                }
+            });
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener("click", () => {
+                    updateIsDemoCheckbox.checked = false;
+                    if (disclaimerModal) {
+                        disclaimerModal.classList.remove("show");
+                    }
+                });
+            }
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener("click", () => {
+                    if (disclaimerModal) {
+                        disclaimerModal.classList.remove("show");
+                    }
+                });
+            }
+            
+            if (disclaimerModal) {
+                disclaimerModal.addEventListener("click", (e) => {
+                    if (e.target === disclaimerModal) {
+                        updateIsDemoCheckbox.checked = false;
+                        disclaimerModal.classList.remove("show");
+                    }
+                });
+            }
+        }
 
         // Hide load more button since we load all records now
         if (viewMoreBtn) {

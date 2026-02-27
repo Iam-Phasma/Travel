@@ -192,6 +192,47 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
         }
     });
 
+    // Demo checkbox handler
+    if (isDemoCheckbox) {
+        const disclaimerModal = document.getElementById("demo-disclaimer-modal");
+        const cancelBtn = document.getElementById("cancel-demo-disclaimer");
+        const confirmBtn = document.getElementById("confirm-demo-disclaimer");
+        
+        isDemoCheckbox.addEventListener("change", () => {
+            if (isDemoCheckbox.checked) {
+                if (disclaimerModal) {
+                    disclaimerModal.classList.add("show");
+                }
+            }
+        });
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener("click", () => {
+                isDemoCheckbox.checked = false;
+                if (disclaimerModal) {
+                    disclaimerModal.classList.remove("show");
+                }
+            });
+        }
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener("click", () => {
+                if (disclaimerModal) {
+                    disclaimerModal.classList.remove("show");
+                }
+            });
+        }
+        
+        if (disclaimerModal) {
+            disclaimerModal.addEventListener("click", (e) => {
+                if (e.target === disclaimerModal) {
+                    isDemoCheckbox.checked = false;
+                    disclaimerModal.classList.remove("show");
+                }
+            });
+        }
+    }
+
     // Real-time TA number validation for upload
     let taCheckTimer = null;
     taNumberInput.addEventListener("input", async () => {
@@ -447,21 +488,18 @@ window.initUploadPanel = function(supabase, selectedEmployees, employeesMultiSel
 
             uploadStatus.textContent = "Upload complete.";
             
-            // Clear fields if auto-clear is enabled
-            const autoClearCheckbox = document.getElementById("auto-clear-checkbox");
-            if (autoClearCheckbox && autoClearCheckbox.checked) {
-                taNumberInput.value = "";
-                purposeInput.value = "";
-                destinationInput.value = "";
-                travelDateInput.value = "";
-                travelUntilInput.value = "";
-                scanFileInput.value = "";
-                if (isDemoCheckbox) isDemoCheckbox.checked = false;
-                selectedEmployees.length = 0;
-                employeesMultiSelect.updateDisplay();
-                employeesMultiSelect.renderOptions();
-                uploadStatus.textContent = "Upload complete. Fields cleared.";
-            }
+            // Clear fields after successful upload
+            taNumberInput.value = "";
+            purposeInput.value = "";
+            destinationInput.value = "";
+            travelDateInput.value = "";
+            travelUntilInput.value = "";
+            scanFileInput.value = "";
+            if (isDemoCheckbox) isDemoCheckbox.checked = false;
+            selectedEmployees.length = 0;
+            employeesMultiSelect.updateDisplay();
+            employeesMultiSelect.renderOptions();
+            uploadStatus.textContent = "Upload complete. Fields cleared.";
 
             // Reload travel authorities if function exists
             if (typeof window.loadTravelAuthorities === "function") {
